@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Card } from './ui/card';
-import { Switch } from './ui/switch';
-import { Label } from './ui/label';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
+import { Card } from '../components/ui/card';
+import { Switch } from '../components/ui/switch';
+import { Label } from '../components/ui/label';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
 import { Mail, AlertTriangle, Droplet, Bug, Flame, Save } from 'lucide-react';
 
 export default function NotificationSettings() {
