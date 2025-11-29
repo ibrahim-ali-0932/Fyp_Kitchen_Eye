@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Camera, ArrowLeft } from 'lucide-react';
+import { useState } from "react";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Camera, ArrowLeft } from "lucide-react";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -10,9 +10,13 @@ interface LoginPageProps {
   onBack: () => void;
 }
 
-export default function LoginPage({ onLogin, onSignup, onBack }: LoginPageProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function LoginPage({
+  onLogin,
+  onSignup,
+  onBack,
+}: LoginPageProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,8 +25,8 @@ export default function LoginPage({ onLogin, onSignup, onBack }: LoginPageProps)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 flex items-center justify-center p-6">
-      <Button 
-        variant="ghost" 
+      <Button
+        variant="ghost"
         className="absolute top-6 left-6"
         onClick={onBack}
       >
@@ -60,7 +64,10 @@ export default function LoginPage({ onLogin, onSignup, onBack }: LoginPageProps)
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <a href="#" className="text-sm text-blue-600 hover:text-blue-700">
+                <a
+                  href="#"
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
                   Forgot password?
                 </a>
               </div>
@@ -74,20 +81,29 @@ export default function LoginPage({ onLogin, onSignup, onBack }: LoginPageProps)
               />
             </div>
 
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              size="lg"
+            >
               Sign In
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm text-slate-600">
-            Don't have an account?{' '}
-            <button onClick={onSignup} className="text-blue-600 hover:text-blue-700">
+            Don't have an account?{" "}
+            <button
+              onClick={onSignup}
+              className="text-blue-600 hover:text-blue-700"
+            >
               Create Account
             </button>
           </div>
 
           <div className="mt-8 pt-6 border-t text-center">
-            <p className="text-xs text-slate-500">Powered by KitchenEye AI Engine</p>
+            <p className="text-xs text-slate-500">
+              Powered by KitchenEye AI Engine
+            </p>
           </div>
         </div>
       </div>
