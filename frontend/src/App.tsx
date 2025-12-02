@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -36,7 +36,7 @@ export default function App() {
   if (currentPage === "login") {
     return (
       <LoginPage
-        onLogin={handleLogin} 
+        onLogin={handleLogin}
         onSignup={() => setCurrentPage("signup")}
         onBack={() => setCurrentPage("landing")}
       />
