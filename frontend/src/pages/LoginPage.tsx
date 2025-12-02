@@ -3,9 +3,13 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Camera, ArrowLeft } from "lucide-react";
+import { loginUser} from "../services/api"; // Not used, can be removed
+import {useNavigate} from "react-router-dom"; // Not used
+import { auth } from "../firebase";
+import { signInWithEmailAndPassword} from "firebase/auth" // Correct import
 
 interface LoginPageProps {
-  onLogin: () => void;
+  onLogin: (success: boolean) => void;
   onSignup: () => void;
   onBack: () => void;
 }
@@ -17,12 +21,35 @@ export default function LoginPage({
 }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
-  };
+    setLoading(true);
+    setErrorMsg("");
+    
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("User logged in:", userCredential.user);
+      
+      // 1. **SUCCESS HANDLER**: Call onLogin(true) to indicate success and potentially navigate
+      onLogin(true); 
 
+    } catch (error: any) {
+        console.error("Login error:", error.message);
+        // 2. **ERROR HANDLER**: Set user-friendly error message and call onLogin(false)
+        const firebaseErrorMsg = error.code 
+            ? error.message.replace(/firebase: /i, '').replace(/\(auth\/.*?\)\.?/i, '').trim()
+            : "Login failed. Please check your email and password.";
+        setErrorMsg(firebaseErrorMsg);
+        onLogin(false);
+    } finally {
+        // 3. **FINALLY**: Stop loading regardless of success/fail
+        setLoading(false); 
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 flex items-center justify-center p-6">
       <Button

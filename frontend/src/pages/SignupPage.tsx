@@ -3,9 +3,11 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Camera, ArrowLeft } from "lucide-react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 
 interface SignupPageProps {
-  onSignup: () => void;
+  onSignup: (success: boolean) => void;
   onLogin: () => void;
   onBack: () => void;
 }
@@ -18,11 +20,89 @@ export default function SignupPage({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [organization, setOrganization] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSignup();
+    setErrorMsg("");
+
+    // Client-side validation
+    if (password !== confirmPassword) {
+      const errorMessage = "Passwords do not match";
+      setErrorMsg(errorMessage);
+      alert(errorMessage);
+      return;
+    }
+
+    if (password.length < 6) {
+      const errorMessage = "Password must be at least 6 characters long";
+      setErrorMsg(errorMessage);
+      alert(errorMessage);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Step 1: Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      // Step 2: Get ID token from Firebase
+      const idToken = await userCredential.user.getIdToken();
+
+      // Step 3: Send profile data to backend with token
+      const response = await fetch("http://localhost:8000/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          email,
+          full_name: name,
+          organization,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store token in localStorage
+        localStorage.setItem("token", idToken);
+        alert("Account created successfully! Welcome to KitchenEye!");
+        onSignup(true);
+      } else {
+        const errorMessage = data.detail || "Failed to create profile";
+        setErrorMsg(errorMessage);
+        alert(errorMessage);
+        // Don't call onSignup(false) here - stay on page
+      }
+    } catch (err: any) {
+      console.error(err);
+      let errorMessage = "Unable to create account";
+
+      if (err.code === "auth/email-already-in-use") {
+        errorMessage = "Email already in use";
+      } else if (err.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address";
+      } else if (err.code === "auth/weak-password") {
+        errorMessage = "Password is too weak";
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setErrorMsg(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -97,6 +177,17 @@ export default function SignupPage({
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Confirm Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
             </div>
