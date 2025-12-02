@@ -1,18 +1,27 @@
 from fastapi import FastAPI
-from .router import signup
-from .router import profile
 from fastapi.middleware.cors import CORSMiddleware
+from .router import signup, login, profile
 
-app = FastAPI()
+app = FastAPI(title="KitchenEye API")
 
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow req from any website like frontend
-    allow_credentials=True,  # allow sending cookies,tokens
-    allow_methods=["*"],  # allow methods get,post,del
-    # allow frontend to send any custom header like tokens
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Your frontend URLs
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
-# defining routes
-app.include_router(signup.router)
-app.include_router(profile.router)
+
+# Include routers with /auth prefix
+app.include_router(signup.router, prefix="/auth")
+app.include_router(login.router, prefix="/auth")
+app.include_router(profile.router, prefix="/auth")
+
+@app.get("/")
+def read_root():
+    return {"message": "KitchenEye API is running"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}

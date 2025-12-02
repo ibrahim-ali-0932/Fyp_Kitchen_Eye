@@ -5,7 +5,7 @@ class Signup(BaseModel):
     email: EmailStr
     Fullname: str
     Branchname: str
-    password: str
+    
 
 
 class profile(BaseModel):

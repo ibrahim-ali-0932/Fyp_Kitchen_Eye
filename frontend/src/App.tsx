@@ -8,22 +8,26 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<
     "landing" | "login" | "signup" | "dashboard"
   >("landing");
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-    setCurrentPage("dashboard");
+  const handleLogin = (success: boolean) => {
+    if (success) {
+      setIsAuthenticated(true);
+      setCurrentPage("dashboard");
+    }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    localStorage.removeItem("token"); // Clear stored token
     setCurrentPage("landing");
   };
 
   if (currentPage === "landing") {
     return (
       <LandingPage
-        onSignIn={handleLogin}
+        onSignIn={() => setCurrentPage("login")}
         onGetStarted={() => setCurrentPage("signup")}
       />
     );
@@ -32,7 +36,7 @@ export default function App() {
   if (currentPage === "login") {
     return (
       <LoginPage
-        onLogin={handleLogin}
+        onLogin={handleLogin} 
         onSignup={() => setCurrentPage("signup")}
         onBack={() => setCurrentPage("landing")}
       />
@@ -42,7 +46,7 @@ export default function App() {
   if (currentPage === "signup") {
     return (
       <SignupPage
-        onSignup={handleLogin}
+        onSignup={() => handleLogin(false)}
         onLogin={() => setCurrentPage("login")}
         onBack={() => setCurrentPage("landing")}
       />
@@ -50,12 +54,11 @@ export default function App() {
   }
 
   if (currentPage === "dashboard") {
-    if (isAuthenticated) {
-      return <DashboardLayout onLogout={handleLogout} />;
-    }
-    return (
+    return isAuthenticated ? (
+      <DashboardLayout onLogout={handleLogout} />
+    ) : (
       <LoginPage
-        onLogin={handleLogin}
+        onLogin={() => handleLogin(true)}
         onSignup={() => setCurrentPage("signup")}
         onBack={() => setCurrentPage("landing")}
       />

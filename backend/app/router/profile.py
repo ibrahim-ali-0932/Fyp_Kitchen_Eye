@@ -1,7 +1,7 @@
 from ..auth.authentication import verify_token
 from fastapi import APIRouter, Depends, HTTPException
 from ..schemas.schemas import profile
-from database.database import db
+from app.database.db import db
 router = APIRouter(
     prefix="/profile",
     tags=["profile"]
