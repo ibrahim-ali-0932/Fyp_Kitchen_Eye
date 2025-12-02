@@ -3,8 +3,8 @@ from pydantic import BaseModel, EmailStr
 
 class Signup(BaseModel):
     email: EmailStr
-    Fullname: str
-    Branchname: str
+    full_name: str
+    organization: str
     
 
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, type FormEvent } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -25,7 +25,7 @@ export default function SignupPage({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
@@ -58,7 +58,7 @@ export default function SignupPage({
       const idToken = await userCredential.user.getIdToken();
 
       // Step 3: Send profile data to backend with token
-      const response = await fetch("http://localhost:8000/auth/signup", {
+      const response = await fetch("http://localhost:8000/auth/signup/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
