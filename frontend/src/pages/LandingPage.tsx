@@ -8,7 +8,12 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 interface LandingPageProps {
   onSignIn: () => void;
   onGetStarted: () => void;
+  onHome: () => void;
+  onContactUs: () => void;
+  onOurTeam: () => void;
 }
+
+
 
 // Animated section wrapper
 function AnimatedSection({ 
@@ -59,6 +64,12 @@ function AnimatedSection({
 
 export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const heroRef = useRef<HTMLElement>(null);
+  const featuresRef = useRef<HTMLElement>(null);
+  const footerRef = useRef<HTMLElement>(null);
+  const scrollToHero = () => heroRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToFeatures = () => featuresRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToFooter = () => footerRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const carouselFeatures = [
     {
@@ -107,6 +118,9 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
     setCurrentSlide((prev) => (prev - 1 + carouselFeatures.length) % carouselFeatures.length);
   };
 
+
+
+
   // Auto-advance carousel
   useEffect(() => {
     const timer = setInterval(nextSlide, 5000);
@@ -120,21 +134,17 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
         <div 
           className="absolute inset-0 bg-cover bg-center bg-fixed"
           style={{
-          backgroundImage: "url('/images/landing_page_background.jpg')",
+          backgroundImage: "url('/images/bg-2.jpg')",
+          filter: 'brightness(0.8) contrast(1.2)',
+
           }}
         />
         
         {/* Solid Dark Overlay for better text contrast */}
-        <div className="absolute inset-0 bg-black/90" />
+        <div className="absolute inset-0 bg-black/30" />
 
         {/* Gradient Overlay for Style */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-blue-900/80 to-slate-900/95" />
-        
-        {/* Additional subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-0" style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-          backgroundSize: '48px 48px'
-        }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-blue-900/30 to-slate-900/40" />
       </div>
 
       {/* Scrollable Content */}
@@ -164,6 +174,29 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
                 Kitchen<span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Eye</span>
               </span>
             </motion.div>
+            <div className="flex items-center gap-8">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button variant="ghost" onClick={scrollToHero} className="text-white hover:bg-white/10">
+                  Home
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button variant="ghost" onClick={scrollToFeatures} className="text-white hover:bg-white/10">
+                  About us
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button variant="ghost" onClick={scrollToFooter} className="text-white hover:bg-white/10">
+                  Contact us
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button variant="ghost" onClick={onSignIn} className="text-white hover:bg-white/10">
+                  Our Team
+                </Button>
+              </motion.div>
+            </div>
+          
             <div className="flex items-center gap-4">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button variant="ghost" onClick={onSignIn} className="text-white hover:bg-white/10">
@@ -183,7 +216,7 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
         </motion.header>
 
         {/* Hero Section */}
-        <section className="min-h-screen flex items-center justify-center px-6 pt-20 pb-32">
+        <section ref={heroRef} className="min-h-screen flex items-center justify-center px-6 pt-18 pb-32">
           <div className="max-w-5xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -191,16 +224,22 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <motion.div 
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-blue-300 mb-8"
+                className="flex items-center justify-center mb-5"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                <Sparkles className="w-5 h-5" />
-                <span>AI-Powered Technology</span>
+                <img 
+                  src="/images/Kitcheneye_logo.png" 
+                  alt="KitchenEye Logo" 
+                  className="w-40 h-40 drop-shadow-xl"
+                />
               </motion.div>
-            </motion.div>
 
+            </motion.div>
+            <motion.div
+              whileHover={{ y: -5, scale: 1.05 }}
+              className=" text-center mb-10 relative  pt-8 px-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20">
             <motion.h1 
               className="text-6xl lg:text-7xl mb-8 tracking-tight text-white"
               initial={{ opacity: 0, y: 30 }}
@@ -222,7 +261,7 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
             >
               Real-time violation detection with Fire, Smoke, PPE & Hygiene Monitoring.
             </motion.p>
-
+            </motion.div>
             <motion.div 
               className="flex gap-6 justify-center"
               initial={{ opacity: 0, y: 30 }}
@@ -251,6 +290,8 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
               </motion.div>
             </motion.div>
 
+          <div className="absolute top-[100vh] left-0 w-full h-40 bg-gradient-to-b from-transparent to-slate-900/80 pointer-events-none"></div>
+
             {/* Stats */}
             <motion.div 
               className="grid grid-cols-3 gap-8 mt-20 max-w-2xl mx-auto"
@@ -278,18 +319,21 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
             </motion.div>
           </div>
         </section>
+            {/* Fade Overlay After Hero */}      
 
         {/* Features Carousel Section */}
-        <section className="py-32 px-6">
+        <section ref={featuresRef} className="py-32 px-6">
           <AnimatedSection className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
+            <motion.div 
+             whileHover={{ y: -10, scale: 1.05 }}
+                className=" text-center mb-16 relative p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20">
               <h2 className="text-5xl mb-6 text-white">
                 Complete Monitoring Solution
               </h2>
               <p className="text-xl text-slate-400">
                 Everything you need to maintain safety and compliance
               </p>
-            </div>
+            </motion.div>
 
             {/* Carousel Container */}
             <div className="relative">
@@ -302,7 +346,7 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
                   {[...carouselFeatures, ...carouselFeatures].map((feature, index) => (
                     <motion.div
                       key={index}
-                      className="min-w-[calc(33.333%-16px)] p-8 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-300"
+                      className="min-w-[calc(33.333%-16px)] p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 transition-all duration-300"
                       whileHover={{ y: -10, scale: 1.02 }}
                     >
                       <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 shadow-lg`}>
@@ -373,7 +417,9 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
                   </motion.div>
                 ))}
               </div>
-              <div>
+              <motion.div
+              whileHover={{ y: -10, scale: 1.05 }}
+                className=" relative p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20">
                 <h2 className="text-5xl mb-6 text-white">
                   Why KitchenEye?
                 </h2>
@@ -395,7 +441,7 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
                     <span>Maintain 100% compliance with automated reporting</span>
                   </li>
                 </ul>
-              </div>
+              </motion.div>
             </div>
           </AnimatedSection>
         </section>
@@ -404,14 +450,19 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
         <section className="py-32 px-6">
           <AnimatedSection direction="right" className="max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div className="order-2 lg:order-1">
-                <h2 className="text-5xl mb-6 text-white">
-                  Real-Time Alerts
-                </h2>
-                <p className="text-xl text-slate-300 mb-8 leading-relaxed">
-                  Get notified instantly when violations occur. Our AI system sends immediate alerts 
-                  to your team so you can respond before issues escalate.
-                </p>
+              <div className="order-2 lg:order-1 space-y-6">
+                <motion.div 
+                  className=" relative p-6 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20"
+                  whileHover={{ x: 10 }}>
+                  <h2 className="text-5xl mb-6 text-white">
+                    Real-Time Alerts
+                  </h2>
+                  <p className="text-xl text-slate-300 mb-6 leading-relaxed">
+                    Get notified instantly when violations occur. Our AI system sends immediate alerts 
+                    to your team so you can respond before issues escalate.
+                  </p>
+                </motion.div>
+                
                 <div className="space-y-6">
                   {[
                     { icon: Bell, title: 'Instant Email Notifications', desc: 'Immediate alerts sent to designated personnel' },
@@ -467,14 +518,16 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
         {/* Section C: Violation Detection Modules - Cards Slide Up */}
         <section className="py-32 px-6">
           <AnimatedSection className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
+            <motion.div 
+              whileHover={{ y: -10, scale: 1.05 }}
+            className="text-center mb-16 relative p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20">
               <h2 className="text-5xl mb-6 text-white">
                 Violation Detection Modules
               </h2>
               <p className="text-xl text-slate-400">
                 Comprehensive AI monitoring for all safety risks
               </p>
-            </div>
+            </motion.div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
@@ -578,7 +631,7 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-white/10 bg-slate-900/50 backdrop-blur-xl">
+        <footer ref={footerRef} className="border-t border-white/10 bg-slate-900/50 backdrop-blur-xl">
           <AnimatedSection className="max-w-7xl mx-auto px-6 py-16">
             <div className="grid md:grid-cols-4 gap-12 mb-12">
               <div>
