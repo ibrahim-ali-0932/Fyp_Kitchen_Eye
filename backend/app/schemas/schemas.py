@@ -5,6 +5,7 @@ class Signup(BaseModel):
     email: EmailStr
     full_name: str
     organization: str
+    address: str
     
 
 
