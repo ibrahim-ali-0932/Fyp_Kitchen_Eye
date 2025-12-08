@@ -29,7 +29,8 @@ async def createUser(body: Signup, user_data: dict = Depends(verify_token)):
         db.collection("users").document(user_uid).set({
             "email": user_email,
             "branchName": body.organization,  # Match frontend field name
-            "fullName": body.full_name        # Match frontend field name
+            "fullName": body.full_name,       # Match frontend field name
+            "address": body.address            # Address field
         })
         
         logger.info(f"Successfully created profile for user: {user_uid}")

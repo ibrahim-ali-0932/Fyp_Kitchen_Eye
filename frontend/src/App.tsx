@@ -58,7 +58,14 @@ export default function App() {
       <LoginPage
         onLogin={handleLogin}
         onSignup={() => setCurrentPage("signup")}
-        onBack={() => setCurrentPage("landing")}
+        onBack={() => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setCurrentPage("landing");
+        }}
+        onBlog={() => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setCurrentPage("blog");
+        }}
       />
     );
   }
@@ -68,7 +75,14 @@ export default function App() {
       <SignupPage
         onSignup={() => handleLogin(false)}
         onLogin={() => setCurrentPage("login")}
-        onBack={() => setCurrentPage("landing")}
+        onBack={() => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setCurrentPage("landing");
+        }}
+        onBlog={() => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setCurrentPage("blog");
+        }}
       />
     );
   }
