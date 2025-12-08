@@ -1,9 +1,30 @@
-'use client';
-
-import { Button } from '../components/ui/button';
-import { Camera, Shield, TrendingUp, CheckCircle, Users, Bell, FileText, ArrowRight, Sparkles, Zap, ChevronLeft, ChevronRight, Flame, Droplet, AlertTriangle, Trash2, BarChart3, Eye, Clock, MapPin } from 'lucide-react';
-import { motion, useInView, Variants } from 'motion/react';
-import { useState, useRef, useEffect, useMemo } from 'react';
+"use client";
+import React from "react";
+import { Button } from "../components/ui/button";
+import {
+  Camera,
+  Shield,
+  TrendingUp,
+  CheckCircle,
+  Users,
+  Bell,
+  FileText,
+  ArrowRight,
+  Sparkles,
+  Zap,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
+  Droplet,
+  AlertTriangle,
+  Trash2,
+  BarChart3,
+  Eye,
+  Clock,
+  MapPin,
+} from "lucide-react";
+import { motion, useInView, Variants } from "motion/react";
+import { useState, useRef, useEffect, useMemo } from "react";
 
 interface LandingPageProps {
   onSignIn: () => void;
@@ -11,43 +32,45 @@ interface LandingPageProps {
   onHome: () => void;
   onContactUs: () => void;
   onOurTeam: () => void;
+  onBlog: () => void;
 }
 
-
-
 // Animated section wrapper
-function AnimatedSection({ 
-  children, 
-  className = "", 
-  delay = 0, 
-  direction = "up" 
-}: { 
-  children: React.ReactNode, 
-  className?: string, 
-  delay?: number, 
-  direction?: "up" | "left" | "right" 
+function AnimatedSection({
+  children,
+  className = "",
+  delay = 0,
+  direction = "up",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+  direction?: "up" | "left" | "right";
 }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  
+
   // Memoize variants to prevent re-render issues
-  const variants: Variants = useMemo(() => ({
-    hidden: {
-      opacity: 0,
-      y: direction === "up" ? 50 : 0,
-      x: direction === "left" ? -50 : direction === "right" ? 50 : 0
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      x: 0,
-      transition: {
-        duration: 0.8,
-        delay: delay,
-        ease: [0.25, 0.46, 0.45, 0.94]
-      }
-    }
-  }), [direction, delay]);
+  const variants: Variants = useMemo(
+    () => ({
+      hidden: {
+        opacity: 0,
+        y: direction === "up" ? 50 : 0,
+        x: direction === "left" ? -50 : direction === "right" ? 50 : 0,
+      },
+      visible: {
+        opacity: 1,
+        y: 0,
+        x: 0,
+        transition: {
+          duration: 0.8,
+          delay: delay,
+          ease: [0.25, 0.46, 0.45, 0.94],
+        },
+      },
+    }),
+    [direction, delay]
+  );
 
   return (
     <motion.div
@@ -62,52 +85,64 @@ function AnimatedSection({
   );
 }
 
-export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps) {
+export default function LandingPage({
+  onSignIn,
+  onGetStarted,
+  onBlog,
+}: LandingPageProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const heroRef = useRef<HTMLElement>(null);
   const featuresRef = useRef<HTMLElement>(null);
   const footerRef = useRef<HTMLElement>(null);
-  const scrollToHero = () => heroRef.current?.scrollIntoView({ behavior: "smooth" });
-  const scrollToFeatures = () => featuresRef.current?.scrollIntoView({ behavior: "smooth" });
-  const scrollToFooter = () => footerRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToHero = () =>
+    heroRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToFeatures = () =>
+    featuresRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToFooter = () =>
+    footerRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const carouselFeatures = [
     {
       icon: Camera,
-      title: 'CCTV Integration',
-      description: 'Connect your existing cameras for real-time monitoring and instant alerts.',
-      color: 'from-blue-500 to-blue-600',
+      title: "CCTV Integration",
+      description:
+        "Connect your existing cameras for real-time monitoring and instant alerts.",
+      color: "from-blue-500 to-blue-600",
     },
     {
       icon: BarChart3,
-      title: 'Dashboard',
-      description: 'Track trends, violations, and compliance metrics with intuitive charts.',
-      color: 'from-green-500 to-green-600',
+      title: "Dashboard",
+      description:
+        "Track trends, violations, and compliance metrics with intuitive charts.",
+      color: "from-green-500 to-green-600",
     },
     {
       icon: Shield,
-      title: 'Hygiene Detection',
-      description: 'AI-powered detection of PPE violations, spills, pests, and fire hazards.',
-      color: 'from-purple-500 to-purple-600',
+      title: "Hygiene Detection",
+      description:
+        "AI-powered detection of PPE violations, spills, pests, and fire hazards.",
+      color: "from-purple-500 to-purple-600",
     },
     {
       icon: Bell,
-      title: 'Real Time Alerts',
-      description: 'Instant notifications via email for critical violations.',
-      color: 'from-orange-500 to-orange-600',
+      title: "Real Time Alerts",
+      description: "Instant notifications via email for critical violations.",
+      color: "from-orange-500 to-orange-600",
     },
     {
       icon: FileText,
-      title: 'Compliance Reports',
-      description: 'Generate detailed reports for audits and regulatory compliance.',
-      color: 'from-red-500 to-red-600',
+      title: "Compliance Reports",
+      description:
+        "Generate detailed reports for audits and regulatory compliance.",
+      color: "from-red-500 to-red-600",
     },
     {
       icon: Users,
-      title: 'Multi Branch Management',
-      description: 'Manage multiple locations from a single centralized dashboard.',
-      color: 'from-indigo-500 to-indigo-600',
-    }
+      title: "Multi Branch Management",
+      description:
+        "Manage multiple locations from a single centralized dashboard.",
+      color: "from-indigo-500 to-indigo-600",
+    },
   ];
 
   const nextSlide = () => {
@@ -115,11 +150,10 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + carouselFeatures.length) % carouselFeatures.length);
+    setCurrentSlide(
+      (prev) => (prev - 1 + carouselFeatures.length) % carouselFeatures.length
+    );
   };
-
-
-
 
   // Auto-advance carousel
   useEffect(() => {
@@ -131,15 +165,14 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
     <div className="relative min-h-screen">
       {/* Fixed Background Image with Overlay */}
       <div className="fixed inset-0 z-0">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-fixed"
           style={{
-          backgroundImage: "url('/images/bg-2.jpg')",
-          filter: 'brightness(0.8) contrast(1.2)',
-
+            backgroundImage: "url('/images/bg-2.jpg')",
+            filter: "brightness(0.8) contrast(1.2)",
           }}
         />
-        
+
         {/* Solid Dark Overlay for better text contrast */}
         <div className="absolute inset-0 bg-black/30" />
 
@@ -150,62 +183,121 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
       {/* Scrollable Content */}
       <div className="relative z-10">
         {/* Header */}
-        <motion.header 
+        <motion.header
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8 }}
           className="sticky top-0 z-50 border-b border-white/10 bg-slate-900/50 backdrop-blur-xl"
         >
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <motion.div 
+            <motion.div
               className="flex items-center gap-3"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400 }}
             >
               <div className="w-12 h-12 bg-gradient-to-br  rounded-xl flex items-center justify-center shadow-xl">
-                <img 
-                  src="/images/Kitcheneye_logo.png" 
-                  alt="KitchenEye Logo" 
-                  className="w-14 h-14" 
+                <img
+                  src="/images/Kitcheneye_logo.png"
+                  alt="KitchenEye Logo"
+                  className="w-14 h-14"
                 />
               </div>
 
               <span className="text-2xl text-white tracking-tight">
-                Kitchen<span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Eye</span>
+                Kitchen
+                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Eye
+                </span>
               </span>
             </motion.div>
             <div className="flex items-center gap-8">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" onClick={scrollToHero} className="text-white hover:bg-white/10">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                    scrollToHero();
+                  }}
+                  className="text-white hover:bg-white/10"
+                >
                   Home
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" onClick={scrollToFeatures} className="text-white hover:bg-white/10">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="ghost"
+                  onClick={scrollToFeatures}
+                  className="text-white hover:bg-white/10"
+                >
                   About us
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" onClick={scrollToFooter} className="text-white hover:bg-white/10">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="ghost"
+                  onClick={scrollToFooter}
+                  className="text-white hover:bg-white/10"
+                >
                   Contact us
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" onClick={onSignIn} className="text-white hover:bg-white/10">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="ghost"
+                  onClick={onSignIn}
+                  className="text-white hover:bg-white/10"
+                >
                   Our Team
                 </Button>
               </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                    onBlog();
+                  }}
+                  className="text-white hover:bg-white/10"
+                >
+                  Blog
+                </Button>
+              </motion.div>
             </div>
-          
+
             <div className="flex items-center gap-4">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" onClick={onSignIn} className="text-white hover:bg-white/10">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="ghost"
+                  onClick={onSignIn}
+                  className="text-white hover:bg-white/10"
+                >
                   Sign In
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button 
-                  onClick={onGetStarted} 
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  onClick={onGetStarted}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl shadow-blue-500/30"
                 >
                   Get Started
@@ -216,73 +308,83 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
         </motion.header>
 
         {/* Hero Section */}
-        <section ref={heroRef} className="min-h-screen flex items-center justify-center px-6 pt-18 pb-32">
+        <section
+          ref={heroRef}
+          className="min-h-screen flex items-center justify-center px-6 pt-18 pb-32"
+        >
           <div className="max-w-5xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <motion.div 
+              <motion.div
                 className="flex items-center justify-center mb-5"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                <img 
-                  src="/images/Kitcheneye_logo.png" 
-                  alt="KitchenEye Logo" 
+                <img
+                  src="/images/Kitcheneye_logo.png"
+                  alt="KitchenEye Logo"
                   className="w-40 h-40 drop-shadow-xl"
                 />
               </motion.div>
-
             </motion.div>
             <motion.div
               whileHover={{ y: -5, scale: 1.05 }}
-              className=" text-center mb-10 relative  pt-8 px-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20">
-            <motion.h1 
-              className="text-6xl lg:text-7xl mb-8 tracking-tight text-white"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
+              className=" text-center mb-10 relative  pt-8 px-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20"
             >
-              KitchenEYE – AI-Powered
-              <br />
-              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
-                Kitchen Hygiene Monitoring
-              </span>
-            </motion.h1>
+              <motion.h1
+                className="text-6xl lg:text-7xl mb-8 tracking-tight text-white"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+              >
+                KitchenEYE – AI-Powered
+                <br />
+                <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
+                  Kitchen Hygiene Monitoring
+                </span>
+              </motion.h1>
 
-            <motion.p 
-              className="text-2xl text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.7 }}
-            >
-              Real-time violation detection with Fire, Smoke, PPE & Hygiene Monitoring.
-            </motion.p>
+              <motion.p
+                className="text-2xl text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.7 }}
+              >
+                Real-time violation detection with Fire, Smoke, PPE & Hygiene
+                Monitoring.
+              </motion.p>
             </motion.div>
-            <motion.div 
+            <motion.div
               className="flex gap-6 justify-center"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.9 }}
             >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button 
-                  size="lg" 
-                  onClick={onGetStarted} 
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  size="lg"
+                  onClick={onGetStarted}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-2xl shadow-blue-500/50 text-lg px-8 py-6 group"
                 >
                   Get Started
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  onClick={onSignIn} 
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={onSignIn}
                   className="border-2 border-white/20 text-dark hover:bg-/10 text-lg px-8 py-6 backdrop-blur-sm"
                 >
                   Sign In
@@ -290,21 +392,21 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
               </motion.div>
             </motion.div>
 
-          <div className="absolute top-[100vh] left-0 w-full h-40 bg-gradient-to-b from-transparent to-slate-900/80 pointer-events-none"></div>
+            <div className="absolute top-[100vh] left-0 w-full h-40 bg-gradient-to-b from-transparent to-slate-900/80 pointer-events-none"></div>
 
             {/* Stats */}
-            <motion.div 
+            <motion.div
               className="grid grid-cols-3 gap-8 mt-20 max-w-2xl mx-auto"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 1.1 }}
             >
               {[
-                { value: '500+', label: 'Kitchens Protected' },
-                { value: '99.9%', label: 'Uptime SLA' },
-                { value: '24/7', label: 'Live Monitoring' }
+                { value: "500+", label: "Kitchens Protected" },
+                { value: "99.9%", label: "Uptime SLA" },
+                { value: "24/7", label: "Live Monitoring" },
               ].map((stat, index) => (
-                <motion.div 
+                <motion.div
                   key={index}
                   whileHover={{ y: -5, scale: 1.05 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -319,14 +421,15 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
             </motion.div>
           </div>
         </section>
-            {/* Fade Overlay After Hero */}      
+        {/* Fade Overlay After Hero */}
 
         {/* Features Carousel Section */}
         <section ref={featuresRef} className="py-32 px-6">
           <AnimatedSection className="max-w-7xl mx-auto">
-            <motion.div 
-             whileHover={{ y: -10, scale: 1.05 }}
-                className=" text-center mb-16 relative p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20">
+            <motion.div
+              whileHover={{ y: -10, scale: 1.05 }}
+              className=" text-center mb-16 relative p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20"
+            >
               <h2 className="text-5xl mb-6 text-white">
                 Complete Monitoring Solution
               </h2>
@@ -338,24 +441,30 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
             {/* Carousel Container */}
             <div className="relative">
               <div className="overflow-hidden">
-                <motion.div 
+                <motion.div
                   className="flex gap-6"
                   animate={{ x: `-${currentSlide * (100 / 3)}%` }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  {[...carouselFeatures, ...carouselFeatures].map((feature, index) => (
-                    <motion.div
-                      key={index}
-                      className="min-w-[calc(33.333%-16px)] p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 transition-all duration-300"
-                      whileHover={{ y: -10, scale: 1.02 }}
-                    >
-                      <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 shadow-lg`}>
-                        <feature.icon className="w-8 h-8 text-white" />
-                      </div>
-                      <h3 className="text-2xl mb-3 text-white">{feature.title}</h3>
-                      <p className="text-slate-400">{feature.description}</p>
-                    </motion.div>
-                  ))}
+                  {[...carouselFeatures, ...carouselFeatures].map(
+                    (feature, index) => (
+                      <motion.div
+                        key={index}
+                        className="min-w-[calc(33.333%-16px)] p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 transition-all duration-300"
+                        whileHover={{ y: -10, scale: 1.02 }}
+                      >
+                        <div
+                          className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 shadow-lg`}
+                        >
+                          <feature.icon className="w-8 h-8 text-white" />
+                        </div>
+                        <h3 className="text-2xl mb-3 text-white">
+                          {feature.title}
+                        </h3>
+                        <p className="text-slate-400">{feature.description}</p>
+                      </motion.div>
+                    )
+                  )}
                 </motion.div>
               </div>
 
@@ -368,7 +477,7 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
               >
                 <ChevronLeft className="w-6 h-6" />
               </motion.button>
-              
+
               <motion.button
                 onClick={nextSlide}
                 whileHover={{ scale: 1.1 }}
@@ -385,7 +494,9 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
                     key={index}
                     onClick={() => setCurrentSlide(index)}
                     className={`h-2 rounded-full transition-all duration-300 ${
-                      currentSlide === index ? 'w-8 bg-blue-500' : 'w-2 bg-white/20'
+                      currentSlide === index
+                        ? "w-8 bg-blue-500"
+                        : "w-2 bg-white/20"
                     }`}
                   />
                 ))}
@@ -400,9 +511,21 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="grid grid-cols-3 gap-8">
                 {[
-                  { icon: Eye, title: 'Real-Time Monitoring', desc: '24/7 AI surveillance' },
-                  { icon: Shield, title: 'Compliance Ready', desc: 'Audit-ready reports' },
-                  { icon: Zap, title: 'Instant Alerts', desc: 'Immediate notifications' }
+                  {
+                    icon: Eye,
+                    title: "Real-Time Monitoring",
+                    desc: "24/7 AI surveillance",
+                  },
+                  {
+                    icon: Shield,
+                    title: "Compliance Ready",
+                    desc: "Audit-ready reports",
+                  },
+                  {
+                    icon: Zap,
+                    title: "Instant Alerts",
+                    desc: "Immediate notifications",
+                  },
                 ].map((item, index) => (
                   <motion.div
                     key={index}
@@ -418,27 +541,32 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
                 ))}
               </div>
               <motion.div
-              whileHover={{ y: -10, scale: 1.05 }}
-                className=" relative p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20">
-                <h2 className="text-5xl mb-6 text-white">
-                  Why KitchenEye?
-                </h2>
+                whileHover={{ y: -10, scale: 1.05 }}
+                className=" relative p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20"
+              >
+                <h2 className="text-5xl mb-6 text-white">Why KitchenEye?</h2>
                 <p className="text-xl text-slate-300 mb-6 leading-relaxed">
-                  Transform your kitchen safety with AI-powered monitoring that never sleeps. 
-                  Detect violations before they become problems.
+                  Transform your kitchen safety with AI-powered monitoring that
+                  never sleeps. Detect violations before they become problems.
                 </p>
                 <ul className="space-y-4 text-slate-300">
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
-                    <span>Reduce violations by 85% with predictive AI detection</span>
+                    <span>
+                      Reduce violations by 85% with predictive AI detection
+                    </span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
-                    <span>Save 20+ hours per week on manual inspection tasks</span>
+                    <span>
+                      Save 20+ hours per week on manual inspection tasks
+                    </span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
-                    <span>Maintain 100% compliance with automated reporting</span>
+                    <span>
+                      Maintain 100% compliance with automated reporting
+                    </span>
                   </li>
                 </ul>
               </motion.div>
@@ -451,24 +579,40 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
           <AnimatedSection direction="right" className="max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="order-2 lg:order-1 space-y-6">
-                <motion.div 
+                <motion.div
                   className=" relative p-6 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20"
-                  whileHover={{ x: 10 }}>
-                  <h2 className="text-5xl mb-6 text-white">
-                    Real-Time Alerts
-                  </h2>
+                  whileHover={{ x: 10 }}
+                >
+                  <h2 className="text-5xl mb-6 text-white">Real-Time Alerts</h2>
                   <p className="text-xl text-slate-300 mb-6 leading-relaxed">
-                    Get notified instantly when violations occur. Our AI system sends immediate alerts 
-                    to your team so you can respond before issues escalate.
+                    Get notified instantly when violations occur. Our AI system
+                    sends immediate alerts to your team so you can respond
+                    before issues escalate.
                   </p>
                 </motion.div>
-                
+
                 <div className="space-y-6">
                   {[
-                    { icon: Bell, title: 'Instant Email Notifications', desc: 'Immediate alerts sent to designated personnel' },
-                    { icon: Camera, title: 'Photo Evidence Included', desc: 'Visual proof attached to every alert' },
-                    { icon: Clock, title: 'Timestamp & Location', desc: 'Know exactly when and where violations occur' },
-                    { icon: MapPin, title: 'Multi-Location Support', desc: 'Monitor all your branches from one dashboard' }
+                    {
+                      icon: Bell,
+                      title: "Instant Email Notifications",
+                      desc: "Immediate alerts sent to designated personnel",
+                    },
+                    {
+                      icon: Camera,
+                      title: "Photo Evidence Included",
+                      desc: "Visual proof attached to every alert",
+                    },
+                    {
+                      icon: Clock,
+                      title: "Timestamp & Location",
+                      desc: "Know exactly when and where violations occur",
+                    },
+                    {
+                      icon: MapPin,
+                      title: "Multi-Location Support",
+                      desc: "Monitor all your branches from one dashboard",
+                    },
                   ].map((item, index) => (
                     <motion.div
                       key={index}
@@ -494,9 +638,15 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
                 >
                   <div className="aspect-square rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 p-8 flex flex-col justify-center items-center">
                     <Bell className="w-24 h-24 text-blue-400 mb-6" />
-                    <h3 className="text-2xl text-white mb-4">Alert Dashboard</h3>
+                    <h3 className="text-2xl text-white mb-4">
+                      Alert Dashboard
+                    </h3>
                     <div className="space-y-3 w-full">
-                      {['PPE Violation Detected', 'Spill Alert - Zone A', 'Fire Risk - Kitchen 2'].map((alert, i) => (
+                      {[
+                        "PPE Violation Detected",
+                        "Spill Alert - Zone A",
+                        "Fire Risk - Kitchen 2",
+                      ].map((alert, i) => (
                         <motion.div
                           key={i}
                           initial={{ opacity: 0, x: -20 }}
@@ -518,9 +668,10 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
         {/* Section C: Violation Detection Modules - Cards Slide Up */}
         <section className="py-32 px-6">
           <AnimatedSection className="max-w-7xl mx-auto">
-            <motion.div 
+            <motion.div
               whileHover={{ y: -10, scale: 1.05 }}
-            className="text-center mb-16 relative p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20">
+              className="text-center mb-16 relative p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/20"
+            >
               <h2 className="text-5xl mb-6 text-white">
                 Violation Detection Modules
               </h2>
@@ -531,49 +682,59 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
-                { 
-                  icon: Flame, 
-                  title: 'Fire & Smoke Detection', 
-                  desc: 'Detect smoke and fire hazards instantly with thermal AI monitoring',
-                  gradient: 'from-orange-500 to-red-600',
-                  emoji: '🔥'
+                {
+                  icon: Flame,
+                  title: "Fire & Smoke Detection",
+                  desc: "Detect smoke and fire hazards instantly with thermal AI monitoring",
+                  gradient: "from-orange-500 to-red-600",
+                  emoji: "🔥",
                 },
-                { 
-                  icon: Droplet, 
-                  title: 'Spill Detection', 
-                  desc: 'Identify floor hazards and liquid spills before accidents happen',
-                  gradient: 'from-blue-500 to-cyan-600',
-                  emoji: '💧'
+                {
+                  icon: Droplet,
+                  title: "Spill Detection",
+                  desc: "Identify floor hazards and liquid spills before accidents happen",
+                  gradient: "from-blue-500 to-cyan-600",
+                  emoji: "💧",
                 },
-                { 
-                  icon: AlertTriangle, 
-                  title: 'PPE Non-Compliance', 
-                  desc: 'Monitor for missing gloves, hairnets, masks and other PPE violations',
-                  gradient: 'from-yellow-500 to-orange-600',
-                  emoji: '🧤'
+                {
+                  icon: AlertTriangle,
+                  title: "PPE Non-Compliance",
+                  desc: "Monitor for missing gloves, hairnets, masks and other PPE violations",
+                  gradient: "from-yellow-500 to-orange-600",
+                  emoji: "🧤",
                 },
-                { 
-                  icon: Trash2, 
-                  title: 'Dirty Surfaces', 
-                  desc: 'Detect unsanitary conditions and cleanliness violations in real-time',
-                  gradient: 'from-purple-500 to-pink-600',
-                  emoji: '🧹'
-                }
+                {
+                  icon: Trash2,
+                  title: "Dirty Surfaces",
+                  desc: "Detect unsanitary conditions and cleanliness violations in real-time",
+                  gradient: "from-purple-500 to-pink-600",
+                  emoji: "🧹",
+                },
               ].map((module, index) => (
-                <AnimatedSection key={index} delay={index * 0.15} direction="up">
+                <AnimatedSection
+                  key={index}
+                  delay={index * 0.15}
+                  direction="up"
+                >
                   <motion.div
                     whileHover={{ y: -15, scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 300 }}
                     className="h-full p-8 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-pointer group"
                   >
-                    <motion.div 
+                    <motion.div
                       className="text-5xl mb-6"
                       animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: index * 0.2,
+                      }}
                     >
                       {module.emoji}
                     </motion.div>
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${module.gradient} flex items-center justify-center mb-6 shadow-lg group-hover:shadow-xl transition-shadow`}>
+                    <div
+                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${module.gradient} flex items-center justify-center mb-6 shadow-lg group-hover:shadow-xl transition-shadow`}
+                    >
                       <module.icon className="w-7 h-7 text-white" />
                     </div>
                     <h3 className="text-xl mb-3 text-white">{module.title}</h3>
@@ -594,34 +755,29 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
               transition={{ type: "spring", stiffness: 200 }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10" />
-              
+
               <div className="relative">
                 <h2 className="text-5xl lg:text-6xl mb-6 text-white">
                   Ready to Transform Your Kitchen Safety?
                 </h2>
-                
+
                 <p className="text-xl text-slate-300 mb-10">
-                  Join hundreds of restaurants and commercial kitchens using KitchenEye
+                  Join hundreds of restaurants and commercial kitchens using
+                  KitchenEye
                 </p>
-                
+
                 <div className="flex gap-6 justify-center">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button 
-                      size="lg" 
-                      onClick={onGetStarted} 
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      size="lg"
+                      onClick={onGetStarted}
                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-2xl shadow-blue-500/50 text-lg px-10 py-6 group"
                     >
-                      Start Free Trial
+                      Create Account
                       <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button 
-                      size="lg" 
-                      variant="outline" 
-                      className="border-2 border-white/20 text-dark hover:bg-white/10 text-lg px-10 py-6 backdrop-blur-sm"
-                    >
-                      Schedule Demo
                     </Button>
                   </motion.div>
                 </div>
@@ -631,16 +787,19 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
         </section>
 
         {/* Footer */}
-        <footer ref={footerRef} className="border-t border-white/10 bg-slate-900/50 backdrop-blur-xl">
+        <footer
+          ref={footerRef}
+          className="border-t border-white/10 bg-slate-900/50 backdrop-blur-xl"
+        >
           <AnimatedSection className="max-w-7xl mx-auto px-6 py-16">
             <div className="grid md:grid-cols-4 gap-12 mb-12">
               <div>
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-xl">
-                    <img 
-                      src="/images/Kitcheneye_logo.png" 
-                      alt="KitchenEye Logo" 
-                      className="w-14 h-14" 
+                    <img
+                      src="/images/Kitcheneye_logo.png"
+                      alt="KitchenEye Logo"
+                      className="w-14 h-14"
                     />
                   </div>
 
@@ -649,56 +808,127 @@ export default function LandingPage({ onSignIn, onGetStarted }: LandingPageProps
                   </span>
                 </div>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  AI-powered hygiene monitoring for modern commercial kitchens. 
+                  AI-powered hygiene monitoring for modern commercial kitchens.
                   Keeping your kitchen safe, compliant, and efficient 24/7.
                 </p>
               </div>
-              
+
               <div>
-                <h4 className="mb-4 text-white">Product</h4>
+                <h4 className="mb-4 text-white">Contact Us</h4>
                 <ul className="space-y-3 text-sm text-slate-400">
-                  <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Demo</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
+                  <li className="hover:text-white transition-colors cursor-pointer">
+                    KitchenEye@gmail.com
+                  </li>
+                  <li className="hover:text-white transition-colors cursor-pointer">
+                    +923325095951
+                  </li>
+                  <li className="hover:text-white transition-colors cursor-pointer">
+                    Muslim Town, faislabad, Pakistan
+                  </li>
+                  <li className="hover:text-white transition-colors cursor-pointer">
+                    Currently working in Faislabad, Pakistan
+                  </li>
                 </ul>
               </div>
-              
+
               <div>
                 <h4 className="mb-4 text-white">Company</h4>
                 <ul className="space-y-3 text-sm text-slate-400">
-                  <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                  <li>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToFeatures();
+                      }}
+                      className="hover:text-white transition-colors cursor-pointer"
+                    >
+                      About Us
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToFooter();
+                      }}
+                      className="hover:text-white transition-colors cursor-pointer"
+                    >
+                      Contact
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToFeatures();
+                      }}
+                      className="hover:text-white transition-colors cursor-pointer"
+                    >
+                      Features
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                        onBlog();
+                      }}
+                      className="hover:text-white transition-colors cursor-pointer"
+                    >
+                      Blog
+                    </a>
+                  </li>
                 </ul>
               </div>
-              
+
               <div>
                 <h4 className="mb-4 text-white">Legal</h4>
                 <ul className="space-y-3 text-sm text-slate-400">
-                  <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Compliance</a></li>
+                  <li>
+                    <a href="#" className="hover:text-white transition-colors">
+                      Privacy Policy
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="hover:text-white transition-colors">
+                      Terms of Service
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="hover:text-white transition-colors">
+                      Security
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="hover:text-white transition-colors">
+                      Compliance
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>
-            
+
             <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-sm text-slate-500">
                 © 2025 KitchenEye. All rights reserved.
               </p>
               <div className="flex gap-6">
-                {['Twitter', 'LinkedIn', 'Facebook', 'Instagram'].map((social) => (
-                  <a 
-                    key={social}
-                    href="#" 
-                    className="text-slate-400 hover:text-white transition-colors text-sm"
-                  >
-                    {social}
-                  </a>
-                ))}
+                {["Twitter", "LinkedIn", "Facebook", "Instagram"].map(
+                  (social) => (
+                    <a
+                      key={social}
+                      href="#"
+                      className="text-slate-400 hover:text-white transition-colors text-sm"
+                    >
+                      {social}
+                    </a>
+                  )
+                )}
               </div>
             </div>
           </AnimatedSection>

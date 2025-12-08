@@ -1,15 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardLayout from "./pages/DashboardLayout";
+import BlogPage from "./pages/BlogPage";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<
-    "landing" | "login" | "signup" | "dashboard"
+    "landing" | "login" | "signup" | "dashboard" | "blog"
   >("landing");
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Scroll to top when navigating to blog or landing page
+  useEffect(() => {
+    if (currentPage === "blog" || currentPage === "landing") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentPage]);
 
   const handleLogin = (success: boolean) => {
     if (success) {
@@ -29,6 +37,18 @@ export default function App() {
       <LandingPage
         onSignIn={() => setCurrentPage("login")}
         onGetStarted={() => setCurrentPage("signup")}
+        onBlog={() => setCurrentPage("blog")}
+      />
+    );
+  }
+
+  if (currentPage === "blog") {
+    return (
+      <BlogPage
+        onBack={() => setCurrentPage("landing")}
+        onSignIn={() => setCurrentPage("login")}
+        onGetStarted={() => setCurrentPage("signup")}
+        onBlog={() => setCurrentPage("blog")}
       />
     );
   }
