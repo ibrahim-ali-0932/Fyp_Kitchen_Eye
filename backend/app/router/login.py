@@ -1,19 +1,19 @@
-from fastapi import APIRouter, Header, HTTPException
-from firebase_admin import auth
+from fastapi import APIRouter, Depends, HTTPException, status, Header
+from firebase_admin import auth as firebase_auth
 
 router = APIRouter(prefix="/login", tags=["login"])
 
-@router.post("/verify")
-async def verify_user(authorization: str = Header(None)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(401, "Missing Bearer token")
 
-    token = authorization.split(" ")[1]
-
+@router.post("/")
+async def login(Authorization: str = Header(None)):
+    id_token = (Authorization or "").replace("Bearer ", "")
     try:
-        decoded_token = auth.verify_id_token(token)
-        uid = decoded_token["uid"]
-        email = decoded_token["email"]
-        return {"uid": uid, "email": email}
-    except Exception:
-        raise HTTPException(401, "Invalid or expired token")
+        decoded = firebase_auth.verify_id_token(id_token)
+        if not decoded.get("email_verified"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Email not verified. Please verify your email first.",
+            )
+        return {"uid": decoded["uid"], "email": decoded.get("email")}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
