@@ -73,7 +73,7 @@ export default function App() {
   if (currentPage === "signup") {
     return (
       <SignupPage
-        onSignup={() => handleLogin(false)}
+        onSignup={(success) => handleLogin(success)}
         onLogin={() => setCurrentPage("login")}
         onBack={() => {
           window.scrollTo({ top: 0, behavior: "smooth" });
