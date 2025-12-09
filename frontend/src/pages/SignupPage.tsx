@@ -3,7 +3,11 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Camera, ArrowLeft, EyeOff } from "lucide-react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signOut, // add this
+} from "firebase/auth";
 import { auth } from "../firebase";
 import {
   Shield,
@@ -28,6 +32,7 @@ import {
 } from "lucide-react";
 import { motion, useInView, Variants } from "motion/react";
 import { useRef, useEffect, useMemo } from "react";
+import { signup } from "../services/authService";
 
 interface SignupPageProps {
   onSignup: (success: boolean) => void;
@@ -204,7 +209,6 @@ export default function SignupPage({
     e.preventDefault();
     setErrorMsg("");
 
-    // Validate all fields
     if (!validateForm()) {
       setErrorMsg("Please fix the errors in the form");
       return;
@@ -213,67 +217,17 @@ export default function SignupPage({
     setLoading(true);
 
     try {
-      // Step 1: Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      // Step 2: Get ID token from Firebase
-      const idToken = await userCredential.user.getIdToken();
-
-      // Step 3: Send profile data to backend with token
-      const response = await fetch("http://localhost:8000/auth/signup/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          email,
-          full_name: name,
-          organization,
-          address,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Store token in localStorage
-        localStorage.setItem("token", idToken);
-        onSignup(true);
-      } else {
-        const errorMessage =
-          data.detail || "Failed to create profile. Please try again.";
-        setErrorMsg(errorMessage);
-        // Don't call onSignup(false) here - stay on page
+      const result = await signup(email, password);
+      if (result.needsVerification) {
+        alert(
+          "Verification email sent! Please verify your email before logging in."
+        );
+        setLoading(false);
+        return;
       }
     } catch (err: any) {
       console.error(err);
-      let errorMessage = "Unable to create account. Please try again.";
-
-      if (err.code === "auth/email-already-in-use") {
-        errorMessage =
-          "This email address is already registered. Please use a different email or sign in.";
-        setErrors((prev) => ({ ...prev, email: errorMessage }));
-      } else if (err.code === "auth/invalid-email") {
-        errorMessage = "Invalid email address format";
-        setErrors((prev) => ({ ...prev, email: errorMessage }));
-      } else if (err.code === "auth/weak-password") {
-        errorMessage = "Password is too weak. Please use a stronger password.";
-        setErrors((prev) => ({ ...prev, password: errorMessage }));
-      } else if (err.code === "auth/network-request-failed") {
-        errorMessage =
-          "Network error. Please check your internet connection and try again.";
-      } else if (err.code === "auth/too-many-requests") {
-        errorMessage = "Too many failed attempts. Please try again later.";
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      setErrorMsg(errorMessage);
+      setErrorMsg(err.message || "Unable to create account. Try again.");
     } finally {
       setLoading(false);
     }
