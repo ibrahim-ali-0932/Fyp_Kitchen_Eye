@@ -127,6 +127,8 @@ export default function App() {
   if (currentPage === "signup") {
     return (
       <SignupPage
+        onSignup={(success) => handleLogin(success)}
+        onLogin={() => setCurrentPage("login")}
         onSignup={() => handleLogin(false)}
         onLogin={() => navigateTo("login")}
         onBack={() => {
