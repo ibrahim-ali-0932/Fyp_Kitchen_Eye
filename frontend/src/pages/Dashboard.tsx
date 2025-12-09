@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
@@ -24,32 +25,33 @@ import {
   Legend,
 } from "recharts";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { fetchStats,  StatItem, ViolationTrend, RecentViolation} from "../services/statsService";
 
 export default function Dashboard() {
-  const stats = [
+  const [stats, setStats] = useState([
     {
       title: "PPE Violations",
-      value: "24",
-      change: "+12%",
-      trend: "up",
+      value: "0",
+      change: "0%",
+      trend: "neutral",
       icon: AlertTriangle,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
     },
     {
       title: "Spill Violations",
-      value: "8",
-      change: "-24%",
-      trend: "down",
+      value: "0",
+      change: "0%",
+      trend: "neutral",
       icon: Droplet,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
       title: "Pest Detections",
-      value: "3",
-      change: "-50%",
-      trend: "down",
+      value: "0",
+      change: "0%",
+      trend: "neutral",
       icon: Bug,
       color: "text-red-600",
       bgColor: "bg-red-50",
@@ -65,76 +67,112 @@ export default function Dashboard() {
     },
     {
       title: "Hygiene Index Score",
-      value: "87%",
-      change: "+5%",
-      trend: "up",
+      value: "0%",
+      change: "0%",
+      trend: "neutral",
       icon: ShieldCheck,
       color: "text-green-600",
       bgColor: "bg-green-50",
     },
-  ];
+  ]);
 
-  const violationData = [
-    { day: "1", ppe: 4, spill: 2, pest: 1, fire: 0 },
-    { day: "2", ppe: 3, spill: 1, pest: 0, fire: 0 },
-    { day: "3", ppe: 5, spill: 3, pest: 0, fire: 0 },
-    { day: "4", ppe: 2, spill: 1, pest: 1, fire: 0 },
-    { day: "5", ppe: 6, spill: 2, pest: 0, fire: 0 },
-    { day: "6", ppe: 3, spill: 1, pest: 0, fire: 0 },
-    { day: "7", ppe: 4, spill: 2, pest: 1, fire: 0 },
-    { day: "8", ppe: 5, spill: 1, pest: 0, fire: 0 },
-    { day: "9", ppe: 2, spill: 3, pest: 0, fire: 0 },
-    { day: "10", ppe: 4, spill: 2, pest: 0, fire: 0 },
-    { day: "11", ppe: 3, spill: 1, pest: 1, fire: 0 },
-    { day: "12", ppe: 6, spill: 2, pest: 0, fire: 0 },
-  ];
+  const [violationData, setViolationData] = useState<ViolationTrend[]>([]);
+  const [recentViolations, setRecentViolations] = useState<RecentViolation[]>([]);
 
-  const recentViolations = [
-    {
-      id: 1,
-      type: "PPE Violation",
-      description: "Missing hairnet detected",
-      severity: "Medium",
-      location: "Kitchen 1 - Main Prep Area",
-      timestamp: "2 hours ago",
-      status: "Pending",
-      image:
-        "https://images.unsplash.com/photo-1762330018258-2cf9b8f80618?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tZXJjaWFsJTIwa2l0Y2hlbiUyMGh5Z2llbmV8ZW58MXx8fHwxNzYzODg2MjA1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    },
-    {
-      id: 2,
-      type: "Spill Detection",
-      description: "Liquid spill on floor",
-      severity: "High",
-      location: "Kitchen 2 - Dishwashing Area",
-      timestamp: "3 hours ago",
-      status: "Resolved",
-      image:
-        "https://images.unsplash.com/photo-1762330018258-2cf9b8f80618?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tZXJjaWFsJTIwa2l0Y2hlbiUyMGh5Z2llbmV8ZW58MXx8fHwxNzYzODg2MjA1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    },
-    {
-      id: 3,
-      type: "PPE Violation",
-      description: "Missing gloves detected",
-      severity: "Medium",
-      location: "Kitchen 1 - Food Prep Station",
-      timestamp: "5 hours ago",
-      status: "Pending",
-      image:
-        "https://images.unsplash.com/photo-1762330018258-2cf9b8f80618?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tZXJjaWFsJTIwa2l0Y2hlbiUyMGh5Z2llbmV8ZW58MXx8fHwxNzYzODg2MjA1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    },
-    {
-      id: 4,
-      type: "Pest Detection",
-      description: "Rodent activity detected",
-      severity: "Critical",
-      location: "Storage Room B",
-      timestamp: "1 day ago",
-      status: "Resolved",
-      image:
-        "https://images.unsplash.com/photo-1762330018258-2cf9b8f80618?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tZXJjaWFsJTIwa2l0Y2hlbiUyMGh5Z2llbmV8ZW58MXx8fHwxNzYzODg2MjA1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    },
-  ];
+  const loadDashboardData = async () => {
+    // Fetch violations.txt for stats
+    const violationsResponse = await fetchStats("violations.txt");
+    console.log("Fetched violations data:", violationsResponse);
+    if (violationsResponse?.value) {
+      const lines = violationsResponse.value.split('\n').filter((line: string) => line.trim());
+      console.log("Parsed lines:", lines);
+      const iconMapping = {
+        "PPE Violations": AlertTriangle,
+        "Spill Violations": Droplet,
+        "Pest Detections": Bug,
+        "Fire/Smoke Alerts": Flame,
+        "Hygiene Index Score": ShieldCheck,
+      };
+      const colorMapping = {
+        "PPE Violations": { color: "text-orange-600", bgColor: "bg-orange-50" },
+        "Spill Violations": { color: "text-blue-600", bgColor: "bg-blue-50" },
+        "Pest Detections": { color: "text-red-600", bgColor: "bg-red-50" },
+        "Fire/Smoke Alerts": { color: "text-purple-600", bgColor: "bg-purple-50" },
+        "Hygiene Index Score": { color: "text-green-600", bgColor: "bg-green-50" },
+      };
+      
+      const parsedStats = lines.map((line: string) => {
+        const [title, value, change, trend] = line.split('|');
+        return {
+          title,
+          value,
+          change,
+          trend,
+          icon: iconMapping[title as keyof typeof iconMapping] || AlertTriangle,
+          color: colorMapping[title as keyof typeof colorMapping]?.color || "text-gray-600",
+          bgColor: colorMapping[title as keyof typeof colorMapping]?.bgColor || "bg-gray-50",
+        };
+      });
+      console.log("Parsed stats:", parsedStats);
+      setStats(parsedStats);
+    }
+
+    // Fetch violation_trend.txt for chart data
+    const trendResponse = await fetchStats("violation_trend.txt");
+    if (trendResponse?.value) {
+      const lines = trendResponse.value.split('\n').filter((line: string) => line.trim());
+      const parsedTrend = lines.slice(1).map((line: string) => {
+        const [day, ppe, spill, pest, fire] = line.split(',');
+        return {
+          day,
+          ppe: parseInt(ppe),
+          spill: parseInt(spill),
+          pest: parseInt(pest),
+          fire: parseInt(fire),
+        };
+      });
+      setViolationData(parsedTrend);
+    }
+
+    // Fetch recent_violations.txt
+    const recentResponse = await fetchStats("recent_violations.txt");
+    if (recentResponse?.value) {
+      const lines = recentResponse.value.split('\n').filter((line: string) => line.trim());
+      const parsedViolations = lines.map((line: string) => {
+        const [id, type, description, severity, location, timestamp, status, image] = line.split('|');
+        return {
+          id: parseInt(id),
+          type,
+          description,
+          severity,
+          location,
+          timestamp,
+          status,
+          image,
+        };
+      });
+      setRecentViolations(parsedViolations);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+
+    // Reload data when window regains focus
+    const handleFocus = () => {
+      loadDashboardData();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    // Optional: Auto-refresh every 10 seconds
+    const interval = setInterval(loadDashboardData, 10000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
+  }, []);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
