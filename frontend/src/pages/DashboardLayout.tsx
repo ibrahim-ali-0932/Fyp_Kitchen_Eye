@@ -24,7 +24,6 @@ import LiveCameraFeed from "./LiveCameraFeed";
 import Analytics from "./Analytics";
 import Reports from "./Reports";
 import NotificationSettings from "./NotificationSettings";
-import UserManagement from "./UserManagement";
 import Subscription from "./Subscription";
 
 interface DashboardLayoutProps {
@@ -38,7 +37,6 @@ type Page =
   | "analytics"
   | "reports"
   | "notifications"
-  | "users"
   | "subscription";
 
 export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
@@ -52,8 +50,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
     { id: "cameras" as Page, icon: Camera, label: "Live Camera Feed" },
     { id: "analytics" as Page, icon: TrendingUp, label: "Analytics & Trends" },
     { id: "reports" as Page, icon: FileText, label: "Reports" },
-    { id: "notifications" as Page, icon: Bell, label: "Notification Settings" },
-    { id: "users" as Page, icon: Users, label: "User Management" },
+    { id: "notifications" as Page, icon: Bell, label: "Notification Settings" }
   ];
 
   const renderPage = () => {
@@ -70,8 +67,6 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         return <Reports />;
       case "notifications":
         return <NotificationSettings />;
-      case "users":
-        return <UserManagement />;
       case "subscription":
         return <Subscription />;
       default:

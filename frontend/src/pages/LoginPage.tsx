@@ -33,7 +33,7 @@ import { motion, useInView, Variants } from "motion/react";
 import { useRef, useEffect, useMemo } from "react";
 
 interface LoginPageProps {
-  onLogin: (success: boolean) => void;
+  onLogin: (success: boolean, isAdmin?:boolean) => void;
   onSignup: () => void;
   onBack: () => void;
   onBlog: () => void;
@@ -50,6 +50,10 @@ export default function LoginPage({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const ADMIN_EMAIL = "admin@gmail.com";
+  const ADMIN_PASSWORD = "Admin123";
+
 
   // Field-specific error states
   const [errors, setErrors] = useState({
@@ -186,7 +190,11 @@ export default function LoginPage({
       setErrorMsg("Please fix the errors in the form");
       return;
     }
-
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      setLoading(false);
+      onLogin(true,true);
+      return;
+    }
     setLoading(true);
 
     try {
