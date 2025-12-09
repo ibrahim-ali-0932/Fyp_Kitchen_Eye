@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, type FormEvent } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Camera, ArrowLeft } from "lucide-react";
-import { loginUser } from "../services/api"; // Not used, can be removed
-import { useNavigate } from "react-router-dom"; // Not used
-import { auth } from "../firebase";
-import { signInWithEmailAndPassword } from "firebase/auth"; // Correct import
+import { loginUser } from "../services/authService"; // use authService
+// import { useNavigate } from "react-router-dom"; // not used
+// import { auth } from "../firebase";
+// import { signInWithEmailAndPassword } from "firebase/auth";
 import {
   Shield,
   TrendingUp,
@@ -33,7 +33,7 @@ import { motion, useInView, Variants } from "motion/react";
 import { useRef, useEffect, useMemo } from "react";
 
 interface LoginPageProps {
-  onLogin: (success: boolean) => void;
+  onLogin: (success: boolean, isAdmin?:boolean) => void;
   onSignup: () => void;
   onBack: () => void;
   onBlog: () => void;
@@ -47,9 +47,16 @@ export default function LoginPage({
 }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState(""); // added
+  const [organization, setOrganization] = useState(""); // added
+  const [address, setAddress] = useState(""); // added
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const ADMIN_EMAIL = "admin@gmail.com";
+  const ADMIN_PASSWORD = "Admin123";
+
 
   // Field-specific error states
   const [errors, setErrors] = useState({
@@ -177,7 +184,8 @@ export default function LoginPage({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Remove the old handleSubmit; use handleLogin below
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
@@ -186,7 +194,11 @@ export default function LoginPage({
       setErrorMsg("Please fix the errors in the form");
       return;
     }
-
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      setLoading(false);
+      onLogin(true,true);
+      return;
+    }
     setLoading(true);
 
     try {
@@ -245,9 +257,36 @@ export default function LoginPage({
       alert(firebaseErrorMsg);
 
       setErrorMsg(firebaseErrorMsg);
+      // Sign in (will throw if not verified, per authService)
+      const { idToken, user } = await loginUser(email, password);
+
+      // Call backend to create/ensure profile
+      const res = await fetch("http://localhost:8000/auth/signup/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`, // required
+        },
+        body: JSON.stringify({
+          email: user.email,
+          full_name: name,
+          organization,
+          address,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.detail || "Backend error");
+      }
+
+      alert("Login successful!");
+      onLogin(true);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "Login failed");
       onLogin(false);
     } finally {
-      // FINALLY: Stop loading regardless of success/fail
       setLoading(false);
     }
   };
@@ -413,7 +452,7 @@ export default function LoginPage({
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
@@ -494,8 +533,9 @@ export default function LoginPage({
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 size="lg"
+                disabled={loading}
               >
-                Sign In
+                {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
 

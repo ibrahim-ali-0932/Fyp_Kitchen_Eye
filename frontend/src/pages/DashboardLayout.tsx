@@ -48,6 +48,7 @@ interface UserProfile {
   Fullname: string;
   Branchname: string;
 }
+  | "subscription";
 
 export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
@@ -137,8 +138,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
     { id: "cameras" as Page, icon: Camera, label: "Live Camera Feed" },
     { id: "analytics" as Page, icon: TrendingUp, label: "Analytics & Trends" },
     { id: "reports" as Page, icon: FileText, label: "Reports" },
-    { id: "notifications" as Page, icon: Bell, label: "Notification Settings" },
-    { id: "users" as Page, icon: Users, label: "User Management" },
+    { id: "notifications" as Page, icon: Bell, label: "Notification Settings" }
   ];
 
   const renderPage = () => {
@@ -155,8 +155,6 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         return <Reports />;
       case "notifications":
         return <NotificationSettings />;
-      case "users":
-        return <UserManagement />;
       case "subscription":
         return <Subscription />;
       case "profile":
