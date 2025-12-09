@@ -202,6 +202,61 @@ export default function LoginPage({
     setLoading(true);
 
     try {
+      // Step 1: Sign in with Firebase
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      console.log("User logged in:", userCredential.user);
+
+      // Step 2: Get ID token from Firebase (force refresh to get latest token)
+      const idToken = await userCredential.user.getIdToken(true);
+
+      // Step 3: Verify the token belongs to the logged-in user
+      console.log("Logged in user email:", userCredential.user.email);
+      console.log("Token stored for:", email);
+
+      // Step 4: Store token in localStorage (overwrite any old token)
+      localStorage.setItem("token", idToken);
+      console.log("Token stored successfully");
+
+      // Step 4: Show success alert
+      alert("Login successful! Welcome back.");
+
+      // Step 5: Call onLogin(true) to indicate success and navigate
+      onLogin(true);
+    } catch (error: any) {
+      console.error("Login error:", error.message);
+      // ERROR HANDLER: Set user-friendly error message and call onLogin(false)
+      let firebaseErrorMsg = "Invalid email or password. Please try again.";
+
+      if (error.code) {
+        // Handle specific Firebase Auth errors
+        if (error.code === "auth/user-not-found") {
+          firebaseErrorMsg = "Invalid email or password.";
+        } else if (error.code === "auth/wrong-password") {
+          firebaseErrorMsg = "Invalid email or password.";
+        } else if (error.code === "auth/invalid-email") {
+          firebaseErrorMsg = "Invalid email format.";
+        } else if (error.code === "auth/invalid-credential") {
+          firebaseErrorMsg = "Invalid email or password.";
+        } else if (error.code === "auth/too-many-requests") {
+          firebaseErrorMsg =
+            "Too many failed attempts. Please try again later.";
+        } else {
+          firebaseErrorMsg =
+            error.message
+              .replace(/firebase: /i, "")
+              .replace(/\(auth\/.*?\)\.?/i, "")
+              .trim() || "Invalid email or password. Please try again.";
+        }
+      }
+
+      // Show error alert
+      alert(firebaseErrorMsg);
+
+      setErrorMsg(firebaseErrorMsg);
       // Sign in (will throw if not verified, per authService)
       const { idToken, user } = await loginUser(email, password);
 

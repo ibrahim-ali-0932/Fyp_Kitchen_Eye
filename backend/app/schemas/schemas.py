@@ -13,3 +13,4 @@ class profile(BaseModel):
     email: EmailStr
     Fullname: str
     Branchname: str
+    address: str
