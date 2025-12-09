@@ -88,7 +88,7 @@ function AnimatedSection({
 export default function LandingPage({
   onSignIn,
   onGetStarted,
-  onBlog,
+  onBlog
 }: LandingPageProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const heroRef = useRef<HTMLElement>(null);

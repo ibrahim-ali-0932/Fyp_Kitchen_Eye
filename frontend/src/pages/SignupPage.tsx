@@ -3,7 +3,11 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Camera, ArrowLeft, EyeOff } from "lucide-react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signOut, // add this
+} from "firebase/auth";
 import { auth } from "../firebase";
 import {
   Shield,
@@ -28,6 +32,7 @@ import {
 } from "lucide-react";
 import { motion, useInView, Variants } from "motion/react";
 import { useRef, useEffect, useMemo } from "react";
+import { signup } from "../services/authService";
 
 interface SignupPageProps {
   onSignup: (success: boolean) => void;
@@ -204,7 +209,6 @@ export default function SignupPage({
     e.preventDefault();
     setErrorMsg("");
 
-    // Validate all fields
     if (!validateForm()) {
       setErrorMsg("Please fix the errors in the form");
       return;
@@ -290,6 +294,17 @@ export default function SignupPage({
       }
 
       setErrorMsg(errorMessage);
+      const result = await signup(email, password);
+      if (result.needsVerification) {
+        alert(
+          "Verification email sent! Please verify your email before logging in."
+        );
+        setLoading(false);
+        return;
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "Unable to create account. Try again.");
     } finally {
       setLoading(false);
     }
