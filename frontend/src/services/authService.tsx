@@ -1,8 +1,23 @@
+<<<<<<< HEAD
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+=======
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import { auth } from "../firebase"; // use initialized app
+
+export const signup = async (email: string, password: string) => {
+  const { user } = await createUserWithEmailAndPassword(auth, email, password);
+  await sendEmailVerification(user);
+  await signOut(auth);
+  return { needsVerification: true };
+};
+>>>>>>> c3dbeb37c9a6c2a34de1bb76c27d39e83aa1ce1b
 
 export const loginUser = async (email: string, password: string) => {
-  const auth = getAuth();
-
   const userCredential = await signInWithEmailAndPassword(
     auth,
     email,
