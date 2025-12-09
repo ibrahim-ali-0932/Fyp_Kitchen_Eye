@@ -238,16 +238,32 @@ export default function SignupPage({
         }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        // If response is not JSON, use default error message
+        setErrorMsg("Failed to create profile. Please try again.");
+        return;
+      }
 
       if (response.ok) {
         // Store token in localStorage
         localStorage.setItem("token", idToken);
         onSignup(true);
       } else {
-        const errorMessage =
-          data.detail || "Failed to create profile. Please try again.";
-        setErrorMsg(errorMessage);
+        // Handle 409 Conflict (email already exists)
+        if (response.status === 409) {
+          const errorMessage =
+            data.detail ||
+            "This email is already registered. Please sign in instead.";
+          setErrors((prev) => ({ ...prev, email: errorMessage }));
+          setErrorMsg(errorMessage);
+        } else {
+          const errorMessage =
+            data.detail || "Failed to create profile. Please try again.";
+          setErrorMsg(errorMessage);
+        }
         // Don't call onSignup(false) here - stay on page
       }
     } catch (err: any) {
@@ -256,7 +272,7 @@ export default function SignupPage({
 
       if (err.code === "auth/email-already-in-use") {
         errorMessage =
-          "This email address is already registered. Please use a different email or sign in.";
+          "This email address is already registered. Please sign in instead.";
         setErrors((prev) => ({ ...prev, email: errorMessage }));
       } else if (err.code === "auth/invalid-email") {
         errorMessage = "Invalid email address format";

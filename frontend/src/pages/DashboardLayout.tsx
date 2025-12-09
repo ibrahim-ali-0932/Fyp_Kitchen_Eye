@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
@@ -25,6 +25,7 @@ import Analytics from "./Analytics";
 import Reports from "./Reports";
 import NotificationSettings from "./NotificationSettings";
 import UserManagement from "./UserManagement";
+import ProfilePage from "./ProfilePage";
 import Subscription from "./Subscription";
 
 interface DashboardLayoutProps {
@@ -39,12 +40,96 @@ type Page =
   | "reports"
   | "notifications"
   | "users"
-  | "subscription";
+  | "subscription"
+  | "profile";
+
+interface UserProfile {
+  email: string;
+  Fullname: string;
+  Branchname: string;
+}
 
 export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Function to fetch user profile (can be called from anywhere)
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found");
+        setLoading(false);
+        return;
+      }
+
+      console.log("🔵 Fetching profile...");
+      console.log("🔵 Token (first 30 chars):", token.substring(0, 30) + "...");
+
+      const response = await fetch("http://localhost:8000/auth/profile/", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("🔵 Response status:", response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ Profile data received:", data);
+        console.log("✅ User email:", data.email);
+        console.log("✅ User name:", data.Fullname);
+        setUserProfile(data);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(
+          "❌ Failed to fetch user profile:",
+          response.status,
+          errorData
+        );
+        // If token is invalid, clear it
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          console.log("❌ Invalid token, cleared from localStorage");
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error fetching user profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch user profile on component mount
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  // Refresh profile when navigating away from profile page
+  useEffect(() => {
+    if (currentPage !== "profile") {
+      // Small delay to ensure profile was saved if coming from profile page
+      const timer = setTimeout(() => {
+        fetchUserProfile();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentPage]);
+
+  // Helper function to get user initials for avatar
+  const getUserInitials = (name: string) => {
+    if (!name) return "U";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
 
   const menuItems = [
     { id: "dashboard" as Page, icon: LayoutDashboard, label: "Dashboard" },
@@ -74,6 +159,8 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         return <UserManagement />;
       case "subscription":
         return <Subscription />;
+      case "profile":
+        return <ProfilePage onProfileUpdate={fetchUserProfile} />;
       default:
         return <Dashboard />;
     }
@@ -119,14 +206,24 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         >
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarImage
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${
+                  userProfile?.Fullname || "User"
+                }`}
+              />
+              <AvatarFallback>
+                {loading
+                  ? "..."
+                  : getUserInitials(userProfile?.Fullname || "User")}
+              </AvatarFallback>
             </Avatar>
             {!sidebarCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="truncate">John Don</p>
+                <p className="truncate">
+                  {loading ? "Loading..." : userProfile?.Fullname || "User"}
+                </p>
                 <p className="text-sm text-slate-400 truncate">
-                  johndoe@company.com
+                  {loading ? "Loading..." : userProfile?.email || "No email"}
                 </p>
               </div>
             )}
@@ -208,13 +305,23 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
             <div className="p-6 border-b border-slate-800">
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarImage
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${
+                      userProfile?.Fullname || "User"
+                    }`}
+                  />
+                  <AvatarFallback>
+                    {loading
+                      ? "..."
+                      : getUserInitials(userProfile?.Fullname || "User")}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="truncate">John Don</p>
+                  <p className="truncate">
+                    {loading ? "Loading..." : userProfile?.Fullname || "User"}
+                  </p>
                   <p className="text-sm text-slate-400 truncate">
-                    johndoe@company.com
+                    {loading ? "Loading..." : userProfile?.email || "No email"}
                   </p>
                 </div>
               </div>
@@ -296,10 +403,23 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
               </Button>
-              <Avatar className="cursor-pointer">
-                <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
+              <button
+                onClick={() => setCurrentPage("profile")}
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+              >
+                <Avatar className="cursor-pointer ring-2 ring-blue-500 ring-offset-2 hover:ring-blue-600 transition-all">
+                  <AvatarImage
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${
+                      userProfile?.Fullname || "User"
+                    }`}
+                  />
+                  <AvatarFallback>
+                    {loading
+                      ? "..."
+                      : getUserInitials(userProfile?.Fullname || "User")}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
             </div>
           </div>
         </header>
