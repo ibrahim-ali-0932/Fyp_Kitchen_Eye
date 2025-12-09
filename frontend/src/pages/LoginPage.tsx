@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, type FormEvent } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Camera, ArrowLeft } from "lucide-react";
-import { loginUser } from "../services/api"; // Not used, can be removed
-import { useNavigate } from "react-router-dom"; // Not used
-import { auth } from "../firebase";
-import { signInWithEmailAndPassword } from "firebase/auth"; // Correct import
+import { loginUser } from "../services/authService"; // use authService
+// import { useNavigate } from "react-router-dom"; // not used
+// import { auth } from "../firebase";
+// import { signInWithEmailAndPassword } from "firebase/auth";
 import {
   Shield,
   TrendingUp,
@@ -47,6 +47,9 @@ export default function LoginPage({
 }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState(""); // added
+  const [organization, setOrganization] = useState(""); // added
+  const [address, setAddress] = useState(""); // added
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -177,7 +180,8 @@ export default function LoginPage({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Remove the old handleSubmit; use handleLogin below
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
@@ -190,36 +194,36 @@ export default function LoginPage({
     setLoading(true);
 
     try {
-      // Step 1: Sign in with Firebase
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      console.log("User logged in:", userCredential.user);
+      // Sign in (will throw if not verified, per authService)
+      const { idToken, user } = await loginUser(email, password);
 
-      // Step 2: Get ID token from Firebase
-      const idToken = await userCredential.user.getIdToken();
+      // Call backend to create/ensure profile
+      const res = await fetch("http://localhost:8000/auth/signup/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`, // required
+        },
+        body: JSON.stringify({
+          email: user.email,
+          full_name: name,
+          organization,
+          address,
+        }),
+      });
 
-      // Step 3: Store token in localStorage
-      localStorage.setItem("token", idToken);
-      console.log("Token stored successfully");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.detail || "Backend error");
+      }
 
-      // Step 4: Call onLogin(true) to indicate success and navigate
+      alert("Login successful!");
       onLogin(true);
-    } catch (error: any) {
-      console.error("Login error:", error.message);
-      // ERROR HANDLER: Set user-friendly error message and call onLogin(false)
-      const firebaseErrorMsg = error.code
-        ? error.message
-            .replace(/firebase: /i, "")
-            .replace(/\(auth\/.*?\)\.?/i, "")
-            .trim()
-        : "Login failed. Please check your email and password.";
-      setErrorMsg(firebaseErrorMsg);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "Login failed");
       onLogin(false);
     } finally {
-      // FINALLY: Stop loading regardless of success/fail
       setLoading(false);
     }
   };
@@ -385,7 +389,7 @@ export default function LoginPage({
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
@@ -466,8 +470,9 @@ export default function LoginPage({
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 size="lg"
+                disabled={loading}
               >
-                Sign In
+                {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
 
