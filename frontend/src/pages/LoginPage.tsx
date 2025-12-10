@@ -33,7 +33,7 @@ import { motion, useInView, Variants } from "motion/react";
 import { useRef, useEffect, useMemo } from "react";
 
 interface LoginPageProps {
-  onLogin: (success: boolean, isAdmin?:boolean) => void;
+  onLogin: (success: boolean, isAdmin?: boolean) => void;
   onSignup: () => void;
   onBack: () => void;
   onBlog: () => void;
@@ -47,16 +47,12 @@ export default function LoginPage({
 }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState(""); // added
-  const [organization, setOrganization] = useState(""); // added
-  const [address, setAddress] = useState(""); // added
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const ADMIN_EMAIL = "admin@gmail.com";
   const ADMIN_PASSWORD = "Admin123";
-
 
   // Field-specific error states
   const [errors, setErrors] = useState({
@@ -184,7 +180,6 @@ export default function LoginPage({
     }
   };
 
-  // Remove the old handleSubmit; use handleLogin below
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
@@ -194,97 +189,72 @@ export default function LoginPage({
       setErrorMsg("Please fix the errors in the form");
       return;
     }
+
+    // Handle admin login
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       setLoading(false);
-      onLogin(true,true);
+      onLogin(true, true);
       return;
     }
+
     setLoading(true);
 
     try {
-      // Step 1: Sign in with Firebase
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      console.log("User logged in:", userCredential.user);
+      // Sign in using authService (will throw if not verified, per authService)
+      const { idToken, user } = await loginUser(email, password);
 
-      // Step 2: Get ID token from Firebase (force refresh to get latest token)
-      const idToken = await userCredential.user.getIdToken(true);
-
-      // Step 3: Verify the token belongs to the logged-in user
-      console.log("Logged in user email:", userCredential.user.email);
-      console.log("Token stored for:", email);
-
-      // Step 4: Store token in localStorage (overwrite any old token)
+      // Store token in localStorage
       localStorage.setItem("token", idToken);
       console.log("Token stored successfully");
 
-      // Step 4: Show success alert
+      // Login successful - Firebase authentication is sufficient
+      // No need to call backend login endpoint
       alert("Login successful! Welcome back.");
-
-      // Step 5: Call onLogin(true) to indicate success and navigate
       onLogin(true);
     } catch (error: any) {
       console.error("Login error:", error.message);
-      // ERROR HANDLER: Set user-friendly error message and call onLogin(false)
-      let firebaseErrorMsg = "Invalid email or password. Please try again.";
 
-      if (error.code) {
-        // Handle specific Firebase Auth errors
-        if (error.code === "auth/user-not-found") {
-          firebaseErrorMsg = "Invalid email or password.";
-        } else if (error.code === "auth/wrong-password") {
-          firebaseErrorMsg = "Invalid email or password.";
-        } else if (error.code === "auth/invalid-email") {
-          firebaseErrorMsg = "Invalid email format.";
-        } else if (error.code === "auth/invalid-credential") {
-          firebaseErrorMsg = "Invalid email or password.";
-        } else if (error.code === "auth/too-many-requests") {
-          firebaseErrorMsg =
-            "Too many failed attempts. Please try again later.";
+      // Handle error messages
+      let errorMsg =
+        "Login not successful. Please check your credentials and try again.";
+
+      if (error.message) {
+        // Check for email verification error from authService
+        if (error.message.includes("Email is not verified")) {
+          errorMsg = error.message;
+        } else if (error.message.includes("Login not successful")) {
+          errorMsg = error.message;
+        } else if (error.code) {
+          // Handle specific Firebase Auth errors
+          if (
+            error.code === "auth/user-not-found" ||
+            error.code === "auth/wrong-password" ||
+            error.code === "auth/invalid-credential"
+          ) {
+            errorMsg = "Invalid email or password. Please try again.";
+          } else if (error.code === "auth/invalid-email") {
+            errorMsg = "Invalid email format.";
+          } else if (error.code === "auth/too-many-requests") {
+            errorMsg = "Too many failed attempts. Please try again later.";
+          } else {
+            errorMsg =
+              error.message
+                .replace(/firebase: /i, "")
+                .replace(/\(auth\/.*?\)\.?/i, "")
+                .trim() || "Login not successful. Please try again.";
+          }
         } else {
-          firebaseErrorMsg =
-            error.message
-              .replace(/firebase: /i, "")
-              .replace(/\(auth\/.*?\)\.?/i, "")
-              .trim() || "Invalid email or password. Please try again.";
+          // Use the error message directly if available, but make it user-friendly
+          if (error.message.includes("already registered")) {
+            errorMsg = "Login not successful. Please check your credentials.";
+          } else {
+            errorMsg =
+              error.message || "Login not successful. Please try again.";
+          }
         }
       }
 
-      // Show error alert
-      alert(firebaseErrorMsg);
-
-      setErrorMsg(firebaseErrorMsg);
-      // Sign in (will throw if not verified, per authService)
-      const { idToken, user } = await loginUser(email, password);
-
-      // Call backend to create/ensure profile
-      const res = await fetch("http://localhost:8000/auth/signup/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`, // required
-        },
-        body: JSON.stringify({
-          email: user.email,
-          full_name: name,
-          organization,
-          address,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Backend error");
-      }
-
-      alert("Login successful!");
-      onLogin(true);
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || "Login failed");
+      setErrorMsg(errorMsg);
       onLogin(false);
     } finally {
       setLoading(false);

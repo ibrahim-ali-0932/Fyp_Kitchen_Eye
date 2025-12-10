@@ -47,8 +47,8 @@ interface UserProfile {
   email: string;
   Fullname: string;
   Branchname: string;
+  address: string;
 }
-  | "subscription";
 
 export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
@@ -60,15 +60,24 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   // Function to fetch user profile (can be called from anywhere)
   const fetchUserProfile = async () => {
     try {
+      setLoading(true); // Set loading to true at start
       const token = localStorage.getItem("token");
       if (!token) {
-        console.error("No token found");
+        console.error("❌ No token found in localStorage");
         setLoading(false);
+        setUserProfile({
+          email: "No email",
+          Fullname: "User",
+          Branchname: "",
+          address: "",
+        });
         return;
       }
 
-      console.log("🔵 Fetching profile...");
+      console.log("🔵 ===== FETCHING PROFILE =====");
+      console.log("🔵 Token exists:", !!token);
       console.log("🔵 Token (first 30 chars):", token.substring(0, 30) + "...");
+      console.log("🔵 Making request to: http://localhost:8000/auth/profile/");
 
       const response = await fetch("http://localhost:8000/auth/profile/", {
         method: "GET",
@@ -78,44 +87,143 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         },
       });
 
+      console.log("🔵 Response received!");
       console.log("🔵 Response status:", response.status);
+      console.log("🔵 Response ok:", response.ok);
+      console.log(
+        "🔵 Response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Profile data received:", data);
-        console.log("✅ User email:", data.email);
-        console.log("✅ User name:", data.Fullname);
-        setUserProfile(data);
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error(
-          "❌ Failed to fetch user profile:",
-          response.status,
-          errorData
+        console.log("✅ ===== PROFILE DATA RECEIVED =====");
+        console.log("✅ Raw data:", JSON.stringify(data, null, 2));
+        console.log("✅ Data type:", typeof data);
+        console.log("✅ Is array:", Array.isArray(data));
+        console.log("✅ All keys:", Object.keys(data));
+        console.log(
+          "✅ Email value:",
+          data.email,
+          "(type:",
+          typeof data.email,
+          ")"
         );
-        // If token is invalid, clear it
-        if (response.status === 401) {
-          localStorage.removeItem("token");
-          console.log("❌ Invalid token, cleared from localStorage");
+        console.log(
+          "✅ Fullname value:",
+          data.Fullname,
+          "(type:",
+          typeof data.Fullname,
+          ")"
+        );
+        console.log(
+          "✅ Branchname value:",
+          data.Branchname,
+          "(type:",
+          typeof data.Branchname,
+          ")"
+        );
+        console.log(
+          "✅ Address value:",
+          data.address,
+          "(type:",
+          typeof data.address,
+          ")"
+        );
+
+        // Check if data has actual values
+        const hasEmail = data.email && data.email.trim() !== "";
+        const hasFullname = data.Fullname && data.Fullname.trim() !== "";
+
+        console.log("✅ Has email:", hasEmail);
+        console.log("✅ Has fullname:", hasFullname);
+
+        // Always set the profile data, even if some fields are empty
+        const profileData = {
+          email: data.email || "No email",
+          Fullname: data.Fullname || "",
+          Branchname: data.Branchname || "",
+          address: data.address || "",
+        };
+
+        console.log("✅ Setting profile data:", profileData);
+        setUserProfile(profileData);
+        console.log("✅ Profile state updated");
+      } else {
+        const errorText = await response.text();
+        console.error("❌ ===== PROFILE FETCH FAILED =====");
+        console.error("❌ Status:", response.status);
+        console.error("❌ Status text:", response.statusText);
+        console.error("❌ Response text:", errorText);
+
+        let errorData = {};
+        try {
+          errorData = JSON.parse(errorText);
+          console.error("❌ Error data:", errorData);
+        } catch (e) {
+          console.error("❌ Could not parse error as JSON");
         }
+
+        // If token is invalid, clear it
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem("token");
+          console.log(
+            "❌ Invalid/Unauthorized token, cleared from localStorage"
+          );
+        }
+
+        // If profile not found (404), set default values
+        if (response.status === 404) {
+          console.warn("⚠️ Profile not found in database (404)");
+        }
+
+        // Set default values on any error
+        setUserProfile({
+          email: "No email",
+          Fullname: "User",
+          Branchname: "",
+          address: "",
+        });
       }
     } catch (error) {
-      console.error("❌ Error fetching user profile:", error);
+      console.error("❌ ===== EXCEPTION IN FETCH PROFILE =====");
+      console.error("❌ Error type:", error.constructor.name);
+      console.error("❌ Error message:", error.message);
+      console.error("❌ Error stack:", error.stack);
+      console.error("❌ Full error:", error);
+
+      // Set default values on exception
+      setUserProfile({
+        email: "No email",
+        Fullname: "User",
+        Branchname: "",
+        address: "",
+      });
     } finally {
+      console.log("🔵 Setting loading to false");
       setLoading(false);
+      console.log("🔵 ===== FETCH PROFILE COMPLETE =====");
     }
   };
 
   // Fetch user profile on component mount
   useEffect(() => {
+    console.log("🔵 DashboardLayout mounted - fetching profile");
+    console.log("🔵 Token in localStorage:", !!localStorage.getItem("token"));
     fetchUserProfile();
   }, []);
 
   // Refresh profile when navigating away from profile page
   useEffect(() => {
     if (currentPage !== "profile") {
+      console.log(
+        "🔵 Page changed to:",
+        currentPage,
+        "- will refresh profile in 500ms"
+      );
       // Small delay to ensure profile was saved if coming from profile page
       const timer = setTimeout(() => {
+        console.log("🔵 Refreshing profile after page change");
         fetchUserProfile();
       }, 500);
       return () => clearTimeout(timer);
@@ -138,7 +246,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
     { id: "cameras" as Page, icon: Camera, label: "Live Camera Feed" },
     { id: "analytics" as Page, icon: TrendingUp, label: "Analytics & Trends" },
     { id: "reports" as Page, icon: FileText, label: "Reports" },
-    { id: "notifications" as Page, icon: Bell, label: "Notification Settings" }
+    { id: "notifications" as Page, icon: Bell, label: "Notification Settings" },
   ];
 
   const renderPage = () => {

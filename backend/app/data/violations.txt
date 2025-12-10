@@ -1,4 +1,4 @@
-PPE Violations|24|+12%|up
+PPE Violations|36|+12%|up
 Spill Violations|8|-24%|down
 Pest Detections|3|-50%|down
 Fire/Smoke Alerts|10|0%|neutral

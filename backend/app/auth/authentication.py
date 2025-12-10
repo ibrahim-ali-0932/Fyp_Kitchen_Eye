@@ -49,8 +49,15 @@ if not firebase_admin._apps:
 # Verify Firebase ID Token
 # ------------------------------
 
-def verify_token(token: str, require_verified: bool = True):
-    print("🔥 Verifying token:", token[:30], "...")
+def verify_token(token: str = None, require_verified: bool = True):
+    """
+    Verify Firebase ID token - can be used as a dependency or called directly
+    """
+    if token is None:
+        # If used as dependency, token should come from oauth2_scheme
+        raise HTTPException(status_code=401, detail="Token is required")
+    
+    print("🔥 Verifying token:", token[:30] if token else "None", "...")
 
     try:
         decoded = auth.verify_id_token(token)
@@ -59,6 +66,37 @@ def verify_token(token: str, require_verified: bool = True):
         raise HTTPException(status_code=401, detail="Invalid token")
 
     if require_verified and not decoded.get("email_verified"):
+        raise HTTPException(status_code=403, detail="Email not verified")
+
+    return decoded
+
+
+# ------------------------------
+# FastAPI Dependency for verifying tokens
+# ------------------------------
+
+async def get_current_user(Authorization: str = Header(None)):
+    """
+    FastAPI dependency to verify Firebase token from Authorization header
+    """
+    if Authorization is None:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+    
+    if not Authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid Authorization format")
+    
+    token = Authorization.replace("Bearer ", "").strip()
+    
+    print("🔥 Verifying token from dependency:", token[:30] + "...")
+    
+    try:
+        decoded = auth.verify_id_token(token)
+    except Exception as e:
+        print("🔥 Firebase token verification failed:", e)
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    # For profile access, we require email verification
+    if not decoded.get("email_verified"):
         raise HTTPException(status_code=403, detail="Email not verified")
 
     return decoded
