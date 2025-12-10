@@ -24,7 +24,6 @@ import LiveCameraFeed from "./LiveCameraFeed";
 import Analytics from "./Analytics";
 import Reports from "./Reports";
 import NotificationSettings from "./NotificationSettings";
-import UserManagement from "./UserManagement";
 import ProfilePage from "./ProfilePage";
 import Subscription from "./Subscription";
 
@@ -39,7 +38,6 @@ type Page =
   | "analytics"
   | "reports"
   | "notifications"
-  | "users"
   | "subscription"
   | "profile";
 
@@ -187,9 +185,11 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
       }
     } catch (error) {
       console.error("❌ ===== EXCEPTION IN FETCH PROFILE =====");
-      console.error("❌ Error type:", error.constructor.name);
-      console.error("❌ Error message:", error.message);
-      console.error("❌ Error stack:", error.stack);
+      if (error instanceof Error) {
+        console.error("❌ Error type:", error.constructor.name);
+        console.error("❌ Error message:", error.message);
+        console.error("❌ Error stack:", error.stack);
+      }
       console.error("❌ Full error:", error);
 
       // Set default values on exception
@@ -284,10 +284,15 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         <div className="p-6 flex items-center justify-between border-b border-slate-800">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                <Camera className="w-5 h-5" />
+              <div className="w-12 h-10 bg-gradient-to-br rounded-lg flex items-center justify-center">
+                  <img src="../public/images/Kitcheneye_logo.png" alt="" />
               </div>
-              <span className="tracking-tight">KitchenEye</span>
+               <span className="text-2xl text-white tracking-tight">
+                Kitchen
+                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Eye
+                </span>
+              </span>
             </div>
           )}
           <Button

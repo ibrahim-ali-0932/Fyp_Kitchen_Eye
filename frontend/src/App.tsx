@@ -4,7 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardLayout from "./pages/DashboardLayout";
 import BlogPage from "./pages/BlogPage";
-//import AdminUserManagement from "./pages/AdminUserManagement";
+import {AdminPanel} from "./pages/AdminPanel";
 
 export default function App() {
   // Initialize state from sessionStorage or default to landing
@@ -163,7 +163,7 @@ export default function App() {
     );
   }
       if (currentPage === "admin") {
-      //return <AdminUserManagement onLogout={handleLogout} />;
+       return <AdminPanel onLogout={handleLogout} />;
   }
 
   return null;
