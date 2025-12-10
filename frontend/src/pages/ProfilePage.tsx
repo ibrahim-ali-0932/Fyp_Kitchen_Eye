@@ -62,6 +62,12 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
 
         if (response.ok) {
           const data = await response.json();
+          console.log("✅ Profile data received in ProfilePage:", data);
+          console.log("   - Email:", data.email);
+          console.log("   - Fullname:", data.Fullname);
+          console.log("   - Branchname:", data.Branchname);
+          console.log("   - Address:", data.address);
+
           setUserProfile(data);
           setFormData({
             Fullname: data.Fullname || "",
@@ -70,7 +76,17 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
             address: data.address || "",
           });
         } else {
-          setError("Failed to fetch profile");
+          const errorData = await response.json().catch(() => ({}));
+          console.error(
+            "❌ Failed to fetch profile:",
+            response.status,
+            errorData
+          );
+          setError(
+            `Failed to fetch profile: ${
+              errorData.detail || response.statusText
+            }`
+          );
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -110,9 +126,9 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
         Branchname: formData.Branchname,
         address: formData.address,
       };
-      
+
       console.log("🔵 Sending profile update:", requestBody);
-      
+
       const response = await fetch("http://localhost:8000/auth/profile/", {
         method: "PUT",
         headers: {
@@ -121,7 +137,7 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
         },
         body: JSON.stringify(requestBody),
       });
-      
+
       console.log("🔵 Update response status:", response.status);
 
       if (response.ok) {
@@ -137,7 +153,7 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
         setIsEditing(false);
         setSuccess("Profile updated successfully!");
         setTimeout(() => setSuccess(""), 3000);
-        
+
         // Notify parent component (DashboardLayout) to refresh its profile data
         if (onProfileUpdate) {
           console.log("🔄 Calling onProfileUpdate to refresh sidebar...");
@@ -356,7 +372,10 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
                     />
                   ) : (
                     <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      {userProfile?.Branchname || "Not set"}
+                      {userProfile?.Branchname &&
+                      userProfile.Branchname.trim() !== ""
+                        ? userProfile.Branchname
+                        : "Not set"}
                     </div>
                   )}
                 </div>
@@ -376,7 +395,9 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
                     />
                   ) : (
                     <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      {userProfile?.address || "Not set"}
+                      {userProfile?.address && userProfile.address.trim() !== ""
+                        ? userProfile.address
+                        : "Not set"}
                     </div>
                   )}
                 </div>
