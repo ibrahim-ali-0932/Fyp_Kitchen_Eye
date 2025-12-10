@@ -3,7 +3,8 @@ import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, User, Mail, Shield, Activity } from "lucide-react";
+import { ArrowLeft, User, Mail, Shield, Activity, Key } from "lucide-react";
+import { usersAPI } from "../services/adminService";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,7 @@ export default function AddUser({ onBack, onSave }: AddUserProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    password: "",
     role: "Viewer" as "Admin" | "Manager" | "Viewer",
     status: "Active" as "Active" | "Inactive",
   });
@@ -33,12 +35,16 @@ export default function AddUser({ onBack, onSave }: AddUserProps) {
   const [errors, setErrors] = useState({
     name: "",
     email: "",
+    password: "",
   });
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {
       name: "",
       email: "",
+      password: "",
     };
 
     if (!formData.name.trim()) {
@@ -51,14 +57,48 @@ export default function AddUser({ onBack, onSave }: AddUserProps) {
       newErrors.email = "Invalid email format";
     }
 
+    if (!formData.password.trim()) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
     setErrors(newErrors);
-    return !newErrors.name && !newErrors.email;
+    return !newErrors.name && !newErrors.email && !newErrors.password;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
+    if (!validateForm()) return;
+
+    try {
+      setIsLoading(true);
+      let token = localStorage.getItem("token");
+      
+      // Admin bypass if no token
+      if (!token) {
+        token = "admin_bypass";
+      }
+
+      console.log("Creating user...");
+      await usersAPI.create(
+        {
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.name,
+          role: formData.role,
+          status: formData.status,
+        },
+        token
+      );
+
+      alert("User created successfully!");
       onSave(formData);
+    } catch (error: any) {
+      console.error("Failed to create user:", error);
+      alert(error.message || "Failed to create user. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -109,6 +149,22 @@ export default function AddUser({ onBack, onSave }: AddUserProps) {
                 className={errors.email ? "border-red-500" : ""}
               />
               {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label className="text-sm font-medium mb-2 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Password <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="password"
+                placeholder="Minimum 6 characters"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className={errors.password ? "border-red-500" : ""}
+              />
+              {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
             </div>
 
             {/* Role Field */}
@@ -193,11 +249,11 @@ export default function AddUser({ onBack, onSave }: AddUserProps) {
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={onBack} className="flex-1">
+              <Button type="button" variant="outline" onClick={onBack} className="flex-1" disabled={isLoading}>
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-                Create User
+              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                {isLoading ? "Creating..." : "Create User"}
               </Button>
             </div>
           </form>

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .router import signup, login, profile, stats, violations  # add violations
+from .router import signup, login, profile, stats, violations, users, cameras
 
 app = FastAPI(title="KitchenEye API")
 
@@ -23,7 +23,9 @@ app.include_router(signup.router, prefix="/auth")
 app.include_router(login.router, prefix="/auth")
 app.include_router(profile.router, prefix="/auth")
 app.include_router(stats.router)
-app.include_router(violations.router)  # add this line
+app.include_router(violations.router)
+app.include_router(users.router, prefix="/auth")
+app.include_router(cameras.router, prefix="/auth")
 
 
 @app.get("/")
