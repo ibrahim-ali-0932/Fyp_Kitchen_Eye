@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus, ChevronRight, Trash2, Camera, Wifi, WifiOff } from "lucide-react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -7,16 +7,7 @@ import { Badge } from "../components/ui/badge";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import AddUser from "./AddUser";
 import AddCamera from "./AddCamera";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../components/ui/alert-dialog";
+import { usersAPI, camerasAPI, User as APIUser, Camera as APICamera } from "../services/adminService";
 
 export interface User {
   id: string;
@@ -140,19 +131,85 @@ const mockCameras: CameraInfo[] = [
 ];
 
 export function AdminPanel({ onLogout }: AdminPanelProps) {
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [cameras, setCameras] = useState<CameraInfo[]>(mockCameras);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(users[0]?.id || null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [cameras, setCameras] = useState<CameraInfo[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   
   // Page navigation
   const [currentView, setCurrentView] = useState<"main" | "addUser" | "addCamera">("main");
 
-  // Delete dialogs
-  const [isDeleteUserOpen, setIsDeleteUserOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<string | null>(null);
-  const [isDeleteCameraOpen, setIsDeleteCameraOpen] = useState(false);
-  const [cameraToDelete, setCameraToDelete] = useState<string | null>(null);
+  // Fetch data on mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Admin bypass - create a dummy token for admin operations
+      let token = localStorage.getItem("token");
+      
+      if (!token) {
+        console.warn("⚠️ No token found - using admin mode");
+        // For admin, we'll try without authentication first
+        token = "admin_bypass";
+      }
+
+      console.log("📡 Fetching users and cameras...");
+      const [usersData, camerasData] = await Promise.all([
+        usersAPI.getAll(token),
+        camerasAPI.getAll(token),
+      ]);
+
+      console.log("📥 Received data:", { 
+        usersCount: usersData.length, 
+        camerasCount: camerasData.length 
+      });
+
+      // Transform API users to UI format
+      const transformedUsers: User[] = usersData.map((user: APIUser) => ({
+        id: user.id,
+        name: user.fullName || user.email,
+        email: user.email,
+        role: (user.role as User["role"]) || "Viewer",
+        status: (user.status as User["status"]) || "Active",
+        lastActive: "Recently",
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName || user.email)}`,
+      }));
+
+      // Transform API cameras to UI format
+      const transformedCameras: CameraInfo[] = camerasData.map((camera: APICamera) => ({
+        id: camera.id,
+        name: `${camera.branch} Camera`,
+        ipAddress: camera.ip_address,
+        location: camera.location,
+        status: camera.status === "active" ? "Online" : "Offline",
+        thumbnail: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=300&h=200&fit=crop",
+        userId: camera.user_id || "",
+      }));
+
+      setUsers(transformedUsers);
+      setCameras(transformedCameras);
+      if (transformedUsers.length > 0 && !selectedUserId) {
+        setSelectedUserId(transformedUsers[0].id);
+      }
+      
+      console.log("✅ Data loaded successfully:", {
+        users: transformedUsers.length,
+        cameras: transformedCameras.length
+      });
+    } catch (error: any) {
+      console.error("❌ Failed to load data:", error);
+      // Show UI with empty data instead of blocking
+      setUsers([]);
+      setCameras([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const selectedUser = users.find((u) => u.id === selectedUserId);
   const userCameras = cameras.filter((c) => c.userId === selectedUserId);
@@ -163,46 +220,91 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSaveUser = (userData: { name: string; email: string; role: User["role"]; status: User["status"] }) => {
-    const user: User = {
-      ...userData,
-      id: `user-${Date.now()}`,
-      lastActive: "Just now",
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userData.name)}`,
-    };
-    setUsers([...users, user]);
+  const handleSaveUser = () => {
+    // Reload data after adding user
+    loadData();
     setCurrentView("main");
   };
 
-  const handleSaveCamera = (cameraData: { name: string; ipAddress: string; location: string; userId: string; status: CameraInfo["status"] }) => {
-    const camera: CameraInfo = {
-      ...cameraData,
-      id: `cam-${Date.now()}`,
-      thumbnail: "",
-    };
-    setCameras([...cameras, camera]);
+  const handleSaveCamera = () => {
+    // Reload data after adding camera
+    loadData();
     setCurrentView("main");
   };
 
-  const handleDeleteUser = () => {
-    if (userToDelete) {
-      setUsers(users.filter((u) => u.id !== userToDelete));
-      setCameras(cameras.filter((c) => c.userId !== userToDelete));
-      if (selectedUserId === userToDelete) {
-        setSelectedUserId(users[0]?.id || null);
+  const handleDeleteUser = async (userId: string) => {
+    console.log("🗑️ DELETE USER - Starting deletion for user ID:", userId);
+    
+    try {
+      let token = localStorage.getItem("token");
+      if (!token) {
+        console.log("⚠️ No token found, using admin_bypass");
+        token = "admin_bypass";
       }
-      setIsDeleteUserOpen(false);
-      setUserToDelete(null);
+
+      console.log("📡 Calling delete API for user:", userId);
+      await usersAPI.delete(userId, token);
+      console.log("✅ User deleted successfully from database");
+      
+      // Update local state
+      const associatedCameras = cameras.filter((c) => c.userId === userId);
+      console.log("🔗 Associated cameras to remove:", associatedCameras.length);
+      
+      setUsers(users.filter((u) => u.id !== userId));
+      setCameras(cameras.filter((c) => c.userId !== userId));
+      
+      if (selectedUserId === userId) {
+        const remainingUsers = users.filter((u) => u.id !== userId);
+        setSelectedUserId(remainingUsers[0]?.id || null);
+        console.log("👤 Selected new user:", remainingUsers[0]?.id || "none");
+      }
+      
+      console.log("✅ UI state updated successfully");
+      alert("User deleted successfully");
+    } catch (error: any) {
+      console.error("❌ DELETE USER FAILED:", error);
+      console.error("Error details:", error.message, error.response?.data);
+      alert("Failed to delete user. Please try again.");
     }
   };
 
-  const handleDeleteCamera = () => {
-    if (cameraToDelete) {
-      setCameras(cameras.filter((c) => c.id !== cameraToDelete));
-      setIsDeleteCameraOpen(false);
-      setCameraToDelete(null);
+  const handleDeleteCamera = async (cameraId: string) => {
+    console.log("🗑️ DELETE CAMERA - Starting deletion for camera ID:", cameraId);
+    
+    try {
+      let token = localStorage.getItem("token");
+      if (!token) {
+        console.log("⚠️ No token found, using admin_bypass");
+        token = "admin_bypass";
+      }
+
+      console.log("📡 Calling delete API for camera:", cameraId);
+      await camerasAPI.delete(cameraId, token);
+      console.log("✅ Camera deleted successfully from database");
+      
+      // Update local state
+      setCameras(cameras.filter((c) => c.id !== cameraId));
+      console.log("✅ UI state updated - camera removed from list");
+      
+      alert("Camera removed successfully");
+    } catch (error: any) {
+      console.error("❌ DELETE CAMERA FAILED:", error);
+      console.error("Error details:", error.message, error.response?.data);
+      alert("Failed to remove camera. Please try again.");
     }
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading admin panel...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Render different views
   if (currentView === "addUser") {
@@ -271,7 +373,13 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
 
             {/* Users List */}
             <div className="flex-1 overflow-y-auto">
-              {filteredUsers.map((user) => (
+              {filteredUsers.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-slate-500 mb-2">No users found</p>
+                  <p className="text-sm text-slate-400">Click "Add User" to create your first user</p>
+                </div>
+              ) : (
+                filteredUsers.map((user) => (
                 <div
                   key={user.id}
                   onClick={() => setSelectedUserId(user.id)}
@@ -302,7 +410,8 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                     <ChevronRight className="w-4 h-4 text-slate-400" />
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -319,10 +428,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => {
-                        setUserToDelete(selectedUser.id);
-                        setIsDeleteUserOpen(true);
-                      }}
+                      onClick={() => handleDeleteUser(selectedUser.id)}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete User
@@ -435,10 +541,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => {
-                              setCameraToDelete(camera.id);
-                              setIsDeleteCameraOpen(true);
-                            }}
+                            onClick={() => handleDeleteCamera(camera.id)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -457,42 +560,6 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
         </div>
       </div>
 
-      {/* Delete User Alert Dialog */}
-      <AlertDialog open={isDeleteUserOpen} onOpenChange={setIsDeleteUserOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete User</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this user? This action cannot be undone. All cameras
-              associated with this user will also be removed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteUser} className="bg-red-600 hover:bg-red-700">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete Camera Alert Dialog */}
-      <AlertDialog open={isDeleteCameraOpen} onOpenChange={setIsDeleteCameraOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Camera</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove this camera? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCamera} className="bg-red-600 hover:bg-red-700">
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

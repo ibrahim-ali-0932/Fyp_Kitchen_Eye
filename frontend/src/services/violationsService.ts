@@ -13,6 +13,10 @@ export type ViolationRecord = {
 export async function fetchUserViolations(
   token: string
 ): Promise<ViolationRecord[]> {
+  console.log("🔔 VIOLATIONS API - Fetching user violations");
+  console.log("   URL:", `${API_URL}/violations/user`);
+  console.log("   Token:", token.substring(0, 20) + "...");
+  
   const response = await fetch(`${API_URL}/violations/user`, {
     method: "GET",
     headers: {
@@ -20,11 +24,18 @@ export async function fetchUserViolations(
     },
   });
 
+  console.log("📡 Response status:", response.status);
+  console.log("📡 Response ok:", response.ok);
+
   if (!response.ok) {
-    throw new Error("Failed to fetch violations");
+    const errorText = await response.text();
+    console.error("❌ API Error:", errorText);
+    throw new Error(`Failed to fetch violations: ${response.status} - ${errorText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log("✅ Violations data received:", data);
+  return data;
 }
 
 export async function logViolation(params: {

@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import { ArrowLeft, Camera, Wifi, MapPin, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { camerasAPI } from "../services/adminService";
 import {
   Select,
   SelectContent,
@@ -48,6 +49,7 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
 
   const [testingConnection, setTestingConnection] = useState(false);
   const [connectionResult, setConnectionResult] = useState<"success" | "error" | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {
@@ -99,10 +101,38 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
     }, 2000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
+    if (!validateForm()) return;
+
+    try {
+      setIsLoading(true);
+      let token = localStorage.getItem("token");
+      
+      // Admin bypass if no token
+      if (!token) {
+        token = "admin_bypass";
+      }
+
+      const cameraData = {
+        branch: formData.name,
+        ip_address: formData.ipAddress,
+        location: formData.location,
+        status: formData.status === "Online" ? "active" : "inactive",
+        user_id: formData.userId,
+      };
+      
+      console.log("📤 Creating camera with data:", cameraData);
+      const result = await camerasAPI.create(cameraData, token);
+      console.log("✅ Camera created:", result);
+
+      alert("Camera added successfully!");
       onSave(formData);
+    } catch (error: any) {
+      console.error("❌ Failed to create camera:", error);
+      alert(error.message || "Failed to add camera. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -273,11 +303,11 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={onBack} className="flex-1">
+              <Button type="button" variant="outline" onClick={onBack} className="flex-1" disabled={isLoading}>
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-                Add Camera
+              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                {isLoading ? "Adding..." : "Add Camera"}
               </Button>
             </div>
           </form>
