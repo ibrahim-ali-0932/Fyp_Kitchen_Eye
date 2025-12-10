@@ -25,7 +25,12 @@ import {
   Legend,
 } from "recharts";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { fetchStats,  StatItem, ViolationTrend, RecentViolation} from "../services/statsService";
+import {
+  fetchStats,
+  StatItem,
+  ViolationTrend,
+  RecentViolation,
+} from "../services/statsService";
 
 export default function Dashboard() {
   const [stats, setStats] = useState([
@@ -77,15 +82,17 @@ export default function Dashboard() {
   ]);
 
   const [violationData, setViolationData] = useState<ViolationTrend[]>([]);
-  const [recentViolations, setRecentViolations] = useState<RecentViolation[]>([]);
+  const [recentViolations, setRecentViolations] = useState<RecentViolation[]>(
+    []
+  );
 
   const loadDashboardData = async () => {
     // Fetch violations.txt for stats
     const violationsResponse = await fetchStats("violations.txt");
-    console.log("Fetched violations data:", violationsResponse);
     if (violationsResponse?.value) {
-      const lines = violationsResponse.value.split('\n').filter((line: string) => line.trim());
-      console.log("Parsed lines:", lines);
+      const lines = violationsResponse.value
+        .split("\n")
+        .filter((line: string) => line.trim());
       const iconMapping = {
         "PPE Violations": AlertTriangle,
         "Spill Violations": Droplet,
@@ -97,32 +104,43 @@ export default function Dashboard() {
         "PPE Violations": { color: "text-orange-600", bgColor: "bg-orange-50" },
         "Spill Violations": { color: "text-blue-600", bgColor: "bg-blue-50" },
         "Pest Detections": { color: "text-red-600", bgColor: "bg-red-50" },
-        "Fire/Smoke Alerts": { color: "text-purple-600", bgColor: "bg-purple-50" },
-        "Hygiene Index Score": { color: "text-green-600", bgColor: "bg-green-50" },
+        "Fire/Smoke Alerts": {
+          color: "text-purple-600",
+          bgColor: "bg-purple-50",
+        },
+        "Hygiene Index Score": {
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+        },
       };
-      
+
       const parsedStats = lines.map((line: string) => {
-        const [title, value, change, trend] = line.split('|');
+        const [title, value, change, trend] = line.split("|");
         return {
           title,
           value,
           change,
           trend,
           icon: iconMapping[title as keyof typeof iconMapping] || AlertTriangle,
-          color: colorMapping[title as keyof typeof colorMapping]?.color || "text-gray-600",
-          bgColor: colorMapping[title as keyof typeof colorMapping]?.bgColor || "bg-gray-50",
+          color:
+            colorMapping[title as keyof typeof colorMapping]?.color ||
+            "text-gray-600",
+          bgColor:
+            colorMapping[title as keyof typeof colorMapping]?.bgColor ||
+            "bg-gray-50",
         };
       });
-      console.log("Parsed stats:", parsedStats);
       setStats(parsedStats);
     }
 
     // Fetch violation_trend.txt for chart data
     const trendResponse = await fetchStats("violation_trend.txt");
     if (trendResponse?.value) {
-      const lines = trendResponse.value.split('\n').filter((line: string) => line.trim());
+      const lines = trendResponse.value
+        .split("\n")
+        .filter((line: string) => line.trim());
       const parsedTrend = lines.slice(1).map((line: string) => {
-        const [day, ppe, spill, pest, fire] = line.split(',');
+        const [day, ppe, spill, pest, fire] = line.split(",");
         return {
           day,
           ppe: parseInt(ppe),
@@ -137,9 +155,20 @@ export default function Dashboard() {
     // Fetch recent_violations.txt
     const recentResponse = await fetchStats("recent_violations.txt");
     if (recentResponse?.value) {
-      const lines = recentResponse.value.split('\n').filter((line: string) => line.trim());
+      const lines = recentResponse.value
+        .split("\n")
+        .filter((line: string) => line.trim());
       const parsedViolations = lines.map((line: string) => {
-        const [id, type, description, severity, location, timestamp, status, image] = line.split('|');
+        const [
+          id,
+          type,
+          description,
+          severity,
+          location,
+          timestamp,
+          status,
+          image,
+        ] = line.split("|");
         return {
           id: parseInt(id),
           type,
@@ -163,13 +192,13 @@ export default function Dashboard() {
       loadDashboardData();
     };
 
-    window.addEventListener('focus', handleFocus);
-    
+    window.addEventListener("focus", handleFocus);
+
     // Optional: Auto-refresh every 10 seconds
     const interval = setInterval(loadDashboardData, 10000);
 
     return () => {
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener("focus", handleFocus);
       clearInterval(interval);
     };
   }, []);
