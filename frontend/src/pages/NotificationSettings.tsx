@@ -1,12 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import emailjs from "emailjs-com";
 import { Card } from "../components/ui/card";
 import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import { AlertTriangle, Droplet, Bug, Flame } from "lucide-react";
+import { AlertTriangle, Droplet, Bug, Flame, Bell, CheckCircle } from "lucide-react";
 import { logViolation } from "../services/violationsService";
 
 export default function NotificationSettings() {
@@ -17,52 +15,141 @@ export default function NotificationSettings() {
   const [fireEmail, setFireEmail] = useState(true);
   const [criticalEmail, setCriticalEmail] = useState(true);
 
-  // NEW fields for test email
-  const [destinationEmail, setDestinationEmail] = useState(
-    "manager@example.com"
-  );
-  const [violationType, setViolationType] = useState("Missing Gloves");
-  const [cameraLocation, setCameraLocation] = useState("Kitchen Cam 1");
-  const [sending, setSending] = useState(false);
+  // Monitoring state
+  const [currentCount, setCurrentCount] = useState<number>(0);
+  const [isMonitoring, setIsMonitoring] = useState(true);
+  const [emailsSent, setEmailsSent] = useState<number>(0);
+  const [lastViolationTime, setLastViolationTime] = useState<string>("");
+  const previousCountRef = useRef<number>(0);
 
-  async function sendTestEmail() {
-    setSending(true);
+  // Fetch violation count from backend
+  async function fetchViolationCount(): Promise<number> {
+    try {
+      const response = await fetch(`http://localhost:8000/stats/violation_count.txt?t=${Date.now()}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Handle both formats: direct number or {value: number}
+        let count: number;
+        if (typeof data === 'number') {
+          count = data;
+        } else if (typeof data === 'object' && data !== null) {
+          count = typeof data.value === 'number' ? data.value : parseInt(data.value) || 0;
+        } else {
+          count = parseInt(String(data)) || 0;
+        }
+        
+        console.log("🔢 Parsed count:", count);
+        return count;
+      } else {
+        console.error("❌ Response not OK:", response.status);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching violation count:", error);
+    }
+    return 0;
+  }
+
+  // Send automated email notification
+  async function sendAutomatedEmail(violationNumber: number) {
+    if (!emailNotifications) return;
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error("Please log in again to log the notification.");
+        console.warn("No token found - cannot log violation");
       }
 
       const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
       const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
+      const timestamp = new Date().toLocaleString();
+      
       await emailjs.send(
         SERVICE_ID,
         TEMPLATE_ID,
         {
-          user_email: destinationEmail,
-          violation_type: violationType,
-          timestamp: new Date().toLocaleString(),
-          camera_location: cameraLocation,
+          user_email: "ibrahimalikhan0932@gmail.com",
+          violation_type: "Violation Detected",
+          timestamp: timestamp,
+          camera_location: "Kitchen Monitor System",
+          violation_number: violationNumber,
         },
         PUBLIC_KEY
       );
-      await logViolation({
-        violation_type: violationType,
-        camera_location: cameraLocation,
-        destination_email: destinationEmail,
-        token,
-        is_test: true,
-      });
-      alert("Test email sent and logged");
+
+      if (token) {
+        await logViolation({
+          violation_type: "Automated Violation Alert",
+          camera_location: "Kitchen Monitor System",
+          destination_email: "f223367@cfd.nu.edu.pk",
+          token,
+          is_test: false,
+        });
+      }
+
+      setEmailsSent(prev => prev + 1);
+      setLastViolationTime(timestamp);
+      console.log(`✅ Email sent for violation #${violationNumber}`);
+      alert(`Automated email sent for violation #${violationNumber}`);
     } catch (err) {
-      console.error(err);
-      alert("Send failed: " + String(err));
-    } finally {
-      setSending(false);
+      console.error("Failed to send automated email:", err);
     }
   }
+
+  // Monitor violation count changes
+  useEffect(() => {
+    console.log("🔄 Monitoring useEffect triggered - isMonitoring:", isMonitoring, "emailNotifications:", emailNotifications);
+    
+    if (!isMonitoring) {
+      console.log("⏸️ Monitoring paused");
+      return;
+    }
+
+    console.log("▶️ Starting monitoring interval...");
+    
+    const interval = setInterval(async () => {
+      const newCount = await fetchViolationCount();
+      setCurrentCount(newCount);
+
+      // Check if count increased
+      if (newCount > previousCountRef.current) {
+        const increase = newCount - previousCountRef.current;
+        console.log(`Violation count increased from ${previousCountRef.current} to ${newCount} (+${increase})`);
+        
+        // Only send emails if email notifications are enabled
+        if (emailNotifications) {
+          // Send email for each increase
+          for (let i = 0; i < increase; i++) {
+            await sendAutomatedEmail(previousCountRef.current + i + 1);
+          }
+        } else {
+          console.log("Email notifications disabled - skipping email send");
+          alert(`Email notifications disabled - email will not be sent`);
+        }
+      } else {
+        console.log(`✓ No change: current=${newCount}, previous=${previousCountRef.current}`);
+      }
+
+      previousCountRef.current = newCount;
+    }, 10000); // Check every 10 seconds
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isMonitoring, emailNotifications]);
+
+  // Initial load
+  useEffect(() => {
+    console.log("Initial load - fetching violation count...");
+    fetchViolationCount().then(count => {
+      console.log("Initial count loaded:", count);
+      setCurrentCount(count);
+      previousCountRef.current = count;
+    });
+  }, []);
 
   return (
     <div className="p-6 space-y-6">
@@ -87,35 +174,65 @@ export default function NotificationSettings() {
         </div>
       </Card>
 
-      {/* Email Contact Info + Send Test */}
+      {/* Monitoring Status */}
       <Card className="p-6">
-        <Label>Send test email to</Label>
-        <Input
-          id="dest-email"
-          type="email"
-          placeholder="recipient@example.com"
-          value={destinationEmail}
-          onChange={(e: any) => setDestinationEmail(e.target.value)}
-        />
-        <div className="mt-3">
-          <Label>Violation Type</Label>
-          <Input
-            value={violationType}
-            onChange={(e: any) => setViolationType(e.target.value)}
-          />
-        </div>
-        <div className="mt-3">
-          <Label>Camera Location</Label>
-          <Input
-            value={cameraLocation}
-            onChange={(e: any) => setCameraLocation(e.target.value)}
-          />
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              Automated Violation Monitoring
+            </h2>
+            <p className="text-sm text-slate-600 mt-1">
+              System detects violations and sends email alerts
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {isMonitoring && (
+              <div className="flex items-center gap-2 text-green-600">
+                <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium">Active</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="mt-4">
-          <Button onClick={sendTestEmail} disabled={sending}>
-            {sending ? "Sending…" : "Send Test Email"}
-          </Button>
+        <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-600 mb-1">Current Violation Count</p>
+            <p className="text-3xl font-bold text-blue-700">{currentCount}</p>
+          </div>
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <p className="text-sm text-green-600 mb-1">Emails Sent</p>
+            <p className="text-3xl font-bold text-green-700">{emailsSent}</p>
+          </div>
+          <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <p className="text-sm text-purple-600 mb-1">Last Alert</p>
+            <p className="text-sm font-semibold text-purple-700">
+              {lastViolationTime || "No alerts yet"}
+            </p>
+          </div>
+        </div>
+
+    {/*emailsSent > 0 && (
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <div>
+              <p className="text-sm font-medium text-green-800">
+                Email notifications are working correctly
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                To test: Update the violation_count.txt file in backend/app/data/ folder
+              </p>
+            </div>
+          </div>
+        )*/} 
+
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-800">
+            </p>
+          <p className="text-sm text-blue-800 mt-2">
+            <strong>Email sent to:</strong> f223367@cfd.nu.edu.pk
+          </p>
         </div>
       </Card>
 
