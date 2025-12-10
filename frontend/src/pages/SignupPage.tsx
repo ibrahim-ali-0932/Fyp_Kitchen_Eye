@@ -224,38 +224,89 @@ export default function SignupPage({
         password
       );
 
-      // Step 2: Get ID token from Firebase
-      const idToken = await userCredential.user.getIdToken();
+      const user = userCredential.user;
 
-      // Step 3: Send profile data to backend with token
+      // Step 2: Send email verification
+      await sendEmailVerification(user);
+      console.log("✅ Verification email sent");
+
+      // Step 3: Get ID token from Firebase (needed for backend)
+      const idToken = await user.getIdToken();
+
+      // Step 4: Prepare profile data to send to backend
+      const profileDataToSend = {
+        email,
+        full_name: name,
+        organization,
+        address,
+      };
+
+      console.log("🔵 ===== SENDING PROFILE DATA TO BACKEND =====");
+      console.log("🔵 Form state values:");
+      console.log("   - email:", email);
+      console.log("   - name:", name);
+      console.log("   - organization:", organization);
+      console.log("   - address:", address);
+      console.log("🔵 Profile data object:", profileDataToSend);
+      console.log("🔵 JSON stringified:", JSON.stringify(profileDataToSend));
+
+      // Validate that we have the required data
+      if (!name || name.trim() === "") {
+        console.error("❌ ERROR: name is empty!");
+      }
+      if (!organization || organization.trim() === "") {
+        console.error("❌ ERROR: organization is empty!");
+      }
+      if (!address || address.trim() === "") {
+        console.error("❌ ERROR: address is empty!");
+      }
+
+      // Step 5: Send profile data to backend with token
       const response = await fetch("http://localhost:8000/auth/signup/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({
-          email,
-          full_name: name,
-          organization,
-          address,
-        }),
+        body: JSON.stringify(profileDataToSend),
       });
+
+      console.log("🔵 Response received, status:", response.status);
 
       let data;
       try {
         data = await response.json();
       } catch (jsonError) {
-        // If response is not JSON, use default error message
+        // If response is not JSON, sign out user, clear token, and show error
+        await signOut(auth);
+        localStorage.removeItem("token");
         setErrorMsg("Failed to create profile. Please try again.");
+        setLoading(false);
         return;
       }
 
       if (response.ok) {
-        // Store token in localStorage
-        localStorage.setItem("token", idToken);
-        onSignup(true);
+        // Profile created successfully
+        // Sign out user - they need to verify email before logging in
+        await signOut(auth);
+        console.log("✅ User signed out - email verification required");
+
+        // IMPORTANT: Clear any old token from localStorage
+        localStorage.removeItem("token");
+        console.log("✅ Old token cleared from localStorage");
+
+        // Show success message with verification reminder
+        alert(
+          "Account created successfully! Please check your email to verify your account before logging in."
+        );
+
+        // Redirect to LOGIN page (not dashboard) - user must verify email and login
+        onLogin();
       } else {
+        // Profile creation failed - sign out user and clear any tokens
+        await signOut(auth);
+        localStorage.removeItem("token");
+
         // Handle 409 Conflict (email already exists)
         if (response.status === 409) {
           const errorMessage =
@@ -272,6 +323,21 @@ export default function SignupPage({
       }
     } catch (err: any) {
       console.error(err);
+
+      // If user was created but something else failed, sign them out and clear token
+      try {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          await signOut(auth);
+          console.log("✅ Signed out user due to error");
+        }
+        // Always clear any old token on error
+        localStorage.removeItem("token");
+        console.log("✅ Token cleared from localStorage due to error");
+      } catch (signOutError) {
+        console.error("Error signing out:", signOutError);
+      }
+
       let errorMessage = "Unable to create account. Please try again.";
 
       if (err.code === "auth/email-already-in-use") {
@@ -294,17 +360,6 @@ export default function SignupPage({
       }
 
       setErrorMsg(errorMessage);
-      const result = await signup(email, password);
-      if (result.needsVerification) {
-        alert(
-          "Verification email sent! Please verify your email before logging in."
-        );
-        setLoading(false);
-        return;
-      }
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || "Unable to create account. Try again.");
     } finally {
       setLoading(false);
     }

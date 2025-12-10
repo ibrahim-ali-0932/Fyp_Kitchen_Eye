@@ -127,9 +127,13 @@ export default function App() {
   if (currentPage === "signup") {
     return (
       <SignupPage
-        onSignup={(success) => handleLogin(success)}
-        onLogin={() => setCurrentPage("login")}
-        onSignup={() => handleLogin(false)}
+        onSignup={(success) => {
+          // After signup, user needs to verify email and login
+          // The SignupPage will call onLogin() to redirect to login page
+          if (success) {
+            navigateTo("login");
+          }
+        }}
         onLogin={() => navigateTo("login")}
         onBack={() => {
           window.scrollTo({ top: 0, behavior: "smooth" });
