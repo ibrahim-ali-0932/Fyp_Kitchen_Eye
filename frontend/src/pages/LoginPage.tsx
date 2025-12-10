@@ -3,7 +3,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Camera, ArrowLeft } from "lucide-react";
-import { loginUser } from "../services/authService"; // use authService
+import { resetPassword, loginUser } from "../services/authService";
 // import { useNavigate } from "react-router-dom"; // not used
 // import { auth } from "../firebase";
 // import { signInWithEmailAndPassword } from "firebase/auth";
@@ -261,6 +261,20 @@ export default function LoginPage({
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!email) {
+      setErrorMsg("Enter your email first.");
+      return;
+    }
+    try {
+      await resetPassword(email);
+      alert("Password reset email sent. Check your inbox.");
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "Failed to send reset email.");
+    }
+  };
+
   return (
     <div className="relative min-h-screen">
       {/* Fixed Background Image with Overlay */}
@@ -448,14 +462,12 @@ export default function LoginPage({
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between items-center">
                   <Label htmlFor="password">Password</Label>
                   <button
                     type="button"
-                    onClick={() => {
-                      setErrorMsg("Password reset functionality coming soon!");
-                    }}
-                    className="text-sm bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent hover:text-blue-700"
+                    onClick={handleResetPassword}
+                    className="text-sm text-blue-400 hover:text-blue-300"
                   >
                     Forgot password?
                   </button>

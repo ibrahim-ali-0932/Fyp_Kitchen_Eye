@@ -1,6 +1,7 @@
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
@@ -32,4 +33,8 @@ export const signup = async (email: string, password: string) => {
   await sendEmailVerification(user);
   await signOut(auth);
   return { needsVerification: true };
+};
+
+export const resetPassword = async (email: string) => {
+  await sendPasswordResetEmail(auth, email);
 };

@@ -31,7 +31,7 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  },
+  }
 );
 
 const Button = React.forwardRef<
@@ -46,6 +46,7 @@ const Button = React.forwardRef<
   return (
     <Comp
       data-slot="button"
+      ref={ref}
       className={cn(buttonVariants({ variant, size, className }))}
       ref={ref}
       {...props}

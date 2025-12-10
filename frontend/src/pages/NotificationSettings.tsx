@@ -6,7 +6,8 @@ import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import { Mail, AlertTriangle, Droplet, Bug, Flame, Save } from "lucide-react";
+import { AlertTriangle, Droplet, Bug, Flame } from "lucide-react";
+import { logViolation } from "../services/violationsService";
 
 export default function NotificationSettings() {
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -27,16 +28,15 @@ export default function NotificationSettings() {
   async function sendTestEmail() {
     setSending(true);
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Please log in again to log the notification.");
+      }
+
       const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
       const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-      console.log("sending email params:", {
-        user_email: destinationEmail,
-        violation_type: violationType,
-        timestamp: new Date().toLocaleString(),
-        camera_location: cameraLocation,
-      });
       await emailjs.send(
         SERVICE_ID,
         TEMPLATE_ID,
@@ -48,7 +48,14 @@ export default function NotificationSettings() {
         },
         PUBLIC_KEY
       );
-      alert("Test email sent");
+      await logViolation({
+        violation_type: violationType,
+        camera_location: cameraLocation,
+        destination_email: destinationEmail,
+        token,
+        is_test: true,
+      });
+      alert("Test email sent and logged");
     } catch (err) {
       console.error(err);
       alert("Send failed: " + String(err));
@@ -175,21 +182,18 @@ export default function NotificationSettings() {
           <div className="p-4 rounded-xl border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-                  <Bug className="w-5 h-5 text-red-600" />
+                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                  <Bug className="w-5 h-5 text-green-700" />
                 </div>
                 <div>
                   <h3 className="mb-1">Pest Detection</h3>
-                  <p className="text-sm text-slate-600">Rodents and insects</p>
+                  <p className="text-sm text-slate-600">
+                    Rodents, insects, and contamination risks
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <Badge
-                  variant="outline"
-                  className="bg-red-100 text-red-700 border-red-200"
-                >
-                  Critical
-                </Badge>
+                <Badge variant="outline">Medium Priority</Badge>
                 <Switch
                   id="pest-email"
                   checked={pestEmail}
@@ -199,17 +203,17 @@ export default function NotificationSettings() {
             </div>
           </div>
 
-          {/* Fire/Smoke Alerts */}
+          {/* Fire Safety */}
           <div className="p-4 rounded-xl border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                  <Flame className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+                  <Flame className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <h3 className="mb-1">Fire & Smoke Detection</h3>
+                  <h3 className="mb-1">Fire Safety</h3>
                   <p className="text-sm text-slate-600">
-                    Fire hazards and smoke alerts
+                    Smoke, heat, and equipment fire risks
                   </p>
                 </div>
               </div>
@@ -218,7 +222,7 @@ export default function NotificationSettings() {
                   variant="outline"
                   className="bg-red-100 text-red-700 border-red-200"
                 >
-                  Critical
+                  Critical Priority
                 </Badge>
                 <Switch
                   id="fire-email"
