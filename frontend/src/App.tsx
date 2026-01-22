@@ -1,170 +1,139 @@
-import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardLayout from "./pages/DashboardLayout";
 import BlogPage from "./pages/BlogPage";
-import {AdminPanel} from "./pages/AdminPanel";
+import { AdminPanel } from "./pages/AdminPanel";
+import { ProtectedRoute, PublicRoute } from "./components/auth";
 
-export default function App() {
-  // Initialize state from sessionStorage or default to landing
-  const [currentPage, setCurrentPage] = useState<
-    "landing" | "login" | "signup" | "dashboard" | "blog" | "admin"
-  >(() => {
-    const saved = sessionStorage.getItem("currentPage");
-    return (saved as any) || "landing";
-  });
-
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    const token = localStorage.getItem("token");
-    const savedAuth = sessionStorage.getItem("isAuthenticated");
-    return savedAuth === "true" || !!token;
-  });
-
-  // Initialize browser history
-  useEffect(() => {
-    // Push initial state if not already present
-    if (!window.history.state) {
-      window.history.replaceState({ page: currentPage }, "", window.location.href);
-    }
-  }, []);
-
-  // Handle browser back/forward buttons
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      if (event.state && event.state.page) {
-        setCurrentPage(event.state.page);
-      } else {
-        // If no state and we're on landing, prevent going back further
-        if (currentPage === "landing") {
-          window.history.pushState({ page: "landing" }, "", window.location.href);
-        }
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [currentPage]);
-
-  // Save state to sessionStorage whenever it changes
-  useEffect(() => {
-    sessionStorage.setItem("currentPage", currentPage);
-    sessionStorage.setItem("isAuthenticated", String(isAuthenticated));
-  }, [currentPage, isAuthenticated]);
-
-  // Scroll to top when navigating to blog or landing page
-  useEffect(() => {
-    if (currentPage === "blog" || currentPage === "landing") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, [currentPage]);
-  const navigateTo = (page: typeof currentPage) => {
-    setCurrentPage(page);
-    window.history.pushState({ page }, "", window.location.href);
-  };
+/**
+ * AppRoutes - Contains all the route definitions
+ * Uses ProtectedRoute for authenticated pages and PublicRoute for login/signup
+ */
+function AppRoutes() {
+  const navigate = useNavigate();
 
   const handleLogin = (success: boolean, isAdmin = false) => {
     if (success) {
-      if(isAdmin){
-        navigateTo("admin");
+      localStorage.setItem("isAuthenticated", "true");
+      if (isAdmin) {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
       }
-      else{
-        setIsAuthenticated(true);
-        navigateTo("dashboard");
-      }
-        
     }
   };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem("token"); // Clear stored token
-    sessionStorage.removeItem("isAuthenticated");
-    navigateTo("landing");
+    localStorage.removeItem("token");
+    localStorage.removeItem("isAuthenticated");
+    navigate("/", { replace: true });
   };
 
-  if (currentPage === "landing") {
-    return (
-      <LandingPage
-        onSignIn={() => navigateTo("login")}
-        onGetStarted={() => navigateTo("signup")}
-        onBlog={() => navigateTo("blog")}
-        onHome={() => navigateTo("landing")}
-        onContactUs={() => navigateTo("landing")}
-        onOurTeam={() => navigateTo("landing")}
-      />
-    );
-  }
+  const handleSignupSuccess = (success: boolean) => {
+    if (success) {
+      navigate("/login", { replace: true });
+    }
+  };
 
-  if (currentPage === "blog") {
-    return (
-      <BlogPage
-        onBack={() => navigateTo("landing")}
-        onSignIn={() => navigateTo("login")}
-        onGetStarted={() => navigateTo("signup")}
-        onBlog={() => navigateTo("blog")}
+  return (
+    <Routes>
+      {/* Public Routes - accessible to everyone */}
+      <Route
+        path="/"
+        element={
+          <LandingPage
+            onSignIn={() => navigate("/login")}
+            onGetStarted={() => navigate("/signup")}
+            onBlog={() => navigate("/blog")}
+            onHome={() => navigate("/")}
+            onContactUs={() => navigate("/")}
+            onOurTeam={() => navigate("/")}
+          />
+        }
       />
-    );
-  }
 
-  if (currentPage === "login") {
-    return (
-      <LoginPage
-        onLogin={handleLogin}
-        onSignup={() => navigateTo("signup")}
-        onBack={() => {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          navigateTo("landing");
-        }}
-        onBlog={() => {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          navigateTo("blog");
-        }}
+      <Route
+        path="/blog"
+        element={
+          <BlogPage
+            onBack={() => navigate("/")}
+            onSignIn={() => navigate("/login")}
+            onGetStarted={() => navigate("/signup")}
+            onBlog={() => navigate("/blog")}
+          />
+        }
       />
-    );
-  }
 
-  if (currentPage === "signup") {
-    return (
-      <SignupPage
-        onSignup={(success) => {
-          // After signup, user needs to verify email and login
-          // The SignupPage will call onLogin() to redirect to login page
-          if (success) {
-            navigateTo("login");
-          }
-        }}
-        onLogin={() => navigateTo("login")}
-        onBack={() => {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          navigateTo("landing");
-        }}
-        onBlog={() => {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          navigateTo("blog");
-        }}
+      {/* Auth Routes - redirect to dashboard if already logged in */}
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <LoginPage
+              onLogin={handleLogin}
+              onSignup={() => navigate("/signup")}
+              onBack={() => navigate("/")}
+              onBlog={() => navigate("/blog")}
+            />
+          </PublicRoute>
+        }
       />
-    );
-  }
 
-  if (currentPage === "dashboard") {
-    return isAuthenticated ? (
-      <DashboardLayout onLogout={handleLogout} />
-    ) : (
-      <LoginPage
-        onLogin={(success) => handleLogin(success)}
-        onSignup={() => navigateTo("signup")}
-        onBack={() => navigateTo("landing")}
-        onBlog={() => {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          navigateTo("blog");
-        }}
+      <Route
+        path="/signup"
+        element={
+          <PublicRoute>
+            <SignupPage
+              onSignup={handleSignupSuccess}
+              onLogin={() => navigate("/login")}
+              onBack={() => navigate("/")}
+              onBlog={() => navigate("/blog")}
+            />
+          </PublicRoute>
+        }
       />
-    );
-  }
-      if (currentPage === "admin") {
-       return <AdminPanel onLogout={handleLogout} />;
-  }
 
-  return null;
+      {/* Protected Routes - require authentication */}
+      <Route
+        path="/dashboard/*"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute>
+            <AdminPanel onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Catch-all route - redirect to home */}
+      <Route path="*" element={<LandingPage
+        onSignIn={() => navigate("/login")}
+        onGetStarted={() => navigate("/signup")}
+        onBlog={() => navigate("/blog")}
+        onHome={() => navigate("/")}
+        onContactUs={() => navigate("/")}
+        onOurTeam={() => navigate("/")}
+      />} />
+    </Routes>
+  );
+}
+
+/**
+ * App - Main application component with BrowserRouter
+ */
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
 }
