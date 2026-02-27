@@ -168,7 +168,7 @@ export default function LandingPage({
         <div
           className="absolute inset-0 bg-cover bg-center bg-fixed"
           style={{
-            backgroundImage: "url('/images/bg-2.jpg')",
+            backgroundImage: "url('/images/bg-6.jpg')",
             filter: "brightness(0.8) contrast(1.2)",
           }}
         />

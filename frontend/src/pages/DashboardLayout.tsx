@@ -207,7 +207,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
               <div className="w-12 h-10 bg-gradient-to-br rounded-lg flex items-center justify-center">
-                  <img src="../public/images/Kitcheneye_logo.png" alt="" />
+                  <img src="/images/Kitcheneye_logo.png" alt="" />
               </div>
                <span className="text-2xl text-white tracking-tight">
                 Kitchen
