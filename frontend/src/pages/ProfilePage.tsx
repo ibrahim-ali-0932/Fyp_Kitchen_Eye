@@ -13,6 +13,8 @@ import {
   X,
   Camera,
 } from "lucide-react";
+import { authorizedFetch } from "../services/authToken";
+import { API_URL } from "../services/api";
 
 interface UserProfile {
   email: string;
@@ -45,18 +47,10 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setError("No token found");
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch("http://localhost:8000/auth/profile/", {
+        const response = await authorizedFetch(`${API_URL}/auth/profile/`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -112,13 +106,6 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
     setSuccess("");
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("No token found");
-        setSaving(false);
-        return;
-      }
-
       // Note: Email cannot be changed, but we need to include it in the request body for the schema
       const requestBody = {
         email: formData.email, // Include email (will be ignored by backend, uses token email)
@@ -129,11 +116,10 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
 
       console.log("🔵 Sending profile update:", requestBody);
 
-      const response = await fetch("http://localhost:8000/auth/profile/", {
+      const response = await authorizedFetch(`${API_URL}/auth/profile/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestBody),
       });

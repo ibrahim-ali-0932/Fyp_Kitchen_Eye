@@ -1,316 +1,193 @@
+// frontend/src/pages/Dashboard.tsx
 import { useEffect, useState } from "react";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
-  AlertTriangle,
-  Droplet,
-  Bug,
-  Flame,
-  ShieldCheck,
-  TrendingUp,
-  TrendingDown,
-  Clock,
-  Camera,
+  Shirt, ChefHat, Hand, Flame, ShieldCheck,
+  TrendingUp, TrendingDown, Clock, Camera,
 } from "lucide-react";
 import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import {
-  fetchStats,
-  StatItem,
-  ViolationTrend,
-  RecentViolation,
-} from "../services/statsService";
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
+} from "../components/ui/select";
+import { fetchDashboard, DashboardData } from "../services/statsService";
+import { fetchViolationImage } from "../services/violationsService";
+
+const DAY_OPTIONS = [
+  { label: "Last 7 Days",  value: 7  },
+  { label: "Last 14 Days", value: 14 },
+  { label: "Last 30 Days", value: 30 },
+];
 
 export default function Dashboard() {
-  const [stats, setStats] = useState([
-    {
-      title: "PPE Violations",
-      value: "0",
-      change: "0%",
-      trend: "neutral",
-      icon: AlertTriangle,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-    },
-    {
-      title: "Spill Violations",
-      value: "0",
-      change: "0%",
-      trend: "neutral",
-      icon: Droplet,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-    },
-    {
-      title: "Pest Detections",
-      value: "0",
-      change: "0%",
-      trend: "neutral",
-      icon: Bug,
-      color: "text-red-600",
-      bgColor: "bg-red-50",
-    },
-    {
-      title: "Fire/Smoke Alerts",
-      value: "0",
-      change: "0%",
-      trend: "neutral",
-      icon: Flame,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-    },
-    {
-      title: "Hygiene Index Score",
-      value: "0%",
-      change: "0%",
-      trend: "neutral",
-      icon: ShieldCheck,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-    },
-  ]);
-
-  const [violationData, setViolationData] = useState<ViolationTrend[]>([]);
-  const [recentViolations, setRecentViolations] = useState<RecentViolation[]>(
-    []
+  const [days, setDays]       = useState(7);
+  const [data, setData]       = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [isOffline, setIsOffline] = useState(
+    typeof navigator !== "undefined" ? !navigator.onLine : false
   );
 
-  const loadDashboardData = async () => {
-    // Fetch violations.txt for stats
-    const violationsResponse = await fetchStats("violations.txt");
-    if (violationsResponse?.value) {
-      const lines = violationsResponse.value
-        .split("\n")
-        .filter((line: string) => line.trim());
-      const iconMapping = {
-        "PPE Violations": AlertTriangle,
-        "Spill Violations": Droplet,
-        "Pest Detections": Bug,
-        "Fire/Smoke Alerts": Flame,
-        "Hygiene Index Score": ShieldCheck,
-      };
-      const colorMapping = {
-        "PPE Violations": { color: "text-orange-600", bgColor: "bg-orange-50" },
-        "Spill Violations": { color: "text-blue-600", bgColor: "bg-blue-50" },
-        "Pest Detections": { color: "text-red-600", bgColor: "bg-red-50" },
-        "Fire/Smoke Alerts": {
-          color: "text-purple-600",
-          bgColor: "bg-purple-50",
-        },
-        "Hygiene Index Score": {
-          color: "text-green-600",
-          bgColor: "bg-green-50",
-        },
-      };
-
-      const parsedStats = lines.map((line: string) => {
-        const [title, value, change, trend] = line.split("|");
-        return {
-          title,
-          value,
-          change,
-          trend,
-          icon: iconMapping[title as keyof typeof iconMapping] || AlertTriangle,
-          color:
-            colorMapping[title as keyof typeof colorMapping]?.color ||
-            "text-gray-600",
-          bgColor:
-            colorMapping[title as keyof typeof colorMapping]?.bgColor ||
-            "bg-gray-50",
-        };
-      });
-      setStats(parsedStats);
+  const load = async (d: number) => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setIsOffline(true);
+      setLoading(false);
+      setError("Internet disconnected. Reconnect to load dashboard data.");
+      return;
     }
 
-    // Fetch violation_trend.txt for chart data
-    const trendResponse = await fetchStats("violation_trend.txt");
-    if (trendResponse?.value) {
-      const lines = trendResponse.value
-        .split("\n")
-        .filter((line: string) => line.trim());
-      const parsedTrend = lines.slice(1).map((line: string) => {
-        const [day, ppe, spill, pest, fire] = line.split(",");
-        return {
-          day,
-          ppe: parseInt(ppe),
-          spill: parseInt(spill),
-          pest: parseInt(pest),
-          fire: parseInt(fire),
-        };
-      });
-      setViolationData(parsedTrend);
-    }
+    setLoading(true);
+    setError(null);
+    try {
+      const dashboard = await fetchDashboard(d);
+      setData(dashboard);
 
-    // Fetch recent_violations.txt
-    const recentResponse = await fetchStats("recent_violations.txt");
-    if (recentResponse?.value) {
-      const lines = recentResponse.value
-        .split("\n")
-        .filter((line: string) => line.trim());
-      const parsedViolations = lines.map((line: string) => {
-        const [
-          id,
-          type,
-          description,
-          severity,
-          location,
-          timestamp,
-          status,
-          image,
-        ] = line.split("|");
-        return {
-          id: parseInt(id),
-          type,
-          description,
-          severity,
-          location,
-          timestamp,
-          status,
-          image,
-        };
+      const imagePairs = await Promise.all(
+        (dashboard.recent_violations || []).map(async (violation) => {
+          try {
+            const imageUrl = await fetchViolationImage(violation.id);
+            return [violation.id, imageUrl] as const;
+          } catch {
+            return [violation.id, null] as const;
+          }
+        })
+      );
+
+      setImageUrls((prev) => {
+        Object.values(prev).forEach((url) => URL.revokeObjectURL(url));
+        const next: Record<string, string> = {};
+        imagePairs.forEach(([id, url]) => {
+          if (url) next[id] = url;
+        });
+        return next;
       });
-      setRecentViolations(parsedViolations);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadDashboardData();
-
-    // Reload data when window regains focus
-    const handleFocus = () => {
-      loadDashboardData();
+    const onOnline = () => {
+      setIsOffline(false);
+      load(days);
+    };
+    const onOffline = () => {
+      setIsOffline(true);
+      setError("Internet disconnected. Reconnect to load dashboard data.");
     };
 
-    window.addEventListener("focus", handleFocus);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
 
-    // Optional: Auto-refresh every 10 seconds
-    const interval = setInterval(loadDashboardData, 10000);
+    load(days);
+    const iv = setInterval(() => {
+      if (typeof navigator === "undefined" || navigator.onLine) {
+        load(days);
+      }
+    }, 30000);
 
     return () => {
-      window.removeEventListener("focus", handleFocus);
-      clearInterval(interval);
+      clearInterval(iv);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
     };
-  }, []);
+  }, [days]);
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case "Critical":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "High":
-        return "bg-orange-100 text-orange-700 border-orange-200";
-      case "Medium":
-        return "bg-yellow-100 text-yellow-700 border-yellow-200";
-      default:
-        return "bg-slate-100 text-slate-700 border-slate-200";
-    }
-  };
+  useEffect(() => {
+    return () => {
+      Object.values(imageUrls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [imageUrls]);
 
-  const getStatusColor = (status: string) => {
-    return status === "Resolved"
-      ? "bg-green-100 text-green-700 border-green-200"
-      : "bg-blue-100 text-blue-700 border-blue-200";
-  };
+  const s = data?.summary;
+  const chart = (data?.chart?.days ?? []).map((d) => ({
+    day: d.date.slice(5), apron: d.apron, gloves: d.gloves, hairnet: d.hairnet, fire: d.fire,
+  }));
+  const recent = data?.recent_violations ?? [];
+
+  const cards = [
+    { title: "Apron Alerts",       value: s?.apron_count   ?? 0, change: s?.apron_change_pct   ?? 0, icon: Shirt,   color: "text-orange-600", bg: "bg-orange-50"  },
+    { title: "Gloves Alerts",      value: s?.gloves_count  ?? 0, change: s?.gloves_change_pct  ?? 0, icon: Hand,    color: "text-blue-600",   bg: "bg-blue-50"    },
+    { title: "Hairnet Alerts",     value: s?.hairnet_count ?? 0, change: s?.hairnet_change_pct ?? 0, icon: ChefHat, color: "text-red-600",    bg: "bg-red-50"     },
+    { title: "Fire Alerts",        value: s?.fire_count    ?? 0, change: s?.fire_change_pct    ?? 0, icon: Flame,   color: "text-purple-600", bg: "bg-purple-50"  },
+    { title: "Hygiene Index Score",value: `${s?.hygiene_score ?? 100}%`, change: null,            icon: ShieldCheck,   color: "text-green-600",  bg: "bg-green-50"   },
+  ];
+
+  const getSev = (s: string) =>
+    s === "High" ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-yellow-100 text-yellow-700 border-yellow-200";
+  const getSta = (s: string) =>
+    s === "Resolved" ? "bg-green-100 text-green-700 border-green-200" : "bg-blue-100 text-blue-700 border-blue-200";
 
   return (
     <div className="p-6 space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl mb-2">Dashboard</h1>
-        <p className="text-slate-600">
-          Monitor hygiene compliance and safety violations in real-time
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl mb-2">Dashboard</h1>
+          <p className="text-slate-600">Monitor hygiene compliance and safety violations in real-time</p>
+        </div>
+        <Select value={String(days)} onValueChange={(v: string) => setDays(Number(v))}>
+          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {DAY_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={String(o.value)}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Stats Grid */}
+      {isOffline && (
+        <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm">
+          You are offline. Dashboard data will refresh automatically when internet is restored.
+        </div>
+      )}
+
+      {error && <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm">Error: {error}</div>}
+
+      {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {stats.map((stat, index) => (
-          <Card key={index} className="p-6">
+        {cards.map((c, i) => (
+          <Card key={i} className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <div
-                className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center`}
-              >
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
+              <div className={`w-12 h-12 rounded-xl ${c.bg} flex items-center justify-center`}>
+                <c.icon className={`w-6 h-6 ${c.color}`} />
               </div>
-              {stat.trend !== "neutral" && (
-                <div
-                  className={`flex items-center gap-1 text-sm ${
-                    stat.trend === "up" ? "text-red-600" : "text-green-600"
-                  }`}
-                >
-                  {stat.trend === "up" ? (
-                    <TrendingUp className="w-4 h-4" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4" />
-                  )}
-                  <span>{stat.change}</span>
+              {c.change !== null && c.change !== 0 && (
+                <div className={`flex items-center gap-1 text-sm ${c.change > 0 ? "text-red-600" : "text-green-600"}`}>
+                  {c.change > 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                  <span>{Math.abs(c.change)}%</span>
                 </div>
               )}
             </div>
-            <div>
-              <div className="text-3xl mb-1">{stat.value}</div>
-              <div className="text-sm text-slate-600">{stat.title}</div>
-            </div>
+            <div className="text-3xl mb-1">{loading ? "—" : c.value}</div>
+            <div className="text-sm text-slate-600">{c.title}</div>
           </Card>
         ))}
       </div>
 
-      {/* Violations Chart */}
+      {/* Chart */}
       <Card className="p-6">
         <div className="mb-6">
           <h2 className="text-xl mb-1">Violations Per Day</h2>
-          <p className="text-sm text-slate-600">
-            Last 12 days violation trends by category
-          </p>
+          <p className="text-sm text-slate-600">Last {days} days violation trends by category</p>
         </div>
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={violationData}>
+          <BarChart data={chart}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="day" tick={{ fill: "#64748b" }} />
             <YAxis tick={{ fill: "#64748b" }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-              }}
-            />
+            <Tooltip contentStyle={{ backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "8px" }} />
             <Legend />
-            <Bar
-              dataKey="ppe"
-              fill="#f97316"
-              name="PPE Violations"
-              radius={[8, 8, 0, 0]}
-            />
-            <Bar
-              dataKey="spill"
-              fill="#3b82f6"
-              name="Spill Violations"
-              radius={[8, 8, 0, 0]}
-            />
-            <Bar
-              dataKey="pest"
-              fill="#ef4444"
-              name="Pest Detections"
-              radius={[8, 8, 0, 0]}
-            />
-            <Bar
-              dataKey="fire"
-              fill="#a855f7"
-              name="Fire Alerts"
-              radius={[8, 8, 0, 0]}
-            />
+            <Bar dataKey="apron"   fill="#f97316" name="Apron Alerts"    radius={[8,8,0,0]} />
+            <Bar dataKey="gloves"  fill="#3b82f6" name="Gloves Alerts"   radius={[8,8,0,0]} />
+            <Bar dataKey="hairnet" fill="#ef4444" name="Hairnet Alerts"  radius={[8,8,0,0]} />
+            <Bar dataKey="fire"  fill="#a855f7" name="Fire Alerts"      radius={[8,8,0,0]} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -319,55 +196,37 @@ export default function Dashboard() {
       <Card className="p-6">
         <div className="mb-6">
           <h2 className="text-xl mb-1">Recent Violations</h2>
-          <p className="text-sm text-slate-600">
-            Latest detected violations across all locations
-          </p>
+          <p className="text-sm text-slate-600">Latest detected violations across all cameras</p>
         </div>
         <div className="space-y-4">
-          {recentViolations.map((violation) => (
-            <div
-              key={violation.id}
-              className="flex gap-4 p-4 rounded-xl border hover:shadow-md transition-shadow"
-            >
-              <div className="w-20 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
-                <ImageWithFallback
-                  src={violation.image}
-                  alt={violation.type}
-                  className="w-full h-full object-cover"
-                />
+          {!loading && recent.length === 0 && (
+            <p className="text-slate-500 text-sm text-center py-4">No violations recorded yet.</p>
+          )}
+          {recent.map((v) => (
+            <div key={v.id} className="flex gap-4 p-4 rounded-xl border hover:shadow-md transition-shadow">
+              <div className="w-40 h-24 rounded-lg overflow-hidden bg-slate-100 border flex-shrink-0">
+                {imageUrls[v.id] ? (
+                  <img src={imageUrls[v.id]} alt={v.type} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">
+                    No image
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div>
-                    <h3 className="mb-1">{violation.type}</h3>
-                    <p className="text-sm text-slate-600">
-                      {violation.description}
-                    </p>
+                    <h3 className="mb-1">{v.type}</h3>
+                    <p className="text-sm text-slate-600">{v.description}</p>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
-                    <Badge
-                      className={getSeverityColor(violation.severity)}
-                      variant="outline"
-                    >
-                      {violation.severity}
-                    </Badge>
-                    <Badge
-                      className={getStatusColor(violation.status)}
-                      variant="outline"
-                    >
-                      {violation.status}
-                    </Badge>
+                    <Badge className={getSev(v.severity)} variant="outline">{v.severity}</Badge>
+                    <Badge className={getSta(v.status)}  variant="outline">{v.status}</Badge>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-slate-600">
-                  <span className="flex items-center gap-1">
-                    <Camera className="w-4 h-4" />
-                    {violation.location}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {violation.timestamp}
-                  </span>
+                  <span className="flex items-center gap-1"><Camera className="w-4 h-4" />{v.location}</span>
+                  <span className="flex items-center gap-1"><Clock   className="w-4 h-4" />{v.timestamp}</span>
                 </div>
               </div>
             </div>

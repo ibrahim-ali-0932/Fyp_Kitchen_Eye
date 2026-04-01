@@ -1,59 +1,85 @@
-// services/statsService.ts
-// -------------------------
-// Handles fetching text-based statistics from FastAPI backend.
-// Every backend file returns JSON, this service parses it safely.
+// frontend/src/services/statsService.ts
+import { getAuthToken } from "./authToken";
+import { fetchViolationImage } from "./violationsService";
 
-export interface StatItem {
-  title: string;
-  value: number | string;
-  change?: string;
-  trend?: string;
-  icon?: any;
-  color?: string;
-  bgColor?: string;
+const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || "http://localhost:8000";
+
+async function authHeaders(): Promise<HeadersInit> {
+  const token = await getAuthToken();
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
 }
 
-export interface ViolationTrend {
-  day: string;
-  ppe: number;
-  spill: number;
-  pest: number;
+export interface ViolationSummary {
+  user_id: string;
+  last_updated: string | null;
+  apron_count: number;
+  gloves_count: number;
+  hairnet_count: number;
+  fire_count: number;
+  total_count: number;
+  hygiene_score: number;
+  apron_change_pct: number;
+  gloves_change_pct: number;
+  hairnet_change_pct: number;
+  fire_change_pct: number;
+}
+
+export interface ChartDay {
+  date: string;
+  apron: number;
+  gloves: number;
+  hairnet: number;
   fire: number;
 }
 
 export interface RecentViolation {
-  id: number;
+  id: string;
   type: string;
   description: string;
-  severity: string;
+  violation_type: string;
+  severity: "High" | "Medium" | "Low";
   location: string;
   timestamp: string;
-  status: string;
-  image: string;
+  status: "Pending" | "Resolved";
+  has_snapshot: boolean;
+  snapshot_url: string | null;
 }
 
-const API_BASE = "http://localhost:8000"; // change in production
+export interface DashboardData {
+  summary: ViolationSummary;
+  chart: { user_id: string; days: ChartDay[] };
+  recent_violations: RecentViolation[];
+}
 
-// Fetch any stat file like violations.txt, trend.txt, etc.
-export async function fetchStats(filename: string) {
-  try {
-    // Add timestamp to prevent caching
-    const timestamp = new Date().getTime();
-    const response = await fetch(`${API_BASE}/stats/${filename}?t=${timestamp}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
-    });
-    if (!response.ok) {
-      console.warn("File not found:", filename);
-      return null;
-    }
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Failed to fetch stats:", err);
-    return null;
-  }
+export async function fetchDashboard(days = 7): Promise<DashboardData> {
+  const headers = await authHeaders();
+  const res = await fetch(`${BASE_URL}/stats/dashboard?days=${days}`, { headers });
+  if (!res.ok) throw new Error(`Dashboard fetch failed: ${res.status}`);
+  const data = await res.json();
+  return {
+    summary: data.summary,
+    chart: { user_id: data.summary.user_id, days: data.chart },
+    recent_violations: data.recent_violations,
+  };
+}
+
+export async function fetchSummary(): Promise<ViolationSummary> {
+  const headers = await authHeaders();
+  const res = await fetch(`${BASE_URL}/stats/summary`, { headers });
+  if (!res.ok) throw new Error(`Summary fetch failed: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchChart(days = 7): Promise<{ user_id: string; days: ChartDay[] }> {
+  const headers = await authHeaders();
+  const res = await fetch(`${BASE_URL}/stats/chart?days=${days}`, { headers });
+  if (!res.ok) throw new Error(`Chart fetch failed: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchSnapshotImage(violationId: string): Promise<string | null> {
+  return fetchViolationImage(violationId);
 }

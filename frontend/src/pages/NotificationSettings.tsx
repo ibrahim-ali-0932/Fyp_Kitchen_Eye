@@ -4,7 +4,7 @@ import { Card } from "../components/ui/card";
 import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
-import { AlertTriangle, Droplet, Bug, Flame, Bell, CheckCircle } from "lucide-react";
+import { Shirt, Hand, ChefHat, Flame, Bell, CheckCircle } from "lucide-react";
 import { logViolation } from "../services/violationsService";
 
 export default function NotificationSettings() {
@@ -85,7 +85,6 @@ export default function NotificationSettings() {
           violation_type: "Automated Violation Alert",
           camera_location: "Kitchen Monitor System",
           destination_email: "f223367@cfd.nu.edu.pk",
-          token,
           is_test: false,
         });
       }
@@ -240,17 +239,17 @@ export default function NotificationSettings() {
       <Card className="p-6">
         <h2 className="text-xl mb-6">Notifications by Violation Type</h2>
         <div className="space-y-6">
-          {/* PPE Violations */}
+          {/* Apron Alerts */}
           <div className="p-4 rounded-xl border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-orange-600" />
+                  <Shirt className="w-5 h-5 text-orange-600" />
                 </div>
                 <div>
-                  <h3 className="mb-1">PPE Violations</h3>
+                  <h3 className="mb-1">Apron Alerts</h3>
                   <p className="text-sm text-slate-600">
-                    Missing gloves, hairnets, masks
+                    Apron-related compliance alerts
                   </p>
                 </div>
               </div>
@@ -265,17 +264,17 @@ export default function NotificationSettings() {
             </div>
           </div>
 
-          {/* Spill Detection */}
+          {/* Gloves Alerts */}
           <div className="p-4 rounded-xl border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <Droplet className="w-5 h-5 text-blue-600" />
+                  <Hand className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="mb-1">Spill Detection</h3>
+                  <h3 className="mb-1">Gloves Alerts</h3>
                   <p className="text-sm text-slate-600">
-                    Floor hazards and liquid spills
+                    Hand-safety and gloves-related alerts
                   </p>
                 </div>
               </div>
@@ -295,17 +294,17 @@ export default function NotificationSettings() {
             </div>
           </div>
 
-          {/* Pest Detection */}
+          {/* Hairnet Alerts */}
           <div className="p-4 rounded-xl border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                  <Bug className="w-5 h-5 text-green-700" />
+                  <ChefHat className="w-5 h-5 text-green-700" />
                 </div>
                 <div>
-                  <h3 className="mb-1">Pest Detection</h3>
+                  <h3 className="mb-1">Hairnet Alerts</h3>
                   <p className="text-sm text-slate-600">
-                    Rodents, insects, and contamination risks
+                    Hairnet and head-covering compliance alerts
                   </p>
                 </div>
               </div>
@@ -320,7 +319,7 @@ export default function NotificationSettings() {
             </div>
           </div>
 
-          {/* Fire Safety */}
+          {/* Fire Alerts */}
           <div className="p-4 rounded-xl border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -328,7 +327,7 @@ export default function NotificationSettings() {
                   <Flame className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <h3 className="mb-1">Fire Safety</h3>
+                  <h3 className="mb-1">Fire Alerts</h3>
                   <p className="text-sm text-slate-600">
                     Smoke, heat, and equipment fire risks
                   </p>

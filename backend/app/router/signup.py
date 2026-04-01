@@ -2,6 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from firebase_admin import auth as firebase_auth
 from ..database.db import db
 
+
+CLOCK_SKEW_SECONDS = 10
+
 router = APIRouter(prefix="/signup", tags=["signup"])
 
 
@@ -35,7 +38,10 @@ async def signup(request: Request, Authorization: str = Header(None)):
 
     try:
         # Step 1: Verify ID token and get user info
-        decoded_token = firebase_auth.verify_id_token(id_token)
+        decoded_token = firebase_auth.verify_id_token(
+            id_token,
+            clock_skew_seconds=CLOCK_SKEW_SECONDS,
+        )
         uid = decoded_token["uid"]
         user_email = decoded_token.get("email", data.get("email", ""))
         user = firebase_auth.get_user(uid)

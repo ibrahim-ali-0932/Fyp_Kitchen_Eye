@@ -4,6 +4,9 @@ from ..database.db import db
 from typing import List, Optional
 from pydantic import BaseModel
 
+
+CLOCK_SKEW_SECONDS = 10
+
 router = APIRouter(prefix="/users", tags=["users"])
 
 class CreateUserRequest(BaseModel):
@@ -26,7 +29,10 @@ async def get_all_users(Authorization: str = Header(None)):
         # Allow admin bypass
         if id_token != "admin_bypass" and id_token:
             try:
-                decoded_token = firebase_auth.verify_id_token(id_token)
+                decoded_token = firebase_auth.verify_id_token(
+                    id_token,
+                    clock_skew_seconds=CLOCK_SKEW_SECONDS,
+                )
             except Exception as e:
                 print(f"Token verification failed: {e}")
                 # Continue anyway for admin
@@ -60,7 +66,10 @@ async def delete_user(user_id: str, Authorization: str = Header(None)):
         
         if id_token != "admin_bypass" and id_token:
             try:
-                decoded_token = firebase_auth.verify_id_token(id_token)
+                decoded_token = firebase_auth.verify_id_token(
+                    id_token,
+                    clock_skew_seconds=CLOCK_SKEW_SECONDS,
+                )
                 print(f"✅ Token verified for user: {decoded_token.get('uid')}")
             except Exception as e:
                 print(f"⚠️ Token verification failed: {e}")
@@ -104,7 +113,10 @@ async def create_user(
         
         if id_token != "admin_bypass" and id_token:
             try:
-                decoded_token = firebase_auth.verify_id_token(id_token)
+                decoded_token = firebase_auth.verify_id_token(
+                    id_token,
+                    clock_skew_seconds=CLOCK_SKEW_SECONDS,
+                )
             except Exception as e:
                 print(f"Token verification failed: {e}")
                 pass

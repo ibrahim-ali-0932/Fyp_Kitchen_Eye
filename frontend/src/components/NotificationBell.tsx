@@ -24,15 +24,8 @@ export default function NotificationBell() {
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
-    console.log("🔔 NOTIFICATION BELL - Starting to load violations");
-    
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    
-    console.log("🔑 Token found:", token ? "YES" : "NO");
-    
-    if (!token) {
-      console.warn("⚠️ No token - skipping violation fetch");
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setError("You're offline. Notifications will refresh when internet is back.");
       return;
     }
     
@@ -40,16 +33,10 @@ export default function NotificationBell() {
     setError(null);
     
     try {
-      console.log("📡 Fetching violations from API...");
-      const data = await fetchUserViolations(token);
-      console.log("✅ Violations loaded successfully:", data?.length || 0);
-      console.log("📋 Violation data:", data);
+      const data = await fetchUserViolations();
       setItems(data || []);
     } catch (error: any) {
-      console.error("❌ Failed to load violations:", error);
-      console.error("Error message:", error.message);
-      console.error("Error details:", error);
-      setError("Failed to load notifications");
+      setError(error?.message || "Failed to load notifications");
     } finally {
       setLoading(false);
     }

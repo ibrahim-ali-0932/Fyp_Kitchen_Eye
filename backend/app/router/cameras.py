@@ -4,6 +4,9 @@ from ..database.db import db
 from datetime import datetime
 from pydantic import BaseModel
 
+
+CLOCK_SKEW_SECONDS = 10
+
 router = APIRouter(prefix="/cameras", tags=["cameras"])
 
 class CreateCameraRequest(BaseModel):
@@ -23,7 +26,10 @@ async def get_all_cameras(Authorization: str = Header(None)):
         
         if id_token != "admin_bypass" and id_token:
             try:
-                decoded_token = firebase_auth.verify_id_token(id_token)
+                decoded_token = firebase_auth.verify_id_token(
+                    id_token,
+                    clock_skew_seconds=CLOCK_SKEW_SECONDS,
+                )
             except Exception as e:
                 print(f"Token verification failed: {e}")
                 pass
@@ -63,7 +69,10 @@ async def create_camera(
         
         if id_token != "admin_bypass" and id_token:
             try:
-                decoded_token = firebase_auth.verify_id_token(id_token)
+                decoded_token = firebase_auth.verify_id_token(
+                    id_token,
+                    clock_skew_seconds=CLOCK_SKEW_SECONDS,
+                )
             except Exception as e:
                 print(f"Token verification failed: {e}")
                 pass
@@ -115,7 +124,10 @@ async def delete_camera(camera_id: str, Authorization: str = Header(None)):
         
         if id_token != "admin_bypass" and id_token:
             try:
-                decoded_token = firebase_auth.verify_id_token(id_token)
+                decoded_token = firebase_auth.verify_id_token(
+                    id_token,
+                    clock_skew_seconds=CLOCK_SKEW_SECONDS,
+                )
                 print(f"✅ Token verified for user: {decoded_token.get('uid')}")
             except Exception as e:
                 print(f"⚠️ Token verification failed: {e}")

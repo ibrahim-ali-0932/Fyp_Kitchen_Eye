@@ -1,5 +1,25 @@
-venv/
+backend/.env
+frontend/.env
+.env
+
+# Firebase credentials — NEVER commit
+backend/app/credentials/
+*.json
+
+# Python cache
 __pycache__/
-logs/
-/vscode/
-vscode/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Node
+node_modules/
+dist/
+build/
+
+# YOLO / ML artifacts
+*.pt
+backend/model/saved_snapshots/
+*.mp4
+backend/model/*.mp4

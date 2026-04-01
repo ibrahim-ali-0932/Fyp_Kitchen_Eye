@@ -27,6 +27,8 @@ import NotificationSettings from "./NotificationSettings";
 import ProfilePage from "./ProfilePage";
 import Subscription from "./Subscription";
 import NotificationBell from "../components/NotificationBell";
+import { authorizedFetch } from "../services/authToken";
+import { API_URL } from "../services/api";
 
 interface DashboardLayoutProps {
   onLogout: () => void;
@@ -60,23 +62,10 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setLoading(false);
-        setUserProfile({
-          email: "No email",
-          Fullname: "User",
-          Branchname: "",
-          address: "",
-        });
-        return;
-      }
-
-      const response = await fetch("http://localhost:8000/auth/profile/", {
+      const response = await authorizedFetch(`${API_URL}/auth/profile/`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -92,21 +81,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         };
         setUserProfile(profileData);
       } else {
-        const errorText = await response.text();
-
-        let errorData = {};
-        try {
-          errorData = JSON.parse(errorText);
-        } catch (e) {}
-
-        // If token is invalid, clear it
-        if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem("token");
-        }
-
-        // If profile not found (404), set default values
-        if (response.status === 404) {
-        }
+        // Keep session state managed by Firebase auth observer; do not force local signout here.
 
         // Set default values on any error
         setUserProfile({

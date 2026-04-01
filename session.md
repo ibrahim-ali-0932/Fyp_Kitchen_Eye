@@ -1,0 +1,195 @@
+/////app.tsx
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import DashboardLayout from "./pages/DashboardLayout";
+import BlogPage from "./pages/BlogPage";
+import { AdminPanel } from "./pages/AdminPanel";
+import { ProtectedRoute, PublicRoute } from "./components/auth";
+
+/**
+ * AppRoutes - Contains all the route definitions
+ * Uses ProtectedRoute for authenticated pages and PublicRoute for login/signup
+ */
+function AppRoutes() {
+  const navigate = useNavigate();
+
+  const handleLogin = (success: boolean, isAdmin = false) => {
+    if (success) {
+      localStorage.setItem("isAuthenticated", "true");
+      if (isAdmin) {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("isAuthenticated");
+    navigate("/", { replace: true });
+  };
+
+  const handleSignupSuccess = (success: boolean) => {
+    if (success) {
+      navigate("/login", { replace: true });
+    }
+  };
+
+  return (
+    <Routes>
+      {/* Public Routes - accessible to everyone */}
+      <Route
+        path="/"
+        element={
+          <LandingPage
+            onSignIn={() => navigate("/login")}
+            onGetStarted={() => navigate("/signup")}
+            onBlog={() => navigate("/blog")}
+            onHome={() => navigate("/")}
+            onContactUs={() => navigate("/")}
+            onOurTeam={() => navigate("/")}
+          />
+        }
+      />
+
+      <Route
+        path="/blog"
+        element={
+          <BlogPage
+            onBack={() => navigate("/")}
+            onSignIn={() => navigate("/login")}
+            onGetStarted={() => navigate("/signup")}
+            onBlog={() => navigate("/blog")}
+          />
+        }
+      />
+
+      {/* Auth Routes - redirect to dashboard if already logged in */}
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <LoginPage
+              onLogin={handleLogin}
+              onSignup={() => navigate("/signup")}
+              onBack={() => navigate("/")}
+              onBlog={() => navigate("/blog")}
+            />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/signup"
+        element={
+          <PublicRoute>
+            <SignupPage
+              onSignup={handleSignupSuccess}
+              onLogin={() => navigate("/login")}
+              onBack={() => navigate("/")}
+              onBlog={() => navigate("/blog")}
+            />
+          </PublicRoute>
+        }
+      />
+
+      {/* Protected Routes - require authentication */}
+      <Route
+        path="/dashboard/*"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute>
+            <AdminPanel onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Catch-all route - redirect to home */}
+      <Route path="*" element={<LandingPage
+        onSignIn={() => navigate("/login")}
+        onGetStarted={() => navigate("/signup")}
+        onBlog={() => navigate("/blog")}
+        onHome={() => navigate("/")}
+        onContactUs={() => navigate("/")}
+        onOurTeam={() => navigate("/")}
+      />} />
+    </Routes>
+  );
+}
+
+/**
+ * App - Main application component with BrowserRouter
+ */
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
+}
+/////proctedroute
+import { Navigate, useLocation } from "react-router-dom";
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+/**
+ * ProtectedRoute - Wraps routes that require authentication
+ * If user is not authenticated, redirects to login page
+ * Preserves the attempted URL so user can be redirected back after login
+ */
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const location = useLocation();
+  const token = localStorage.getItem("token");
+  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+
+  // Require BOTH token AND isAuthenticated flag
+  if (!token || !isAuthenticated) {
+    // Redirect to login, but save the attempted URL
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+}
+
+////////////publicRoute//////
+import { Navigate } from "react-router-dom";
+
+interface PublicRouteProps {
+  children: React.ReactNode;
+}
+
+/**
+ * PublicRoute - Wraps routes that should only be accessible when NOT authenticated
+ * If user IS authenticated, redirects to dashboard
+ * This prevents logged-in users from accessing login/signup pages
+ * Also solves the "back button" problem - pressing back to login redirects to dashboard
+ */
+export function PublicRoute({ children }: PublicRouteProps) {
+  const token = localStorage.getItem("token");
+  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+
+  // Only redirect if BOTH token exists AND user is explicitly marked as authenticated
+  // This prevents redirect with stale tokens from previous sessions
+  if (token && isAuthenticated) {
+    // User is already logged in, redirect to dashboard
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
+////index.ts
+export { ProtectedRoute } from "./ProtectedRoute";
+export { PublicRoute } from "./PublicRoute";

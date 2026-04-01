@@ -4,21 +4,20 @@ from .router import signup, login, profile, stats, violations, users, cameras
 
 app = FastAPI(title="KitchenEye API")
 
-# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
+        "http://127.0.0.1:5173",
         "http://localhost:3000",
-        "http://localhost:3001",
-    ],  # Your frontend URLs
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
 
-# Include routers with /auth prefix
 app.include_router(signup.router, prefix="/auth")
 app.include_router(login.router, prefix="/auth")
 app.include_router(profile.router, prefix="/auth")

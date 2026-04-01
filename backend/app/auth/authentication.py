@@ -4,6 +4,9 @@ import firebase_admin
 import os
 
 
+CLOCK_SKEW_SECONDS = 10
+
+
 # ------------------------------
 # Extract Bearer token correctly
 # ------------------------------
@@ -35,7 +38,8 @@ cred_path = os.path.normpath(
         current_dir,
         "..",
         "credentials",
-        "kitchen-eye-f607f-firebase-adminsdk-fbsvc-2d8eb5ab8e.json",
+        "kitchen-eye-f607f-firebase-adminsdk-fbsvc-1ccac73f93.json",
+        
     )
 )
 
@@ -60,10 +64,10 @@ def verify_token(token: str = None, require_verified: bool = True):
     print("🔥 Verifying token:", token[:30] if token else "None", "...")
 
     try:
-        decoded = auth.verify_id_token(token)
+        decoded = auth.verify_id_token(token, clock_skew_seconds=CLOCK_SKEW_SECONDS)
     except Exception as e:
         print("🔥 Firebase token verification failed:", e)
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail=f"Invalid token: {e}")
 
     if require_verified and not decoded.get("email_verified"):
         raise HTTPException(status_code=403, detail="Email not verified")
@@ -90,10 +94,10 @@ async def get_current_user(Authorization: str = Header(None)):
     print("🔥 Verifying token from dependency:", token[:30] + "...")
     
     try:
-        decoded = auth.verify_id_token(token)
+        decoded = auth.verify_id_token(token, clock_skew_seconds=CLOCK_SKEW_SECONDS)
     except Exception as e:
         print("🔥 Firebase token verification failed:", e)
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail=f"Invalid token: {e}")
 
     # For profile access, we require email verification
     if not decoded.get("email_verified"):
