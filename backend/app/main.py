@@ -1,5 +1,7 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from .router import signup, login, profile, stats, violations, users, cameras, reports
 
 app = FastAPI(title="KitchenEye API")
@@ -26,6 +28,12 @@ app.include_router(violations.router)
 app.include_router(reports.router)
 app.include_router(users.router, prefix="/auth")
 app.include_router(cameras.router, prefix="/auth")
+
+# Mount static files for video serving
+videos_dir = os.path.join(os.path.dirname(__file__), "videos")
+if not os.path.exists(videos_dir):
+    os.makedirs(videos_dir)
+app.mount("/videos", StaticFiles(directory=videos_dir), name="videos")
 
 
 @app.get("/")

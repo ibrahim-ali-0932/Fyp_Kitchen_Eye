@@ -32,6 +32,7 @@ export default function Reports() {
         outputFormat,
         startDate: reportType === "custom" ? startDate : undefined,
         endDate: reportType === "custom" ? endDate : undefined,
+        includeImages: outputFormat === "pdf",
       });
       setSuccess(`Report generated and downloaded as ${outputFormat.toUpperCase()}.`);
     } catch (e: any) {

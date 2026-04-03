@@ -1,4 +1,0 @@
-1|PPE Violation|Missing hairnet detected|Medium|Kitchen 1 - Main Prep Area|2 hours ago|Pending|https://images.unsplash.com/photo-1762330018258-2cf9b8f80618
-2|Spill Detection|Liquid spill on floor|High|Kitchen 2 - Dishwashing Area|3 hours ago|Resolved|https://images.unsplash.com/photo-1762330018258-2cf9b8f80618
-3|PPE Violation|Missing gloves detected|Medium|Kitchen 1 - Food Prep Station|5 hours ago|Pending|https://images.unsplash.com/photo-1762330018258-2cf9b8f80618
-4|Pest Detection|Rodent activity detected|Critical|Storage Room B|1 day ago|Resolved|https://images.unsplash.com/photo-1762330018258-2cf9b8f80618

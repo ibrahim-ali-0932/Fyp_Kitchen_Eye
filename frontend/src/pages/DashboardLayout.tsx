@@ -29,6 +29,7 @@ import Subscription from "./Subscription";
 import NotificationBell from "../components/NotificationBell";
 import { authorizedFetch } from "../services/authToken";
 import { API_URL } from "../services/api";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface DashboardLayoutProps {
   onLogout: () => void;
@@ -51,12 +52,63 @@ interface UserProfile {
   address: string;
 }
 
+const PAGE_TO_PATH: Record<Page, string> = {
+  dashboard: "/dashboard",
+  violations: "/dashboard/violations",
+  cameras: "/dashboard/cameras",
+  analytics: "/dashboard/analytics",
+  reports: "/dashboard/reports",
+  notifications: "/dashboard/notifications",
+  subscription: "/dashboard/subscription",
+  profile: "/dashboard/profile",
+};
+
+const PATH_TO_PAGE: Record<string, Page> = {
+  "": "dashboard",
+  dashboard: "dashboard",
+  violations: "violations",
+  cameras: "cameras",
+  analytics: "analytics",
+  reports: "reports",
+  notifications: "notifications",
+  subscription: "subscription",
+  profile: "profile",
+};
+
+const parseDashboardPath = (pathname: string): { page: Page; known: boolean } => {
+  const normalizedPath = pathname.replace(/\/+$/, "");
+  const segments = normalizedPath.split("/").filter(Boolean);
+  const pageKey = segments[1] || "";
+  const page = PATH_TO_PAGE[pageKey];
+
+  if (page) {
+    return { page, known: true };
+  }
+
+  return { page: "dashboard", known: false };
+};
+
 export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
-  const [currentPage, setCurrentPage] = useState<Page>("dashboard");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState<Page>(() =>
+    parseDashboardPath(location.pathname).page,
+  );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const handlePageChange = (page: Page, closeMobileSidebar = false) => {
+    const targetPath = PAGE_TO_PATH[page];
+    if (location.pathname !== targetPath) {
+      navigate(targetPath);
+    }
+    setCurrentPage(page);
+    if (closeMobileSidebar) {
+      setMobileSidebarOpen(false);
+    }
+  };
 
   // Function to fetch user profile (can be called from anywhere)
   const fetchUserProfile = async () => {
@@ -116,6 +168,18 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   useEffect(() => {
     fetchUserProfile();
   }, []);
+
+  useEffect(() => {
+    const parsed = parseDashboardPath(location.pathname);
+
+    if (!parsed.known && location.pathname.startsWith("/dashboard")) {
+      navigate("/dashboard", { replace: true });
+      setCurrentPage("dashboard");
+      return;
+    }
+
+    setCurrentPage(parsed.page);
+  }, [location.pathname, navigate]);
 
   // Helper function to get user initials for avatar
   const getUserInitials = (name: string) => {
@@ -233,7 +297,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           {menuItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => setCurrentPage(item.id)}
+              onClick={() => handlePageChange(item.id)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                 currentPage === item.id
                   ? "bg-blue-600 text-white"
@@ -253,7 +317,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
             <Button
               size="sm"
               className="w-full bg-white text-blue-600 hover:bg-slate-100"
-              onClick={() => setCurrentPage("subscription")}
+              onClick={() => handlePageChange("subscription")}
             >
               <CreditCard className="w-4 h-4 mr-2" />
               Upgrade Plan
@@ -329,10 +393,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
               {menuItems.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    setCurrentPage(item.id);
-                    setMobileSidebarOpen(false);
-                  }}
+                  onClick={() => handlePageChange(item.id, true)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                     currentPage === item.id
                       ? "bg-blue-600 text-white"
@@ -353,10 +414,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
                 <Button
                   size="sm"
                   className="w-full bg-white text-blue-600 hover:bg-slate-100"
-                  onClick={() => {
-                    setCurrentPage("subscription");
-                    setMobileSidebarOpen(false);
-                  }}
+                  onClick={() => handlePageChange("subscription", true)}
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
                   Upgrade Plan
@@ -399,7 +457,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
             <div className="flex items-center gap-3">
               <NotificationBell />
               <button
-                onClick={() => setCurrentPage("profile")}
+                onClick={() => handlePageChange("profile")}
                 className="cursor-pointer hover:opacity-80 transition-opacity"
               >
                 <Avatar className="cursor-pointer ring-2 ring-blue-500 ring-offset-2 hover:ring-blue-600 transition-all">

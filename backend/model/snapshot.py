@@ -1,8 +1,14 @@
 # backend/model/snapshot.py
 # Run from PROJECT ROOT: python backend/model/snapshot.py
+#
+# This version watches a PATCH_DIR for video patches produced by patch_maker.py.
+# It picks patches in order, runs inference, then deletes each patch when done.
+# Camera ID is extracted automatically from the patch filename (e.g. CAM-001).
 
 import os
+import re
 import sys
+import time
 from dotenv import load_dotenv
 
 _backend_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
@@ -13,7 +19,6 @@ load_dotenv(os.path.join(_backend_dir, ".env"))
 
 from ultralytics import YOLO
 import cv2
-from datetime import datetime
 from pathlib import Path
 from collections import defaultdict
 from services.violation_service import save_violation
@@ -22,15 +27,13 @@ from services.dedup_service import should_save_violation, reset_state
 # ============================================================
 # CONFIGURATION
 # ============================================================
+PATCH_DIR   = r"D:\sem 7\FYP\Frontend\backend\model\patches"          # Must match PATCH_DIR in patch_maker.py
 MODEL_PATH  = r"D:\sem 7\FYP\Frontend\backend\model\best (6).pt"
-VIDEO_PATH  = r"D:\sem 7\FYP\Frontend\backend\model\CHEFS WORKING _BUSY KITCHEN_ Over 3000 Meals A Week _Chef Life _Gopro(720P_60FPS).mp4"
 
-USER_ID   = "nTZMtubSmmTjJuZqNKTMnIeMDes2"
-CAMERA_ID = "EZYuxqna15bB5dVtz4to"
+USER_ID              = "nTZMtubSmmTjJuZqNKTMnIeMDes2"
+POLL_INTERVAL_SEC    = 5             # Seconds to wait when no patch is available
 
 CONFIDENCE          = 0.3
-VIDEO_START_SEC     = None
-VIDEO_END_SEC       = None
 IOU_THRESHOLD       = 0.3
 MIN_FIRE_AREA_RATIO = 0.35
 SNAPSHOT_RESIZE     = 0.4
@@ -39,6 +42,8 @@ SAVE_SNAPSHOTS      = True
 
 SNAPSHOT_DIR = Path(os.path.join(os.path.dirname(__file__), "saved_snapshots"))
 SNAPSHOT_DIR.mkdir(exist_ok=True)
+
+PATCH_DIR_PATH = Path(PATCH_DIR)
 
 # Canonical violation classes only
 VIOLATION_CLASSES = {
@@ -51,17 +56,41 @@ COMPLIANT_CLASSES = {"apron", "gloves", "hairnet"}
 
 # Internal normalization (model may output variants)
 _TYPE_MAP = {
-    "no_apron":    "no_apron",
-    "no_gloves":   "no_gloves",
-    "no_hairnet":  "no_hairnet",
-    "no_hair_net": "no_hairnet",
-    "fire":        "fire",
+    "no_apron":      "no_apron",
+    "no_gloves":     "no_gloves",
+    "no_hairnet":    "no_hairnet",
+    "no_hair_net":   "no_hairnet",
+    "fire":          "fire",
     "fire_detected": "fire",
 }
 
 print(f"[KitchenEye] Loading model: {MODEL_PATH}")
 model = YOLO(MODEL_PATH)
 
+
+# ============================================================
+# CAMERA ID EXTRACTION
+# ============================================================
+
+def extract_camera_id(patch_path: Path) -> str:
+    """
+    Extract camera ID from patch filename.
+    e.g.  CAM-001_patch_003.mp4  ->  CAM-001
+          Cam-002_patch_001.mp4  ->  CAM-002
+    Falls back to full stem if pattern not matched.
+    """
+    stem = patch_path.stem                          # e.g. CAM-001_patch_003
+    match = re.match(r"^(CAM-\d+)", stem, re.IGNORECASE)
+    if match:
+        return match.group(1).upper()               # normalise to upper-case
+    # Fallback: everything before the first '_patch_'
+    parts = re.split(r"_patch_", stem, flags=re.IGNORECASE)
+    return parts[0].upper() if parts else stem.upper()
+
+
+# ============================================================
+# HELPERS (unchanged from original)
+# ============================================================
 
 def normalize(cls: str) -> str:
     return _TYPE_MAP.get(cls, cls)
@@ -88,10 +117,10 @@ def resolve_ppe_conflicts(detections):
     others = []
     for cls, conf, box, tid in detections:
         n = normalize(cls)
-        if n in ("no_apron", "apron"):         groups["apron"].append((cls, conf, box, tid))
-        elif n in ("no_gloves", "gloves"):     groups["gloves"].append((cls, conf, box, tid))
-        elif n in ("no_hairnet", "hairnet"):   groups["hairnet"].append((cls, conf, box, tid))
-        else:                                  others.append((cls, conf, box, tid))
+        if n in ("no_apron", "apron"):       groups["apron"].append((cls, conf, box, tid))
+        elif n in ("no_gloves", "gloves"):   groups["gloves"].append((cls, conf, box, tid))
+        elif n in ("no_hairnet", "hairnet"): groups["hairnet"].append((cls, conf, box, tid))
+        else:                                others.append((cls, conf, box, tid))
 
     resolved = []
     for dets in groups.values():
@@ -116,10 +145,32 @@ def resolve_ppe_conflicts(detections):
     return resolved
 
 
-def process_video():
-    if USER_ID in ("CHANGE_TO_REAL_FIREBASE_UID", "", None):
-        print("❌ Set USER_ID before running.")
-        return
+# ============================================================
+# PATCH QUEUE
+# ============================================================
+
+def get_next_patch() -> Path | None:
+    """
+    Return the lexicographically smallest .mp4 patch in PATCH_DIR, or None.
+    Lexicographic order ensures CAM-001_patch_001 is processed before patch_002,
+    and CAM-001 before CAM-002.
+    """
+    patches = sorted(PATCH_DIR_PATH.glob("*.mp4"))
+    return patches[0] if patches else None
+
+
+# ============================================================
+# INFERENCE ON A SINGLE PATCH
+# ============================================================
+
+def process_patch(patch_path: Path):
+    camera_id = extract_camera_id(patch_path)
+
+    print(f"\n{'=' * 60}")
+    print(f"[KitchenEye] Patch  : {patch_path.name}")
+    print(f"[KitchenEye] Camera : {camera_id}")
+    print(f"[KitchenEye] User   : {USER_ID}")
+    print(f"{'=' * 60}")
 
     reset_state()
 
@@ -130,26 +181,13 @@ def process_video():
     violation_counts   = defaultdict(int)
     total_violations   = 0
 
-    cap = cv2.VideoCapture(VIDEO_PATH)
+    cap = cv2.VideoCapture(str(patch_path))
     if not cap.isOpened():
-        print(f"❌ Cannot open: {VIDEO_PATH}")
+        print(f"❌ Cannot open patch: {patch_path}")
         return
 
-    fps          = int(cap.get(cv2.CAP_PROP_FPS))
+    fps          = int(cap.get(cv2.CAP_PROP_FPS)) or 25
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    duration     = total_frames / fps
-    start_frame  = int(VIDEO_START_SEC * fps) if VIDEO_START_SEC else 0
-    end_frame    = int(VIDEO_END_SEC * fps) if VIDEO_END_SEC else total_frames
-    start_frame  = max(0, min(start_frame, total_frames))
-    end_frame    = max(start_frame, min(end_frame, total_frames))
-
-    if start_frame > 0:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
-
-    print(f"[KitchenEye] Video: {VIDEO_PATH}")
-    print(f"[KitchenEye] Duration: {duration:.1f}s | FPS: {fps}")
-    print(f"[KitchenEye] User: {USER_ID} | Camera: {CAMERA_ID}")
-    print("=" * 60)
 
     frame_count = 0
     while cap.isOpened():
@@ -157,8 +195,6 @@ def process_video():
         if not ret:
             break
         frame_count += 1
-        if start_frame + frame_count > end_frame:
-            break
 
         results = model.track(frame, conf=CONFIDENCE, iou=0.5, persist=True, verbose=False)
 
@@ -195,19 +231,18 @@ def process_video():
                 counted_violations.add(key)
                 violation_counts[canonical] += 1
                 total_violations += 1
-                print(f"🚨 [{frame_count}] {VIOLATION_CLASSES[canonical]} | ID:{tid} | conf:{conf:.2f}")
+                print(f"🚨 [{frame_count}] {VIOLATION_CLASSES[canonical]} | "
+                      f"ID:{tid} | conf:{conf:.2f} | cam:{camera_id}")
 
-                # Save to Firestore, get violation_id back
                 saved = None
                 if should_save_violation(key):
                     saved = save_violation(
                         user_id=USER_ID,
                         violation_type=canonical,
-                        camera_id=CAMERA_ID,
+                        camera_id=camera_id,        # ← extracted from filename
                         confidence=round(conf, 3),
                     )
 
-                # Save snapshot — filename = {violation_id}.jpg
                 if SAVE_SNAPSHOTS and saved:
                     violation_id = saved.get("violation_id")
                     filename = f"{violation_id}.jpg"
@@ -222,26 +257,61 @@ def process_video():
                         ann,
                         [cv2.IMWRITE_JPEG_QUALITY, SNAPSHOT_QUALITY],
                     )
-                    print(f"[KitchenEye] Snapshot saved: {SNAPSHOT_DIR / filename}")
+                    print(f"[KitchenEye] Snapshot: {SNAPSHOT_DIR / filename}")
 
             elif canonical in COMPLIANT_CLASSES and key not in counted_compliant:
                 counted_compliant.add(key)
 
-        if frame_count % 100 == 0:
-            seg = end_frame - start_frame
-            print(f"Progress: {frame_count}/{seg} ({frame_count / seg * 100:.1f}%)")
+        if frame_count % 100 == 0 and total_frames > 0:
+            print(f"  Progress: {frame_count}/{total_frames} "
+                  f"({frame_count / total_frames * 100:.1f}%)")
 
     cap.release()
     cv2.destroyAllWindows()
 
-    print("\n" + "=" * 60)
-    print("📊 FINAL SUMMARY")
+    # ── Summary ──────────────────────────────────────────────
+    print(f"\n📊 [{patch_path.name}] SUMMARY")
     for v in ["no_apron", "no_gloves", "no_hairnet", "fire"]:
         if violation_counts[v]:
             print(f"   {v}: {violation_counts[v]}")
-    print(f"\n📈 TOTAL: {total_violations}")
-    print(f"📁 Snapshots: {SNAPSHOT_DIR}/")
+    print(f"   TOTAL: {total_violations}")
+
+
+# ============================================================
+# MAIN LOOP
+# ============================================================
+
+def main():
+    if USER_ID in ("CHANGE_TO_REAL_FIREBASE_UID", "", None):
+        print("❌ Set USER_ID before running.")
+        return
+
+    print("[KitchenEye] Patch consumer started.")
+    print(f"  PATCH_DIR  : {PATCH_DIR}")
+    print(f"  MODEL      : {MODEL_PATH}")
+    print(f"  POLL every : {POLL_INTERVAL_SEC}s when queue is empty")
+
+    while True:
+        patch = get_next_patch()
+
+        if patch is None:
+            print(f"[KitchenEye] No patches available. Waiting {POLL_INTERVAL_SEC}s...")
+            time.sleep(POLL_INTERVAL_SEC)
+            continue
+
+        try:
+            process_patch(patch)
+        except Exception as e:
+            print(f"[KitchenEye] ❌ Error processing {patch.name}: {e}")
+        finally:
+            # Always delete the patch after processing (even on error)
+            # to avoid getting stuck on a corrupt file.
+            try:
+                patch.unlink()
+                print(f"[KitchenEye] 🗑️  Deleted patch: {patch.name}")
+            except Exception as e:
+                print(f"[KitchenEye] Warning: could not delete {patch.name}: {e}")
 
 
 if __name__ == "__main__":
-    process_video()
+    main()

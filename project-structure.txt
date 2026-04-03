@@ -1,21 +1,73 @@
 ├── backend
+│   ├── .env
+│   │   └── backend.env
 │   ├── .gitignore
+│   ├── .pytest_cache
+│   │   ├── .gitignore
+│   │   ├── CACHEDIR.TAG
+│   │   ├── README.md
 │   ├── app
 │   │   ├── auth
 │   │   │   └── authentication.py
 │   │   ├── credentials
-│   │   │   └── kitchen-eye-f607f-firebase-adminsdk-fbsvc-2d8eb5ab8e.json
+│   │   │   └── kitchen-eye-f607f-firebase-adminsdk-fbsvc-1ccac73f93.json
 │   │   ├── database
 │   │   │   └── db.py
 │   │   ├── main.py
 │   │   ├── router
+│   │   │   ├── cameras.py
 │   │   │   ├── login.py
 │   │   │   ├── profile.py
-│   │   │   └── signup.py
+│   │   │   ├── reports.py
+│   │   │   ├── signup.py
+│   │   │   ├── stats.py
+│   │   │   ├── users.py
+│   │   │   └── violations.py
 │   │   ├── schemas
 │   │   │   └── schemas.py
+│   │   ├── videos
+│   │   │   ├── CAM-001.mp4
+│   │   │   └── CAM-002.mp4
 │   │   └── __init__.py
-│   └── requirements.txt
+│   ├── backend
+│   │   └── __init__.py
+│   ├── model
+│   │   ├── best (6).pt
+│   │   ├── patches
+│   │   │   ├── CAM-001_patch_004.mp4
+│   │   │   ├── CAM-001_patch_005.mp4
+│   │   ├── patch_maker.py
+│   │   ├── saved_snapshots
+│   │   │   ├── 0538bcb0-c483-4ec7-bc1d-aa7c801624b2.jpg
+│   │   │   ├── 0ad04fb4-38d4-4fca-9bca-f3953fb2f1f9.jpg
+│   │   │   ├── 17e46afa-c5ee-4fda-aa42-6216af9301f2.jpg
+│   │   │   ├── 18039cc9-bc3e-406c-92ee-394d4837f98a.jpg
+│   │   │   ├── 1813f874-0687-480a-90cc-81f3528545d4.jpg
+│   │   │   ├── 18780740-3411-4874-ba3b-19e0ecc5e752.jpg
+│   │   │   ├── 1c8b0ff3-24ef-4c4e-8080-fbe4aa33e31f.jpg
+│   │   │   ├── 26501629-58f7-47d2-972a-9ad950bbf165.jpg
+│   │   │   ├── 2657b02a-9b3a-42dd-a3b5-86a20875fa3b.jpg
+│   │   │   ├── 278405f9-f1f1-41f4-ba65-049cff740989.jpg
+│   │   │   ├── 2b4f9ede-a1fb-46b3-b916-db9252590174.jpg
+│   │   │   ├── 2cd24994-9d28-4466-9f1f-1d58988aa07a.jpg
+│   │   │   ├── 360b24f7-08a8-41dd-b9d6-94e9ed00d63c.jpg
+│   │   │   ├── 36263885-bef4-4de0-813f-77bb5d4ee622.jpg
+│   │   │   ├── 36ef89ae-48b0-4f48-a511-85a114bf52fc.jpg
+│   │   │   ├── 37d19f4b-d311-4f07-8937-af347fba97ef.jpg
+│   │   │   ├── 3a7d8ad5-8b9f-4fad-b9bc-d6d141a94c9a.jpg
+│   │   │   ├── 3b260b98-12ef-40f7-9fbd-b53dd7a96deb.jpg
+│   │   │   ├── 451b7a32-1bb9-4dc1-81a0-900d864c0fc0.jpg
+│   │   │   ├── 4a64d92a-53c8-41ca-be6a-90d1fc038a7a.jpg
+│   │   │   ├── 4caf4ff6-297d-4307-ae1f-8ac30f5d4e80.jpg
+│   │   │   ├── 4f630f9d-cd0c-4064-bbd7-03200b0688ae.jpg
+│   │   └── snapshot.py
+│   ├── requirements.txt
+│   └── services
+│       ├── dedup_service.py
+│       ├── services_init.py
+│       ├── stats_service.py
+│       ├── violation_categories.py
+│       └── violation_service.py
 ├── frontend
 │   ├── .env
 │   ├── .gitignore
@@ -26,82 +78,71 @@
 │   ├── index.html
 │   ├── package-lock.json
 │   ├── package.json
+│   ├── public
+│   │   └── images
+│   │       ├── bg-1.jpg
+│   │       ├── bg-2.jpg
+│   │       ├── bg-3.jpg
+│   │       ├── bg-4.jpg
+│   │       ├── bg-5.jpg
+│   │       ├── bg-6.jpg
+│   │       ├── Kitcheneye_logo.png
+│   │       ├── Kitcheneye_logo.svg
+│   │       ├── Kitcheneye_logo_text.png
+│   │       └── Kitcheneye_logo_text.svg
 │   ├── README.md
 │   ├── src
 │   │   ├── App.tsx
 │   │   ├── Attributions.md
 │   │   ├── components
+│   │   │   ├── auth
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── ProtectedRoute.tsx
+│   │   │   │   └── PublicRoute.tsx
+│   │   │   ├── CameraVideoModal.tsx
 │   │   │   ├── figma
 │   │   │   │   └── ImageWithFallback.tsx
+│   │   │   ├── NotificationBell.tsx
 │   │   │   └── ui
 │   │   │       ├── accordion.tsx
 │   │   │       ├── alert-dialog.tsx
-│   │   │       ├── alert.tsx
-│   │   │       ├── aspect-ratio.tsx
-│   │   │       ├── avatar.tsx
-│   │   │       ├── badge.tsx
-│   │   │       ├── breadcrumb.tsx
-│   │   │       ├── button.tsx
-│   │   │       ├── calendar.tsx
-│   │   │       ├── card.tsx
-│   │   │       ├── carousel.tsx
-│   │   │       ├── chart.tsx
-│   │   │       ├── checkbox.tsx
-│   │   │       ├── collapsible.tsx
-│   │   │       ├── command.tsx
-│   │   │       ├── context-menu.tsx
-│   │   │       ├── dialog.tsx
-│   │   │       ├── drawer.tsx
-│   │   │       ├── dropdown-menu.tsx
-│   │   │       ├── form.tsx
-│   │   │       ├── hover-card.tsx
-│   │   │       ├── input-otp.tsx
-│   │   │       ├── input.tsx
-│   │   │       ├── label.tsx
-│   │   │       ├── menubar.tsx
-│   │   │       ├── navigation-menu.tsx
-│   │   │       ├── pagination.tsx
-│   │   │       ├── popover.tsx
-│   │   │       ├── progress.tsx
-│   │   │       ├── radio-group.tsx
-│   │   │       ├── resizable.tsx
-│   │   │       ├── scroll-area.tsx
-│   │   │       ├── select.tsx
-│   │   │       ├── separator.tsx
-│   │   │       ├── sheet.tsx
-│   │   │       ├── sidebar.tsx
-│   │   │       ├── skeleton.tsx
-│   │   │       ├── slider.tsx
-│   │   │       ├── sonner.tsx
-│   │   │       ├── switch.tsx
-│   │   │       ├── table.tsx
-│   │   │       ├── tabs.tsx
-│   │   │       ├── textarea.tsx
-│   │   │       ├── toggle-group.tsx
-│   │   │       ├── toggle.tsx
-│   │   │       ├── tooltip.tsx
-│   │   │       ├── use-mobile.ts
-│   │   │       └── utils.ts
 │   │   ├── copy-to-frontend.sh
+│   │   ├── firebase.js
+│   │   ├── globals.css
 │   │   ├── guidelines
 │   │   │   └── Guidelines.md
 │   │   ├── index.css
 │   │   ├── main.tsx
 │   │   ├── MIGRATION_GUIDE.md
 │   │   ├── pages
+│   │   │   ├── AddCamera.tsx
+│   │   │   ├── AddUser.tsx
+│   │   │   ├── AdminPanel.tsx
 │   │   │   ├── Analytics.tsx
+│   │   │   ├── BlogPage.tsx
+│   │   │   ├── CameraManagement.tsx
 │   │   │   ├── Dashboard.tsx
 │   │   │   ├── DashboardLayout.tsx
 │   │   │   ├── LandingPage.tsx
 │   │   │   ├── LiveCameraFeed.tsx
 │   │   │   ├── LoginPage.tsx
 │   │   │   ├── NotificationSettings.tsx
+│   │   │   ├── ProfilePage.tsx
 │   │   │   ├── Reports.tsx
 │   │   │   ├── SignupPage.tsx
 │   │   │   ├── Subscription.tsx
-│   │   │   ├── UserManagement.tsx
+│   │   │   ├── UserDetails.tsx
+│   │   │   ├── UsersList.tsx
 │   │   │   └── ViolationHistory.tsx
-│   │   └── services
-│   │       └── api.ts
+│   │   ├── services
+│   │   │   ├── adminService.ts
+│   │   │   ├── api.ts
+│   │   │   ├── authService.tsx
+│   │   │   ├── authToken.ts
+│   │   │   ├── reportService.ts
+│   │   │   ├── statsService.ts
+│   │   │   └── violationsService.ts
+│   │   └── vite-env.d.ts
 │   └── vite.config.ts
-└── generate-tree.js
+├── generate-tree.js
+└── project-structure.txt

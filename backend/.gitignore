@@ -25,3 +25,5 @@ backend/model/saved_snapshots/
 backend/model/saved_snapshots/
 *.jpg
 backend/model/*.mp4
+backend/app/videos/
+backend/model/patches/

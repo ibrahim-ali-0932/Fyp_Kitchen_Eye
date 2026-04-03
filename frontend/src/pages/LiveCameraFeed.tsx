@@ -1,10 +1,21 @@
+import { useState } from "react";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Camera, Maximize2, RefreshCw } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { CameraVideoModal } from "../components/CameraVideoModal";
+import { getVideoUrl } from "../services/api";
+
+interface SelectedCamera {
+  id: string;
+  name: string;
+}
 
 export default function LiveCameraFeed() {
+  const [selectedCamera, setSelectedCamera] = useState<SelectedCamera | null>(
+    null
+  );
   const cameras = [
     {
       id: "CAM-001",
@@ -140,11 +151,31 @@ export default function LiveCameraFeed() {
             className="overflow-hidden hover:shadow-lg transition-shadow"
           >
             <div className="relative aspect-video bg-slate-900">
-              <ImageWithFallback
-                src={camera.image}
-                alt={camera.name}
-                className="w-full h-full object-cover opacity-80"
-              />
+              {camera.status === "online" ? (
+                <video
+                  width="100%"
+                  height="100%"
+                  autoPlay
+                  loop
+                  muted
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error(
+                      `Error loading video for ${camera.id}:`,
+                      e
+                    );
+                  }}
+                >
+                  <source src={getVideoUrl(camera.id)} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <ImageWithFallback
+                  src={camera.image}
+                  alt={camera.name}
+                  className="w-full h-full object-cover opacity-80"
+                />
+              )}
               {camera.status === "offline" && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                   <div className="text-center text-white">
@@ -166,7 +197,14 @@ export default function LiveCameraFeed() {
                 </Badge>
               </div>
               <div className="absolute top-3 right-3">
-                <Button size="sm" variant="secondary" className="h-8 w-8 p-0">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 w-8 p-0"
+                  onClick={() =>
+                    setSelectedCamera({ id: camera.id, name: camera.name })
+                  }
+                >
                   <Maximize2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -195,6 +233,17 @@ export default function LiveCameraFeed() {
           </Card>
         ))}
       </div>
+
+      {/* Camera Video Modal */}
+      {selectedCamera && (
+        <CameraVideoModal
+          isOpen={!!selectedCamera}
+          cameraId={selectedCamera.id}
+          cameraName={selectedCamera.name}
+          videoUrl={getVideoUrl(selectedCamera.id)}
+          onClose={() => setSelectedCamera(null)}
+        />
+      )}
     </div>
   );
 }
