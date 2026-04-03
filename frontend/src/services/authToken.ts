@@ -1,6 +1,40 @@
 import { auth } from "../firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
 
+let cachedToken: string | null = localStorage.getItem("token");
+let cachedTokenExpiryMs = 0;
+let inFlightTokenPromise: Promise<string> | null = null;
+
+function decodeJwtExpMs(token: string): number {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      return 0;
+    }
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const normalized = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+    const payload = JSON.parse(atob(normalized));
+    const exp = Number(payload?.exp);
+    return Number.isFinite(exp) ? exp * 1000 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function shouldReuseToken(token: string | null, expiryMs: number): token is string {
+  if (!token || !expiryMs) {
+    return false;
+  }
+  const safetyWindowMs = 60 * 1000;
+  return Date.now() + safetyWindowMs < expiryMs;
+}
+
+function setCachedToken(token: string) {
+  cachedToken = token;
+  cachedTokenExpiryMs = decodeJwtExpMs(token);
+  localStorage.setItem("token", token);
+}
+
 async function waitForCurrentUser(): Promise<User | null> {
   if (auth.currentUser) {
     return auth.currentUser;
@@ -21,14 +55,34 @@ async function waitForCurrentUser(): Promise<User | null> {
 }
 
 export async function getAuthToken(): Promise<string> {
+  if (shouldReuseToken(cachedToken, cachedTokenExpiryMs)) {
+    return cachedToken;
+  }
+
+  if (inFlightTokenPromise) {
+    return inFlightTokenPromise;
+  }
+
+  inFlightTokenPromise = (async () => {
   const user = await waitForCurrentUser();
   if (!user) {
+    cachedToken = null;
+    cachedTokenExpiryMs = 0;
+    localStorage.removeItem("token");
     throw new Error("Not authenticated");
   }
 
-  const token = await user.getIdToken(true);
-  localStorage.setItem("token", token);
+  // Avoid forced refresh for normal requests to prevent hitting Firebase auth quotas.
+  const token = await user.getIdToken();
+  setCachedToken(token);
   return token;
+  })();
+
+  try {
+    return await inFlightTokenPromise;
+  } finally {
+    inFlightTokenPromise = null;
+  }
 }
 
 export async function authorizedFetch(
@@ -50,7 +104,7 @@ export async function authorizedFetch(
     }
 
     const refreshed = await auth.currentUser.getIdToken(true);
-    localStorage.setItem("token", refreshed);
+    setCachedToken(refreshed);
     const retryHeaders = new Headers(init.headers || {});
     retryHeaders.set("Authorization", `Bearer ${refreshed}`);
     response = await fetch(input, { ...init, headers: retryHeaders });

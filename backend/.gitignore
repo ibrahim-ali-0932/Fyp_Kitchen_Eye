@@ -22,4 +22,6 @@ build/
 *.pt
 backend/model/saved_snapshots/
 *.mp4
+backend/model/saved_snapshots/
+*.jpg
 backend/model/*.mp4

@@ -1,16 +1,25 @@
 // frontend/src/pages/ViolationHistory.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import { Label } from "../components/ui/label";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogPortal
+} from "../components/ui/dialog";
+import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "../components/ui/select";
-import { Download, Search, Camera, Clock } from "lucide-react";
-import { fetchUserViolations, ViolationRecord } from "../services/violationsService";
+import { Download, Search, Camera, Clock, Loader2 } from "lucide-react";
+import { fetchUserViolations, fetchViolationImage, ViolationRecord } from "../services/violationsService";
+import { generateViolationReport } from "../services/reportService";
 
 function getSeverityColor(s: string) {
   return s === "Critical" ? "bg-red-100 text-red-700 border-red-200"
@@ -64,11 +73,23 @@ function mapViolation(v: ViolationRecord) {
 }
 
 export default function ViolationHistory() {
+  const today = new Date();
+  const monthAgo = new Date(today);
+  monthAgo.setDate(today.getDate() - 29);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSeverity, setSelectedSeverity] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [startDate, setStartDate] = useState(monthAgo.toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState(today.toISOString().slice(0, 10));
   const [violations, setViolations] = useState<ReturnType<typeof mapViolation>[]>([]);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewTitle, setPreviewTitle] = useState("");
+  const [exportingFormat, setExportingFormat] = useState<"csv" | "pdf" | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportSuccess, setExportSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,16 +100,132 @@ export default function ViolationHistory() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = violations.filter((v) => {
-    const matchSearch =
-      !searchQuery ||
-      v.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      v.location.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchCat = selectedCategory === "all" || v.category === selectedCategory;
-    const matchSev = selectedSeverity === "all" || v.severity.toLowerCase() === selectedSeverity;
-    const matchStatus = selectedStatus === "all" || v.status.toLowerCase() === selectedStatus;
-    return matchSearch && matchCat && matchSev && matchStatus;
-  });
+  const filtered = useMemo(() => {
+    const startBoundary = startDate ? new Date(`${startDate}T00:00:00`) : null;
+    const endBoundary = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
+
+    return violations.filter((v) => {
+      const matchSearch =
+        !searchQuery ||
+        v.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        v.location.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchCat = selectedCategory === "all" || v.category === selectedCategory;
+      const matchSev = selectedSeverity === "all" || v.severity.toLowerCase() === selectedSeverity;
+      const matchStatus = selectedStatus === "all" || v.status.toLowerCase() === selectedStatus;
+
+      const matchDate = (() => {
+        if (!v.timestamp) {
+          return !startBoundary && !endBoundary;
+        }
+        const occurred = new Date(v.timestamp);
+        if (Number.isNaN(occurred.getTime())) {
+          return false;
+        }
+        if (startBoundary && occurred < startBoundary) {
+          return false;
+        }
+        if (endBoundary && occurred > endBoundary) {
+          return false;
+        }
+        return true;
+      })();
+
+      return matchSearch && matchCat && matchSev && matchStatus && matchDate;
+    });
+  }, [violations, searchQuery, selectedCategory, selectedSeverity, selectedStatus, startDate, endDate]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadImages = async () => {
+      const imagePairs = await Promise.all(
+        filtered.map(async (violation) => {
+          try {
+            const imageUrl = await fetchViolationImage(violation.id);
+            return [violation.id, imageUrl] as const;
+          } catch {
+            return [violation.id, null] as const;
+          }
+        })
+      );
+
+      if (cancelled) {
+        imagePairs.forEach(([, url]) => {
+          if (url) {
+            URL.revokeObjectURL(url);
+          }
+        });
+        return;
+      }
+
+      setImageUrls((prev) => {
+        Object.values(prev).forEach((url) => URL.revokeObjectURL(url));
+        const next: Record<string, string> = {};
+        imagePairs.forEach(([id, url]) => {
+          if (url) {
+            next[id] = url;
+          }
+        });
+        return next;
+      });
+    };
+
+    if (loading) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    loadImages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [filtered, loading]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(imageUrls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [imageUrls]);
+
+  const handleExport = async (format: "csv" | "pdf") => {
+    setExportError(null);
+    setExportSuccess(null);
+
+    if (!filtered.length) {
+      setExportError("No violations match the current filters.");
+      return;
+    }
+
+    if (!startDate || !endDate) {
+      setExportError("Please select a valid start and end date.");
+      return;
+    }
+
+    if (new Date(endDate) < new Date(startDate)) {
+      setExportError("End date must be on or after start date.");
+      return;
+    }
+
+    setExportingFormat(format);
+
+    try {
+      await generateViolationReport({
+        reportType: "custom",
+        outputFormat: format,
+        startDate,
+        endDate,
+        violationIds: filtered.map((v) => v.id),
+        includeImages: format === "pdf",
+      });
+      setExportSuccess(`Filtered report exported as ${format.toUpperCase()}.`);
+    } catch (e: any) {
+      setExportError(e.message || "Failed to export report.");
+    } finally {
+      setExportingFormat(null);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -99,7 +236,7 @@ export default function ViolationHistory() {
 
       {/* Filters */}
       <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
           <div className="space-y-2 lg:col-span-1">
             <Label>Search</Label>
             <div className="relative">
@@ -148,11 +285,35 @@ export default function ViolationHistory() {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2">
+            <Label>Start Date</Label>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>End Date</Label>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline"><Download className="w-4 h-4 mr-2" />Export CSV</Button>
-          <Button variant="outline"><Download className="w-4 h-4 mr-2" />Export PDF</Button>
+          <Button variant="outline" onClick={() => handleExport("csv")} disabled={!!exportingFormat || loading}>
+            {exportingFormat === "csv" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+            Export CSV
+          </Button>
+          <Button variant="outline" onClick={() => handleExport("pdf")} disabled={!!exportingFormat || loading}>
+            {exportingFormat === "pdf" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+            Export PDF
+          </Button>
         </div>
+        {exportError && <p className="text-sm text-red-600 mt-3">{exportError}</p>}
+        {exportSuccess && <p className="text-sm text-green-700 mt-3">{exportSuccess}</p>}
       </Card>
 
       {/* List */}
@@ -166,6 +327,25 @@ export default function ViolationHistory() {
         <div className="space-y-4">
           {filtered.map((v) => (
             <div key={v.id} className="flex gap-4 p-4 rounded-xl border hover:shadow-md transition-shadow cursor-pointer">
+              <button
+                type="button"
+                className="w-40 h-24 rounded-lg overflow-hidden bg-slate-100 border flex-shrink-0"
+                onClick={() => {
+                  if (!imageUrls[v.id]) {
+                    return;
+                  }
+                  setPreviewImageUrl(imageUrls[v.id]);
+                  setPreviewTitle(`${v.type} #${v.id.slice(0, 8)}`);
+                }}
+              >
+                {imageUrls[v.id] ? (
+                  <img src={imageUrls[v.id]} alt={v.type} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">
+                    No image
+                  </div>
+                )}
+              </button>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div>
@@ -192,6 +372,26 @@ export default function ViolationHistory() {
           )}
         </div>
       </Card>
+
+      <Dialog open={!!previewImageUrl} onOpenChange={(open) => !open && setPreviewImageUrl(null)}>
+       <DialogContent className="max-w-3xl overflow-auto fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <DialogHeader>
+            <DialogTitle>{previewTitle || "Violation Snapshot"}</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex items-center justify-center">
+            {previewImageUrl ? (
+              <img
+                src={previewImageUrl}
+                alt={previewTitle || "Violation Snapshot"}
+                className="max-h-[70vh] max-w-full object-contain rounded-lg border"
+              />
+            ) : (
+              <p className="text-sm text-slate-600">No image available.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

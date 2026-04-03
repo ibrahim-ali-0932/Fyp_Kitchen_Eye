@@ -9,6 +9,8 @@ export async function generateViolationReport(params: {
   outputFormat: ReportFormat;
   startDate?: string;
   endDate?: string;
+  violationIds?: string[];
+  includeImages?: boolean;
 }): Promise<void> {
   const response = await authorizedFetch(`${API_URL}/reports/generate`, {
     method: "POST",
@@ -20,6 +22,8 @@ export async function generateViolationReport(params: {
       output_format: params.outputFormat,
       start_date: params.startDate,
       end_date: params.endDate,
+      violation_ids: params.violationIds,
+      include_images: params.includeImages ?? false,
     }),
   });
 

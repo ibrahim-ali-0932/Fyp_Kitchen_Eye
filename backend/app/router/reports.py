@@ -15,6 +15,7 @@ from ..database.db import db
 from services.violation_categories import map_violation_to_category, normalize_violation_type
 
 router = APIRouter(prefix="/reports", tags=["reports"])
+SNAPSHOT_DIR = Path(__file__).resolve().parents[2] / "model" / "saved_snapshots"
 
 
 class GenerateReportRequest(BaseModel):
@@ -22,6 +23,8 @@ class GenerateReportRequest(BaseModel):
 	output_format: Literal["csv", "pdf"]
 	start_date: str | None = None
 	end_date: str | None = None
+	violation_ids: list[str] | None = None
+	include_images: bool = False
 
 
 def _parse_occurrence(raw: dict) -> datetime | None:
@@ -62,6 +65,20 @@ def _date_range(payload: GenerateReportRequest) -> tuple[date, date]:
 	return start, end
 
 
+def _find_snapshot_path(row: dict) -> Path | None:
+	filename = str(row.get("snapshot_filename") or f"{row['id']}.jpg")
+	candidate = SNAPSHOT_DIR / filename
+	if candidate.exists():
+		return candidate
+
+	for ext in ["jpg", "jpeg", "png"]:
+		for path in SNAPSHOT_DIR.glob(f"*{row['id']}*.{ext}"):
+			if path.exists():
+				return path
+
+	return None
+
+
 @router.post("/generate")
 async def generate_report(
 	payload: GenerateReportRequest,
@@ -74,6 +91,7 @@ async def generate_report(
 		raise HTTPException(status_code=400, detail="User ID missing in token")
 
 	start_date, end_date = _date_range(payload)
+	requested_ids = {str(item) for item in (payload.violation_ids or [])}
 
 	records = []
 	seen_ids = set()
@@ -88,13 +106,17 @@ async def generate_report(
 			continue
 		if not (start_date <= occurred_at.date() <= end_date):
 			continue
+		row_id = str(data.get("violation_id") or snap.id)
+		if requested_ids and row_id not in requested_ids and snap.id not in requested_ids:
+			continue
 		records.append({
-			"id": str(data.get("violation_id") or snap.id),
+			"id": row_id,
 			"type": normalize_violation_type(str(data.get("violation_type", "unknown"))),
 			"bucket": _mapped_bucket(str(data.get("violation_type", "unknown"))),
 			"camera": str(data.get("camera_id") or data.get("camera_location") or "Unknown"),
 			"timestamp": occurred_at.isoformat(),
 			"status": "Resolved" if data.get("resolved") else "Pending",
+			"snapshot_filename": str(data.get("snapshot_filename") or ""),
 		})
 
 	if user_email:
@@ -108,13 +130,17 @@ async def generate_report(
 				continue
 			if not (start_date <= occurred_at.date() <= end_date):
 				continue
+			row_id = str(data.get("violation_id") or snap.id)
+			if requested_ids and row_id not in requested_ids and snap.id not in requested_ids:
+				continue
 			records.append({
-				"id": str(data.get("violation_id") or snap.id),
+				"id": row_id,
 				"type": normalize_violation_type(str(data.get("violation_type", "unknown"))),
 				"bucket": _mapped_bucket(str(data.get("violation_type", "unknown"))),
 				"camera": str(data.get("camera_id") or data.get("camera_location") or "Unknown"),
 				"timestamp": occurred_at.isoformat(),
 				"status": "Resolved" if data.get("resolved") else "Pending",
+				"snapshot_filename": str(data.get("snapshot_filename") or ""),
 			})
 
 	records.sort(key=lambda row: row["timestamp"], reverse=True)
@@ -167,19 +193,35 @@ async def generate_report(
 	pdf.drawString(40, y, "Timestamp")
 	pdf.drawString(180, y, "Category")
 	pdf.drawString(280, y, "Type")
-	pdf.drawString(400, y, "Camera")
+	pdf.drawString(390, y, "Camera")
 	y -= 14
 	pdf.setFont("Helvetica", 9)
 
 	for row in records:
-		if y < 50:
+		if y < 140:
 			pdf.showPage()
 			y = height - 40
 			pdf.setFont("Helvetica", 9)
 		pdf.drawString(40, y, row["timestamp"][:19])
 		pdf.drawString(180, y, row["bucket"].replace("_", " ").title())
-		pdf.drawString(280, y, row["type"][:18])
-		pdf.drawString(400, y, row["camera"][:20])
+		pdf.drawString(280, y, row["type"][:16])
+		pdf.drawString(390, y, row["camera"][:18])
+		y -= 14
+		pdf.drawString(40, y, f"Status: {row['status']}   Violation ID: {row['id']}")
+		y -= 12
+
+		if payload.include_images:
+			snapshot_path = _find_snapshot_path(row)
+			if snapshot_path:
+				try:
+					pdf.drawImage(str(snapshot_path), 40, y - 72, width=120, height=72, preserveAspectRatio=True, mask="auto")
+				except Exception:
+					pdf.drawString(40, y - 14, "Image unavailable")
+			else:
+				pdf.drawString(40, y - 14, "No image available")
+			y -= 84
+
+		pdf.line(40, y, width - 40, y)
 		y -= 12
 
 	pdf.save()

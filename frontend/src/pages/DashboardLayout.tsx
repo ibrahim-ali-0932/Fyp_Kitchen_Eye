@@ -117,16 +117,6 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
     fetchUserProfile();
   }, []);
 
-  // Refresh profile when navigating away from profile page
-  useEffect(() => {
-    if (currentPage !== "profile") {
-      const timer = setTimeout(() => {
-        fetchUserProfile();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [currentPage]);
-
   // Helper function to get user initials for avatar
   const getUserInitials = (name: string) => {
     if (!name) return "U";

@@ -1,5 +1,5 @@
 // frontend/src/pages/Dashboard.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
@@ -32,8 +32,13 @@ export default function Dashboard() {
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== "undefined" ? !navigator.onLine : false
   );
+  const isLoadingRef = useRef(false);
 
   const load = async (d: number) => {
+    if (isLoadingRef.current) {
+      return;
+    }
+
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       setIsOffline(true);
       setLoading(false);
@@ -41,6 +46,7 @@ export default function Dashboard() {
       return;
     }
 
+    isLoadingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -69,6 +75,7 @@ export default function Dashboard() {
     } catch (e: any) {
       setError(e.message);
     } finally {
+      isLoadingRef.current = false;
       setLoading(false);
     }
   };

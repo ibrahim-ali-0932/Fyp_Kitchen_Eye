@@ -4,3 +4,4 @@ firebase-admin
 email-validator
 pydantic
 reportlab
+Pillow
