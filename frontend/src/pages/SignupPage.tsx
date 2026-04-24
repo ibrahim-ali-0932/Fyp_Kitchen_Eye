@@ -2,6 +2,13 @@ import React, { useState, type FormEvent } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { Camera, ArrowLeft, EyeOff } from "lucide-react";
 import {
   createUserWithEmailAndPassword,
@@ -40,6 +47,8 @@ interface SignupPageProps {
   onBack: () => void;
   onBlog: () => void;
 }
+
+const ORGANIZATION_OPTIONS = ["Pearl Continental", "Hotel One"];
 
 export default function SignupPage({
   onSignup,
@@ -152,15 +161,8 @@ export default function SignupPage({
     if (!organization.trim()) {
       return "Organization/Branch name is required";
     }
-    if (organization.trim().length < 2) {
-      return "Organization name must be at least 2 characters long";
-    }
-    if (organization.trim().length > 200) {
-      return "Organization name is too long (maximum 200 characters)";
-    }
-    // Only allow alphabets and digits
-    if (!/^[a-zA-Z0-9]+$/.test(organization.trim())) {
-      return "Organization name can only contain letters and numbers";
+    if (!ORGANIZATION_OPTIONS.includes(organization.trim())) {
+      return "Please select a valid organization from the dropdown";
     }
     return "";
   };
@@ -228,7 +230,7 @@ export default function SignupPage({
 
       // Step 2: Send email verification
       await sendEmailVerification(user);
-      console.log("✅ Verification email sent");
+      console.log("Verification email sent");
 
       // Step 3: Get ID token from Firebase (needed for backend)
       const idToken = await user.getIdToken();
@@ -241,24 +243,24 @@ export default function SignupPage({
         address,
       };
 
-      console.log("🔵 ===== SENDING PROFILE DATA TO BACKEND =====");
-      console.log("🔵 Form state values:");
+      console.log("===== SENDING PROFILE DATA TO BACKEND =====");
+      console.log("Form state values:");
       console.log("   - email:", email);
       console.log("   - name:", name);
       console.log("   - organization:", organization);
       console.log("   - address:", address);
-      console.log("🔵 Profile data object:", profileDataToSend);
-      console.log("🔵 JSON stringified:", JSON.stringify(profileDataToSend));
+      console.log("Profile data object:", profileDataToSend);
+      console.log("JSON stringified:", JSON.stringify(profileDataToSend));
 
       // Validate that we have the required data
       if (!name || name.trim() === "") {
-        console.error("❌ ERROR: name is empty!");
+        console.error("ERROR: name is empty!");
       }
       if (!organization || organization.trim() === "") {
-        console.error("❌ ERROR: organization is empty!");
+        console.error("ERROR: organization is empty!");
       }
       if (!address || address.trim() === "") {
-        console.error("❌ ERROR: address is empty!");
+        console.error("ERROR: address is empty!");
       }
 
       // Step 5: Send profile data to backend with token
@@ -271,7 +273,7 @@ export default function SignupPage({
         body: JSON.stringify(profileDataToSend),
       });
 
-      console.log("🔵 Response received, status:", response.status);
+      console.log("Response received, status:", response.status);
 
       let data;
       try {
@@ -289,11 +291,11 @@ export default function SignupPage({
         // Profile created successfully
         // Sign out user - they need to verify email before logging in
         await signOut(auth);
-        console.log("✅ User signed out - email verification required");
+        console.log("User signed out - email verification required");
 
         // IMPORTANT: Clear any old token from localStorage
         localStorage.removeItem("token");
-        console.log("✅ Old token cleared from localStorage");
+        console.log("Old token cleared from localStorage");
 
         // Show success message with verification reminder
         alert(
@@ -312,7 +314,15 @@ export default function SignupPage({
           const errorMessage =
             data.detail ||
             "This email is already registered. Please sign in instead.";
-          setErrors((prev) => ({ ...prev, email: errorMessage }));
+          const normalizedDetail = String(data.detail || "").toLowerCase();
+          if (
+            normalizedDetail.includes("organization") &&
+            normalizedDetail.includes("already")
+          ) {
+            setErrors((prev) => ({ ...prev, organization: errorMessage }));
+          } else {
+            setErrors((prev) => ({ ...prev, email: errorMessage }));
+          }
           setErrorMsg(errorMessage);
         } else {
           const errorMessage =
@@ -329,11 +339,11 @@ export default function SignupPage({
         const currentUser = auth.currentUser;
         if (currentUser) {
           await signOut(auth);
-          console.log("✅ Signed out user due to error");
+          console.log("Signed out user due to error");
         }
         // Always clear any old token on error
         localStorage.removeItem("token");
-        console.log("✅ Token cleared from localStorage due to error");
+        console.log("Token cleared from localStorage due to error");
       } catch (signOutError) {
         console.error("Error signing out:", signOutError);
       }
@@ -437,14 +447,12 @@ export default function SignupPage({
     }
   };
 
-  const handleOrganizationChange = (value: string) => {
-    // Only allow alphabets and digits
-    const filtered = value.replace(/[^a-zA-Z0-9]/g, "");
-    setOrganization(filtered);
+  const handleOrganizationSelect = (value: string) => {
+    setOrganization(value);
     if (errors.organization) {
       setErrors((prev) => ({
         ...prev,
-        organization: validateOrganization(filtered),
+        organization: validateOrganization(value),
       }));
     }
   };
@@ -663,25 +671,25 @@ export default function SignupPage({
 
               <div className="space-y-2">
                 <Label htmlFor="organization">Branch/Organization Name</Label>
-                <Input
-                  id="organization"
-                  type="text"
-                  placeholder="Your Restaurant Name"
-                  value={organization}
-                  onChange={(e) => handleOrganizationChange(e.target.value)}
-                  onBlur={() =>
-                    setErrors((prev) => ({
-                      ...prev,
-                      organization: validateOrganization(organization),
-                    }))
-                  }
-                  required
-                  className={`w-full p-3 pr-12 rounded-lg border bg-white/10 text-white placeholder-gray-300 ${
-                    errors.organization
-                      ? "border-red-500/50"
-                      : "border-white/20"
-                  }`}
-                />
+                <Select value={organization} onValueChange={handleOrganizationSelect}>
+                  <SelectTrigger
+                    id="organization"
+                    className={`w-full p-3 pr-12 rounded-lg border bg-white/10 text-white placeholder-gray-300 ${
+                      errors.organization
+                        ? "border-red-500/50"
+                        : "border-white/20"
+                    }`}
+                  >
+                    <SelectValue placeholder="Select your organization" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 text-white border-white/20">
+                    {ORGANIZATION_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {errors.organization && (
                   <p className="text-sm text-red-400 mt-1">
                     {errors.organization}
@@ -726,7 +734,7 @@ export default function SignupPage({
                         password: validatePassword(password),
                       }))
                     }
-                    placeholder="●●●●●●●"
+                    placeholder="*******"
                     required
                     className={`w-full p-3 pl-3 pr-12 rounded-lg border bg-white/10 text-white placeholder-gray-300 ${
                       errors.password ? "border-red-500/50" : "border-white/20"
@@ -773,7 +781,7 @@ export default function SignupPage({
                           : "",
                       }))
                     }
-                    placeholder="●●●●●●●"
+                    placeholder="*******"
                     required
                     className={`w-full p-3 pl-3 pr-12 rounded-lg border bg-white/10 text-white placeholder-gray-300 ${
                       errors.confirmPassword

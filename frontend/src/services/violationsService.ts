@@ -21,8 +21,33 @@ export type ViolationRecord = {
   sent_via?: string;
 };
 
-export async function fetchUserViolations(): Promise<ViolationRecord[]> {
-  const res = await authorizedFetch(`${API_URL}/violations/user`);
+export type FetchUserViolationsParams = {
+  search?: string;
+  category?: string;
+  severity?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  limit?: number;
+};
+
+export async function fetchUserViolations(params?: FetchUserViolationsParams): Promise<ViolationRecord[]> {
+  const query = new URLSearchParams();
+  if (params?.search?.trim()) query.set("search", params.search.trim());
+  if (params?.category && params.category !== "all") query.set("category", params.category);
+  if (params?.severity && params.severity !== "all") query.set("severity", params.severity);
+  if (params?.status && params.status !== "all") query.set("status", params.status);
+  if (params?.startDate) query.set("start_date", params.startDate);
+  if (params?.endDate) query.set("end_date", params.endDate);
+  if (params?.startTime) query.set("start_time", params.startTime);
+  if (params?.endTime) query.set("end_time", params.endTime);
+  if (typeof params?.limit === "number") query.set("limit", String(params.limit));
+
+  const suffix = query.toString();
+  const url = suffix ? `${API_URL}/violations/user?${suffix}` : `${API_URL}/violations/user`;
+  const res = await authorizedFetch(url);
   if (!res.ok) {
     if (res.status === 401) {
       throw new Error("Session expired or invalid. Please log in again.");
@@ -31,6 +56,31 @@ export async function fetchUserViolations(): Promise<ViolationRecord[]> {
     throw new Error(`Failed to fetch violations: ${res.status} - ${err}`);
   }
   return res.json();
+}
+
+export async function fetchTodayViolations(): Promise<ViolationRecord[]> {
+  const res = await authorizedFetch(`${API_URL}/violations/today`);
+  if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error("Session expired or invalid. Please log in again.");
+    }
+    const err = await res.text();
+    throw new Error(`Failed to fetch today's violations: ${res.status} - ${err}`);
+  }
+  return res.json();
+}
+
+export async function resetNotificationCount(): Promise<void> {
+  const res = await authorizedFetch(`${API_URL}/violations/notifications/reset`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error("Session expired or invalid. Please log in again.");
+    }
+    const err = await res.text();
+    throw new Error(`Failed to reset notifications: ${res.status} - ${err}`);
+  }
 }
 
 export async function fetchViolationImage(violationId: string): Promise<string | null> {

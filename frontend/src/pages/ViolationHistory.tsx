@@ -1,5 +1,5 @@
 // frontend/src/pages/ViolationHistory.tsx
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -10,8 +10,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogPortal
 } from "../components/ui/dialog";
 import {
   Select, SelectContent, SelectItem,
@@ -50,11 +48,11 @@ function mapViolation(v: ViolationRecord) {
     displayType = "Gloves";
     category = "gloves";
     severity = "Low";
-  } else if (type === "no_hairnet") {
+  } else if (type === "no_hairnet" || type === "no_hair_net") {
     displayType = "Hairnet";
     category = "hairnet";
     severity = "Low";
-  } else if (type === "fire") {
+  } else if (type === "fire" || type === "fire_detected") {
     displayType = "Fire";
     category = "fire";
     severity = "High";
@@ -83,63 +81,74 @@ export default function ViolationHistory() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [startDate, setStartDate] = useState(monthAgo.toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState(today.toISOString().slice(0, 10));
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [violations, setViolations] = useState<ReturnType<typeof mapViolation>[]>([]);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState("");
   const [exportingFormat, setExportingFormat] = useState<"csv" | "pdf" | null>(null);
+  const [searching, setSearching] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportSuccess, setExportSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const handleSearch = async () => {
+    setError(null);
+    setExportError(null);
+    setExportSuccess(null);
+
+    if (startTime && !startDate) {
+      setError("Please select a start date when using a start time.");
+      return;
+    }
+    if (endTime && !endDate) {
+      setError("Please select an end date when using an end time.");
+      return;
+    }
+
+    const startBoundary = startDate ? new Date(`${startDate}T${startTime || "00:00"}`) : null;
+    const endBoundary = endDate ? new Date(`${endDate}T${endTime || "23:59"}`) : null;
+    if (startBoundary && endBoundary && endBoundary < startBoundary) {
+      setError("End date/time must be on or after start date/time.");
+      return;
+    }
+
+    try {
+      setSearching(true);
+      setLoading(true);
+      const category = selectedCategory === "hairnet" ? "hair_net" : selectedCategory;
+      const raw = await fetchUserViolations({
+        search: searchQuery,
+        category,
+        severity: selectedSeverity,
+        status: selectedStatus,
+        startDate,
+        endDate,
+        startTime: startTime || undefined,
+        endTime: endTime || undefined,
+      });
+      setViolations(raw.map(mapViolation));
+    } catch (e: any) {
+      setError(e.message || "Failed to fetch filtered violations.");
+    } finally {
+      setLoading(false);
+      setSearching(false);
+    }
+  };
+
   useEffect(() => {
-    fetchUserViolations()
-      .then((raw) => setViolations(raw.map(mapViolation)))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    handleSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const filtered = useMemo(() => {
-    const startBoundary = startDate ? new Date(`${startDate}T00:00:00`) : null;
-    const endBoundary = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
-
-    return violations.filter((v) => {
-      const matchSearch =
-        !searchQuery ||
-        v.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        v.location.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchCat = selectedCategory === "all" || v.category === selectedCategory;
-      const matchSev = selectedSeverity === "all" || v.severity.toLowerCase() === selectedSeverity;
-      const matchStatus = selectedStatus === "all" || v.status.toLowerCase() === selectedStatus;
-
-      const matchDate = (() => {
-        if (!v.timestamp) {
-          return !startBoundary && !endBoundary;
-        }
-        const occurred = new Date(v.timestamp);
-        if (Number.isNaN(occurred.getTime())) {
-          return false;
-        }
-        if (startBoundary && occurred < startBoundary) {
-          return false;
-        }
-        if (endBoundary && occurred > endBoundary) {
-          return false;
-        }
-        return true;
-      })();
-
-      return matchSearch && matchCat && matchSev && matchStatus && matchDate;
-    });
-  }, [violations, searchQuery, selectedCategory, selectedSeverity, selectedStatus, startDate, endDate]);
 
   useEffect(() => {
     let cancelled = false;
 
     const loadImages = async () => {
       const imagePairs = await Promise.all(
-        filtered.map(async (violation) => {
+        violations.map(async (violation) => {
           try {
             const imageUrl = await fetchViolationImage(violation.id);
             return [violation.id, imageUrl] as const;
@@ -181,7 +190,7 @@ export default function ViolationHistory() {
     return () => {
       cancelled = true;
     };
-  }, [filtered, loading]);
+  }, [violations, loading]);
 
   useEffect(() => {
     return () => {
@@ -193,7 +202,7 @@ export default function ViolationHistory() {
     setExportError(null);
     setExportSuccess(null);
 
-    if (!filtered.length) {
+    if (!violations.length) {
       setExportError("No violations match the current filters.");
       return;
     }
@@ -216,7 +225,7 @@ export default function ViolationHistory() {
         outputFormat: format,
         startDate,
         endDate,
-        violationIds: filtered.map((v) => v.id),
+        violationIds: violations.map((v) => v.id),
         includeImages: format === "pdf",
       });
       setExportSuccess(`Filtered report exported as ${format.toUpperCase()}.`);
@@ -236,7 +245,7 @@ export default function ViolationHistory() {
 
       {/* Filters */}
       <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4">
           <div className="space-y-2 lg:col-span-1">
             <Label>Search</Label>
             <div className="relative">
@@ -301,8 +310,28 @@ export default function ViolationHistory() {
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
+          <div className="space-y-2">
+            <Label>Start Time</Label>
+            <Input
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>End Time</Label>
+            <Input
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          </div>
         </div>
-        <div className="flex justify-end gap-2 mt-4">
+        <div className="flex flex-wrap justify-end gap-2 mt-4">
+          <Button onClick={handleSearch} disabled={searching}>
+            {searching ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
+            Search
+          </Button>
           <Button variant="outline" onClick={() => handleExport("csv")} disabled={!!exportingFormat || loading}>
             {exportingFormat === "csv" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
             Export CSV
@@ -321,11 +350,11 @@ export default function ViolationHistory() {
         <div className="mb-6">
           <h2 className="text-lg mb-1">All Violations</h2>
           <p className="text-sm text-slate-600">
-            {loading ? "Loading..." : error ? `Error: ${error}` : `${filtered.length} violations found`}
+            {loading ? "Loading..." : error ? `Error: ${error}` : `${violations.length} violations found`}
           </p>
         </div>
         <div className="space-y-4">
-          {filtered.map((v) => (
+          {violations.map((v) => (
             <div key={v.id} className="flex gap-4 p-4 rounded-xl border hover:shadow-md transition-shadow cursor-pointer">
               <button
                 type="button"
@@ -367,7 +396,7 @@ export default function ViolationHistory() {
               </div>
             </div>
           ))}
-          {!loading && filtered.length === 0 && (
+          {!loading && violations.length === 0 && (
             <p className="text-center text-slate-500 py-8">No violations match your filters.</p>
           )}
         </div>

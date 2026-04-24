@@ -1,10 +1,3 @@
-# backend/model/snapshot.py
-# Run from PROJECT ROOT: python backend/model/snapshot.py
-#
-# This version watches a PATCH_DIR for video patches produced by patch_maker.py.
-# It picks patches in order, runs inference, then deletes each patch when done.
-# Camera ID is extracted automatically from the patch filename (e.g. CAM-001).
-
 import os
 import re
 import sys

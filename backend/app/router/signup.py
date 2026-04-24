@@ -8,6 +8,11 @@ CLOCK_SKEW_SECONDS = 10
 router = APIRouter(prefix="/signup", tags=["signup"])
 
 
+def normalize_organization_name(value: str) -> str:
+    # Normalize for duplicate checks: trim, collapse internal spaces, lowercase.
+    return " ".join(value.strip().split()).lower()
+
+
 @router.post("/")
 async def signup(request: Request, Authorization: str = Header(None)):
     # Get raw request body for debugging
@@ -98,10 +103,39 @@ async def signup(request: Request, Authorization: str = Header(None)):
             address_value = ""
         else:
             address_value = str(address_value).strip()
+
+        normalized_organization = normalize_organization_name(organization_value)
+
+        if normalized_organization:
+            organization_conflict = (
+                users_ref.where("branchNameNormalized", "==", normalized_organization)
+                .limit(1)
+                .get()
+            )
+            if len(organization_conflict) > 0:
+                raise HTTPException(
+                    status_code=409,
+                    detail="This organization already exists. You cannot register with this organization.",
+                )
+
+            # Backward-compatible duplicate check for legacy docs without branchNameNormalized.
+            legacy_conflict = False
+            for doc in users_ref.stream():
+                branch_name = str((doc.to_dict() or {}).get("branchName", ""))
+                if normalize_organization_name(branch_name) == normalized_organization:
+                    legacy_conflict = True
+                    break
+
+            if legacy_conflict:
+                raise HTTPException(
+                    status_code=409,
+                    detail="This organization already exists. You cannot register with this organization.",
+                )
         
         profile_data = {
             "email": user_email,
             "branchName": organization_value,  # Save exactly what was sent (after trim)
+            "branchNameNormalized": normalized_organization,
             "fullName": full_name_value,       # Save exactly what was sent (after trim)
             "address": address_value           # Save exactly what was sent (after trim)
         }

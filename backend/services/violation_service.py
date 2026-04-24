@@ -2,7 +2,7 @@
 import os
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from firebase_admin import firestore as fs
 
 try:
@@ -32,6 +32,59 @@ TYPE_MAP = {
 
 def normalize_type(raw: str) -> str:
     return TYPE_MAP.get(str(raw).lower().strip(), raw)
+
+
+def utc_day_bounds(moment: datetime | None = None) -> tuple[datetime, datetime]:
+    current = moment or datetime.now(timezone.utc)
+    start = current.astimezone(timezone.utc).replace(
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
+    end = start + timedelta(days=1)
+    return start, end
+
+
+def utc_recent_bounds(days: int, moment: datetime | None = None) -> tuple[datetime, datetime]:
+    current = moment or datetime.now(timezone.utc)
+    days = max(1, int(days or 1))
+    end = current.astimezone(timezone.utc).replace(
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+    ) + timedelta(days=1)
+    start = end - timedelta(days=days)
+    return start, end
+
+
+def parse_violation_time(value) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value))
+    except Exception:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def is_violation_today(value, moment: datetime | None = None) -> bool:
+    parsed = parse_violation_time(value)
+    if not parsed:
+        return False
+    start, end = utc_day_bounds(moment)
+    return start <= parsed < end
+
+
+def is_violation_in_recent_days(value, days: int, moment: datetime | None = None) -> bool:
+    parsed = parse_violation_time(value)
+    if not parsed:
+        return False
+    start, end = utc_recent_bounds(days, moment)
+    return start <= parsed < end
 
 
 def save_violation(

@@ -3,6 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
+import {
   Shirt, ChefHat, Hand, Flame, ShieldCheck,
   TrendingUp, TrendingDown, Clock, Camera,
 } from "lucide-react";
@@ -18,10 +24,18 @@ import { fetchDashboard, DashboardData } from "../services/statsService";
 import { fetchViolationImage } from "../services/violationsService";
 
 const DAY_OPTIONS = [
-  { label: "Last 7 Days",  value: 7  },
+  { label: "Today", value: 1 },
+  { label: "Yesterday", value: 2 },
+  { label: "Last 7 Days", value: 7 },
   { label: "Last 14 Days", value: 14 },
   { label: "Last 30 Days", value: 30 },
 ];
+
+function getRangeLabel(days: number): string {
+  if (days === 1) return "Today";
+  if (days === 2) return "Yesterday";
+  return `Last ${days} Days`;
+}
 
 export default function Dashboard() {
   const [days, setDays]       = useState(7);
@@ -29,6 +43,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewTitle, setPreviewTitle] = useState("");
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== "undefined" ? !navigator.onLine : false
   );
@@ -140,7 +156,7 @@ export default function Dashboard() {
           <p className="text-slate-600">Monitor hygiene compliance and safety violations in real-time</p>
         </div>
         <Select value={String(days)} onValueChange={(v: string) => setDays(Number(v))}>
-          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder="Select range" /></SelectTrigger>
           <SelectContent>
             {DAY_OPTIONS.map((o) => (
               <SelectItem key={o.value} value={String(o.value)}>{o.label}</SelectItem>
@@ -182,7 +198,7 @@ export default function Dashboard() {
       <Card className="p-6">
         <div className="mb-6">
           <h2 className="text-xl mb-1">Violations Per Day</h2>
-          <p className="text-sm text-slate-600">Last {days} days violation trends by category</p>
+          <p className="text-sm text-slate-600">{getRangeLabel(days)} violation trends by category</p>
         </div>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={chart}>
@@ -202,15 +218,34 @@ export default function Dashboard() {
       {/* Recent Violations */}
       <Card className="p-6">
         <div className="mb-6">
-          <h2 className="text-xl mb-1">Recent Violations</h2>
-          <p className="text-sm text-slate-600">Latest detected violations across all cameras</p>
+          <h2 className="text-xl mb-1">Today's Violations</h2>
+          <p className="text-sm text-slate-600">Latest detected violations from the current UTC day</p>
         </div>
         <div className="space-y-4">
           {!loading && recent.length === 0 && (
-            <p className="text-slate-500 text-sm text-center py-4">No violations recorded yet.</p>
+            <p className="text-slate-500 text-sm text-center py-4">No violations recorded today.</p>
           )}
           {recent.map((v) => (
-            <div key={v.id} className="flex gap-4 p-4 rounded-xl border hover:shadow-md transition-shadow">
+            <div
+              key={v.id}
+              className="flex gap-4 p-4 rounded-xl border hover:shadow-md transition-shadow cursor-pointer"
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                const imageUrl = imageUrls[v.id];
+                if (!imageUrl) return;
+                setPreviewImageUrl(imageUrl);
+                setPreviewTitle(`${v.type} #${v.id.slice(0, 8)}`);
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter" && e.key !== " ") return;
+                const imageUrl = imageUrls[v.id];
+                if (!imageUrl) return;
+                e.preventDefault();
+                setPreviewImageUrl(imageUrl);
+                setPreviewTitle(`${v.type} #${v.id.slice(0, 8)}`);
+              }}
+            >
               <div className="w-40 h-24 rounded-lg overflow-hidden bg-slate-100 border flex-shrink-0">
                 {imageUrls[v.id] ? (
                   <img src={imageUrls[v.id]} alt={v.type} className="w-full h-full object-cover" />
@@ -240,6 +275,26 @@ export default function Dashboard() {
           ))}
         </div>
       </Card>
+
+      <Dialog open={!!previewImageUrl} onOpenChange={(open) => !open && setPreviewImageUrl(null)}>
+        <DialogContent className="max-w-4xl overflow-auto fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <DialogHeader>
+            <DialogTitle>{previewTitle || "Violation Snapshot"}</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex items-center justify-center">
+            {previewImageUrl ? (
+              <img
+                src={previewImageUrl}
+                alt={previewTitle || "Violation Snapshot"}
+                className="max-h-[75vh] max-w-full object-contain rounded-lg border"
+              />
+            ) : (
+              <p className="text-sm text-slate-600">No image available.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

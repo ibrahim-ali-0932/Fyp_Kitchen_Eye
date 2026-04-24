@@ -1,18 +1,3 @@
-# backend/services/dedup_service.py
-#
-# Two-gate deduplication — InsightFace (ArcFace R100) edition
-#
-#   Gate 1  — InsightFace detects + embeds any face in the search region.
-#             Works for frontal, angled, and full profile faces.
-#   Gate 2  — Cosine-similarity comparison against stored 512-float embeddings.
-#   Fallback— Legacy key-based cooldown timer (fire detections + no-face cases).
-#
-# InsightFace install (run once):
-#   pip install insightface onnxruntime      # CPU
-#   pip install insightface onnxruntime-gpu  # GPU (recommended)
-#
-# First run downloads ~300 MB of model weights to ~/.insightface/
-
 import time
 import cv2
 import numpy as np
@@ -24,24 +9,19 @@ try:
 except ImportError:
     _FaceAnalysis = None
     _INSIGHTFACE_AVAILABLE = False
-    print("[KitchenEye] ⚠️  insightface not installed — face gate disabled, fallback only.")
+    print("[KitchenEye]  insightface not installed — face gate disabled, fallback only.")
 
 
 # ── Tunables ──────────────────────────────────────────────────────────────────
-COOLDOWN_SECONDS      = 30      # fallback: seconds between saves for the same unique_key
-FACE_COOLDOWN_MINUTES = 30      # face-gate: minutes before same face+type is saved again
+COOLDOWN_SECONDS      = 30      #  seconds between saves for the same unique_key
+FACE_COOLDOWN_MINUTES = 30      #  minutes before same face+type is saved again
 
-COSINE_SIM_THRESHOLD  = 0.40   # 0–1; dot product of L2-normed ArcFace embeddings.
-                                 # 0.40 is a solid default for kitchen footage.
-                                 # Raise to 0.45 to be stricter (fewer false matches).
-                                 # Lower to 0.35 if same person is being re-saved too often.
+COSINE_SIM_THRESHOLD  = 0.40   
 
 SEARCH_EXPAND_FACTOR  = 2.0    # multiplier: how far upward to look for a face
                                  # above a gloves/apron bounding box.
 
 DET_SCORE_MIN         = 0.55   # minimum InsightFace RetinaFace detection confidence.
-                                 # Lower to 0.45 if faces in your footage are often
-                                 # partially occluded by steam, masks, or camera angle.
 
 
 # ── InsightFace singleton ─────────────────────────────────────────────────────
@@ -71,9 +51,9 @@ def _get_fa():
         )
         # det_size=(640,640) is better than the default (320,320) for small/distant faces.
         _fa.prepare(ctx_id=0, det_size=(640, 640))
-        print("[KitchenEye] ✅ InsightFace (buffalo_l / ArcFace R100) loaded.")
+        print("[KitchenEye] InsightFace (buffalo_l / ArcFace R100) loaded.")
     except Exception as exc:
-        print(f"[KitchenEye] ⚠️  InsightFace load failed: {exc}  — using key-timer fallback.")
+        print(f"[KitchenEye]  InsightFace load failed: {exc}  — using key-timer fallback.")
         _fa = None
     return _fa
 

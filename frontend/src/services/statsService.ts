@@ -15,6 +15,7 @@ async function authHeaders(): Promise<HeadersInit> {
 export interface ViolationSummary {
   user_id: string;
   last_updated: string | null;
+  notification_count: number;
   apron_count: number;
   gloves_count: number;
   hairnet_count: number;

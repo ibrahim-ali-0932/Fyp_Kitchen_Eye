@@ -59,6 +59,45 @@ def _get_daily(user_id: str, date_str: str) -> dict:
     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
 
 
+def _aggregate_days(user_id: str, date_strings: list[str]) -> dict:
+    totals = {
+        "apron_count": 0,
+        "gloves_count": 0,
+        "hairnet_count": 0,
+        "fire_count": 0,
+    }
+
+    for date_str in date_strings:
+        daily = _get_daily(user_id, date_str)
+        totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+        totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+        totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+        totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+
+    totals["total_count"] = (
+        totals["apron_count"]
+        + totals["gloves_count"]
+        + totals["hairnet_count"]
+        + totals["fire_count"]
+    )
+    totals["hygiene_score"] = _hygiene_score(
+        totals["apron_count"],
+        totals["gloves_count"],
+        totals["hairnet_count"],
+        totals["fire_count"],
+    )
+    return totals
+
+
+def _date_strings_for_range(days: int, offset_days: int = 0) -> list[str]:
+    today = datetime.now(timezone.utc).date()
+    days = max(1, int(days or 1))
+    result = []
+    for i in range(days - 1, -1, -1):
+        result.append((today - timedelta(days=i + offset_days)).isoformat())
+    return result
+
+
 def update_stats(user_id: str, violation_type: str):
     """Called after every violation write. Updates stats_daily, stats_summary, violations_chart."""
     today     = datetime.now(timezone.utc).date().isoformat()
@@ -68,6 +107,10 @@ def update_stats(user_id: str, violation_type: str):
     if not category:
         print(f"[stats] Unknown violation type: {violation_type} — skipping stats")
         return
+
+    summary_ref = db.collection("stats_summary").document(user_id)
+    summary_snap = summary_ref.get()
+    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
 
     daily_id  = f"{user_id}_{today}"
     daily_ref = db.collection("stats_daily").document(daily_id)
@@ -105,6 +148,7 @@ def update_stats(user_id: str, violation_type: str):
     summary = {
         "user_id":           user_id,
         "last_updated":      fs.SERVER_TIMESTAMP,
+        "notification_count": notification_count,
         "apron_count":       data["apron_count"],
         "gloves_count":      data["gloves_count"],
         "hairnet_count":     data["hairnet_count"],
@@ -127,6 +171,35 @@ def update_stats(user_id: str, violation_type: str):
     })
 
 
+def build_summary_for_days(user_id: str, days: int) -> dict:
+    days = max(1, int(days or 1))
+    if days == 2:
+        current_dates = _date_strings_for_range(1, offset_days=1)
+        previous_dates = _date_strings_for_range(1, offset_days=2)
+    else:
+        current_dates = _date_strings_for_range(days)
+        previous_dates = _date_strings_for_range(days, offset_days=days)
+
+    current = _aggregate_days(user_id, current_dates)
+    previous = _aggregate_days(user_id, previous_dates)
+
+    return {
+        "user_id": user_id,
+        "last_updated": datetime.now(timezone.utc).isoformat(),
+        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+        "apron_count": current["apron_count"],
+        "gloves_count": current["gloves_count"],
+        "hairnet_count": current["hairnet_count"],
+        "fire_count": current["fire_count"],
+        "total_count": current["total_count"],
+        "hygiene_score": current["hygiene_score"],
+        "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+        "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+        "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+        "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+    }
+
+
 def build_chart_days(user_id: str, days: int = 30) -> list:
     """Returns [{date, apron, gloves, hairnet, fire}] for last N days. Missing days zero-filled."""
     today = datetime.now(timezone.utc).date()
@@ -142,3 +215,45 @@ def build_chart_days(user_id: str, days: int = 30) -> list:
             "fire":    d["fire_count"],
         })
     return result
+
+
+def empty_summary(user_id: str) -> dict:
+    return {
+        "user_id": user_id,
+        "last_updated": None,
+        "notification_count": 0,
+        "apron_count": 0,
+        "gloves_count": 0,
+        "hairnet_count": 0,
+        "fire_count": 0,
+        "total_count": 0,
+        "hygiene_score": 100,
+        "apron_change_pct": 0,
+        "gloves_change_pct": 0,
+        "hairnet_change_pct": 0,
+        "fire_change_pct": 0,
+    }
+
+
+def summary_payload(user_id: str, raw: dict) -> dict:
+    def si(v):
+        try:
+            return int(v)
+        except Exception:
+            return 0
+
+    return {
+        "user_id": user_id,
+        "last_updated": str(raw.get("last_updated", "")),
+        "notification_count": si(raw.get("notification_count", 0)),
+        "apron_count": si(raw.get("apron_count")),
+        "gloves_count": si(raw.get("gloves_count")),
+        "hairnet_count": si(raw.get("hairnet_count")),
+        "fire_count": si(raw.get("fire_count")),
+        "total_count": si(raw.get("total_count")),
+        "hygiene_score": si(raw.get("hygiene_score", 100)),
+        "apron_change_pct": si(raw.get("apron_change_pct")),
+        "gloves_change_pct": si(raw.get("gloves_change_pct")),
+        "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
+        "fire_change_pct": si(raw.get("fire_change_pct")),
+    }

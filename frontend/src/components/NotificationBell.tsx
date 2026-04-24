@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { Bell, AlertTriangle, Mail } from "lucide-react";
 
 import {
-  fetchUserViolations,
+  fetchTodayViolations,
+  fetchViolationImage,
+  resetNotificationCount,
   ViolationRecord,
 } from "../services/violationsService";
+import { fetchSummary } from "../services/statsService";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -21,6 +24,8 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<ViolationRecord[]>([]);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
@@ -33,8 +38,35 @@ export default function NotificationBell() {
     setError(null);
     
     try {
-      const data = await fetchUserViolations();
+      const [summary, data] = await Promise.all([
+        fetchSummary(),
+        fetchTodayViolations(),
+      ]);
+
+      setNotificationCount(summary.notification_count ?? 0);
       setItems(data || []);
+
+      const imagePairs = await Promise.all(
+        (data || []).map(async (item) => {
+          try {
+            const imageUrl = await fetchViolationImage(item.id);
+            return [item.id, imageUrl] as const;
+          } catch {
+            return [item.id, null] as const;
+          }
+        })
+      );
+
+      setImageUrls((prev) => {
+        Object.values(prev).forEach((url) => URL.revokeObjectURL(url));
+        const next: Record<string, string> = {};
+        imagePairs.forEach(([id, url]) => {
+          if (url) {
+            next[id] = url;
+          }
+        });
+        return next;
+      });
     } catch (error: any) {
       setError(error?.message || "Failed to load notifications");
     } finally {
@@ -42,20 +74,45 @@ export default function NotificationBell() {
     }
   };
 
+  const reloadAndReset = async () => {
+    setNotificationCount(0);
+    try {
+      await resetNotificationCount();
+    } catch (error: any) {
+      setError(error?.message || "Failed to reset notifications");
+    }
+    await load();
+  };
+
   useEffect(() => {
     load();
+    const interval = setInterval(() => {
+      load();
+    }, 30000);
+
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
-    if (open) {
-      load();
-    }
-  }, [open]);
+    return () => {
+      Object.values(imageUrls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [imageUrls]);
 
-  const count = items.length;
+  const count = notificationCount;
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (nextOpen) {
+      setNotificationCount(0);
+      void reloadAndReset();
+    }
+  };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="sm" className="relative">
           <Bell className="w-5 h-5" />
@@ -111,12 +168,20 @@ export default function NotificationBell() {
                 }
                 className="p-4 flex gap-3"
               >
-                <div className="mt-1">
-                  {item.is_test ? (
-                    <Mail className="w-4 h-4 text-blue-500" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 text-orange-500" />
-                  )}
+                <div className="mt-1 flex-shrink-0">
+                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 border flex items-center justify-center">
+                    {imageUrls[item.id] ? (
+                      <img
+                        src={imageUrls[item.id]}
+                        alt={item.violation_type || "Violation"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : item.is_test ? (
+                      <Mail className="w-4 h-4 text-blue-500" />
+                    ) : (
+                      <AlertTriangle className="w-4 h-4 text-orange-500" />
+                    )}
+                  </div>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-2">

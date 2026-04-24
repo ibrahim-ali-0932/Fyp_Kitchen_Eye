@@ -1,21 +1,10 @@
 
-
-# patch_maker.py
-# Watches a folder of camera videos, splits them into overlapping patches,
-# and saves patches to an output folder.
-#
-# Run from anywhere:
-#   python patch_maker.py
-
 import os
 import re
 import time
 import subprocess
 from pathlib import Path
 
-# ============================================================
-# CONFIGURATION
-# ============================================================
 FFMPEG_EXE  = r"C:\ffmpeg\ffmpeg-8.1-essentials_build\bin\ffmpeg.exe"
 FFPROBE_EXE = r"C:\ffmpeg\ffmpeg-8.1-essentials_build\bin\ffprobe.exe"
 VIDEO_DIR            = r"D:\sem 7\FYP\Frontend\backend\app\videos"          # Folder containing Cam-001.mp4 etc.
@@ -25,16 +14,6 @@ OVERLAP_SEC          = 2                     # Overlap between consecutive patch
 REFRESH_INTERVAL_SEC = 60                    # How often to re-scan VIDEO_DIR (seconds)
 
 VIDEO_EXTENSIONS     = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
-
-# ── FFmpeg paths ─────────────────────────────────────────────
-# Option A (recommended): set full paths to the .exe files here.
-#   Download FFmpeg from https://www.gyan.dev/ffmpeg/builds/
-#   Extract the zip, then point these to the /bin folder inside.
-#   Example:
-#     FFMPEG_EXE  = r"C:\ffmpeg\bin\ffmpeg.exe"
-#     FFPROBE_EXE = r"C:\ffmpeg\bin\ffprobe.exe"
-#
-# Option B: leave both as None and make sure ffmpeg is on PATH.
 FFMPEG_EXE  = None    # e.g. r"C:\ffmpeg\bin\ffmpeg.exe"
 FFPROBE_EXE = None    # e.g. r"C:\ffmpeg\bin\ffprobe.exe"
 # ─────────────────────────────────────────────────────────────
