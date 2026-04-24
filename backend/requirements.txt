@@ -5,3 +5,4 @@ email-validator
 pydantic
 reportlab
 Pillow
+python-dotenv

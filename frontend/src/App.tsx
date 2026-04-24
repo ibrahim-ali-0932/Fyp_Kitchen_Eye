@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -6,6 +7,7 @@ import DashboardLayout from "./pages/DashboardLayout";
 import BlogPage from "./pages/BlogPage";
 import { AdminPanel } from "./pages/AdminPanel";
 import { ProtectedRoute, PublicRoute } from "./components/auth";
+import { auth } from "./firebase";
 
 /**
  * AppRoutes - Contains all the route definitions
@@ -18,6 +20,8 @@ function AppRoutes() {
     if (success) {
       localStorage.setItem("isAuthenticated", "true");
       if (isAdmin) {
+        localStorage.setItem("token", "admin_bypass");
+        localStorage.setItem("token_uid", "admin");
         navigate("/admin", { replace: true });
       } else {
         navigate("/dashboard", { replace: true });
@@ -25,10 +29,15 @@ function AppRoutes() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("isAuthenticated");
-    navigate("/", { replace: true });
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("token_uid");
+      localStorage.removeItem("isAuthenticated");
+      navigate("/", { replace: true });
+    }
   };
 
   const handleSignupSuccess = (success: boolean) => {
@@ -115,14 +124,19 @@ function AppRoutes() {
       />
 
       {/* Catch-all route - redirect to home */}
-      <Route path="*" element={<LandingPage
-        onSignIn={() => navigate("/login")}
-        onGetStarted={() => navigate("/signup")}
-        onBlog={() => navigate("/blog")}
-        onHome={() => navigate("/")}
-        onContactUs={() => navigate("/")}
-        onOurTeam={() => navigate("/")}
-      />} />
+      <Route
+        path="*"
+        element={
+          <LandingPage
+            onSignIn={() => navigate("/login")}
+            onGetStarted={() => navigate("/signup")}
+            onBlog={() => navigate("/blog")}
+            onHome={() => navigate("/")}
+            onContactUs={() => navigate("/")}
+            onOurTeam={() => navigate("/")}
+          />
+        }
+      />
     </Routes>
   );
 }

@@ -5,25 +5,30 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { auth } from "../firebase"; // use initialized app
+import { auth } from "../firebase";
 
 export const loginUser = async (email: string, password: string) => {
+  await signOut(auth);
+  localStorage.removeItem("token");
+  localStorage.removeItem("token_uid");
+  localStorage.removeItem("isAuthenticated");
+
   const userCredential = await signInWithEmailAndPassword(
     auth,
     email,
-    password
+    password,
   );
   const user = userCredential.user;
 
-  // Check if email is verified
   if (!user.emailVerified) {
     throw new Error(
-      "Email is not verified. Please verify your email before logging in."
+      "Email is not verified. Please verify your email before logging in.",
     );
   }
 
-  // Get the ID token
   const idToken = await user.getIdToken();
+  localStorage.setItem("token", idToken);
+  localStorage.setItem("token_uid", user.uid);
 
   return { idToken, user };
 };

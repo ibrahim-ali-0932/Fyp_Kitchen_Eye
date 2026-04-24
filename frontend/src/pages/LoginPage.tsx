@@ -209,6 +209,7 @@ export default function LoginPage({
 
       // Login successful - Firebase authentication is sufficient
       // No need to call backend login endpoint
+      console.log("Logged in as:", user.uid);
       alert("Login successful! Welcome back.");
       onLogin(true);
     } catch (error: any) {
