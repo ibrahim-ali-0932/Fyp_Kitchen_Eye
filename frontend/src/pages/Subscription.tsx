@@ -15,7 +15,7 @@ import {
 export default function Subscription() {
   const plans = [
     {
-      name: "Free",
+      name: "Basic",
       price: "$0",
       period: "forever",
       description: "Perfect for trying out KitchenEye",
@@ -193,7 +193,7 @@ export default function Subscription() {
               <Button
                 className={`w-full mb-6 ${colors.button}`}
                 size="lg"
-                disabled={plan.name === "Free"}
+                disabled={plan.name === "Basic"}
               >
                 {plan.cta}
               </Button>

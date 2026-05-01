@@ -80,6 +80,42 @@ export const usersAPI = {
 
     return response.json();
   },
+
+  // Update a user's plan
+  async updatePlan(userId: string, plan: string, token: string): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/auth/users/${userId}/plan`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ plan }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || "Failed to update plan");
+    }
+
+    return response.json();
+  },
+};
+
+export const plansAPI = {
+  async getAll(token: string): Promise<Array<{ id: string; name?: string }>> {
+    const response = await fetch(`${API_BASE_URL}/auth/users/plans`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch plans");
+    }
+
+    const data = await response.json();
+    return data.plans || [];
+  },
 };
 
 export const camerasAPI = {

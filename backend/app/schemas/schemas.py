@@ -6,7 +6,6 @@ class Signup(BaseModel):
     full_name: str
     organization: str
     address: str
-    
 
 
 class profile(BaseModel):
@@ -14,3 +13,4 @@ class profile(BaseModel):
     Fullname: str
     Branchname: str
     address: str
+    plan: str = "basic"

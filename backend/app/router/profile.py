@@ -19,12 +19,12 @@ def getprofile(decoded=Depends(get_current_user)):
         print(f"❌ No profile found for UID: {uid}")
         raise HTTPException(
             404,
-            f"Profile not found. Please complete the signup process to create your profile.",
+            "Profile not found. Please complete the signup process to create your profile.",
         )
 
-    print(f"✅ Profile document exists")
+    print("✅ Profile document exists")
     data = snap.to_dict()
-    print(f"🔵 ===== FIRESTORE DATA RETRIEVED =====")
+    print("🔵 ===== FIRESTORE DATA RETRIEVED =====")
     print(f"🔵 Raw Firestore data: {data}")
     print(f"🔵 Available keys in Firestore: {list(data.keys()) if data else 'None'}")
     print(f"🔵 Data type: {type(data)}")
@@ -60,8 +60,9 @@ def getprofile(decoded=Depends(get_current_user)):
     fullname = data.get("fullName") or data.get("Fullname") or ""
     branchname = data.get("branchName") or data.get("Branchname") or ""
     address = data.get("address") or ""
+    plan = data.get("plan") or "basic"
 
-    print(f"🔵 ===== TRANSFORMED VALUES =====")
+    print("🔵 ===== TRANSFORMED VALUES =====")
     print(f"🔵 Email (transformed): '{email}'")
     print(f"🔵 Fullname (transformed): '{fullname}'")
     print(f"🔵 Branchname (transformed): '{branchname}'")
@@ -72,13 +73,15 @@ def getprofile(decoded=Depends(get_current_user)):
         "Fullname": fullname,
         "Branchname": branchname,
         "address": address,
+        "plan": plan,
     }
 
-    print(f"✅ Transformed data:")
+    print("✅ Transformed data:")
     print(f"   - Email: {email}")
     print(f"   - Fullname: {fullname}")
     print(f"   - Branchname: {branchname}")
     print(f"   - Address: {address}")
+    print(f"   - Plan: {plan}")
     print(f"✅ Returning profile data: {transformed_data}")
 
     try:
@@ -121,6 +124,7 @@ def update_profile(body: profile, decoded=Depends(get_current_user)):
             "Fullname": body.Fullname,
             "Branchname": body.Branchname,
             "address": body.address,
+            "plan": snap.to_dict().get("plan", "basic"),
         }
 
         print(f"✅ Profile updated successfully: {updated_data}")

@@ -1223,6 +1223,15 @@
     overflow-y: auto;
   }
 
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .rounded {
     border-radius: .25rem;
   }

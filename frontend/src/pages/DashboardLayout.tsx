@@ -50,6 +50,7 @@ interface UserProfile {
   Fullname: string;
   Branchname: string;
   address: string;
+  plan?: string;
 }
 
 const PAGE_TO_PATH: Record<Page, string> = {
@@ -75,7 +76,9 @@ const PATH_TO_PAGE: Record<string, Page> = {
   profile: "profile",
 };
 
-const parseDashboardPath = (pathname: string): { page: Page; known: boolean } => {
+const parseDashboardPath = (
+  pathname: string,
+): { page: Page; known: boolean } => {
   const normalizedPath = pathname.replace(/\/+$/, "");
   const segments = normalizedPath.split("/").filter(Boolean);
   const pageKey = segments[1] || "";
@@ -91,8 +94,8 @@ const parseDashboardPath = (pathname: string): { page: Page; known: boolean } =>
 export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState<Page>(() =>
-    parseDashboardPath(location.pathname).page,
+  const [currentPage, setCurrentPage] = useState<Page>(
+    () => parseDashboardPath(location.pathname).page,
   );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -130,6 +133,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           Fullname: data.Fullname || "",
           Branchname: data.Branchname || "",
           address: data.address || "",
+          plan: data.plan || "basic",
         };
         setUserProfile(profileData);
       } else {
@@ -141,6 +145,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           Fullname: "User",
           Branchname: "",
           address: "",
+          plan: "basic",
         });
       }
     } catch (error) {
@@ -158,6 +163,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         Fullname: "User",
         Branchname: "",
         address: "",
+        plan: "basic",
       });
     } finally {
       setLoading(false);
@@ -189,6 +195,47 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
     return name.substring(0, 2).toUpperCase();
+  };
+
+  const normalizedPlan = (userProfile?.plan || "basic").toLowerCase();
+  const isBasicPlan = normalizedPlan === "basic";
+  const currentPlanLabel = userProfile?.plan || "Basic";
+
+  const renderPlanCard = () => {
+    if (isBasicPlan) {
+      return (
+        <div className="rounded-xl p-4 bg-gradient-to-br from-blue-600 to-indigo-700 border border-blue-300/20 shadow-lg shadow-blue-950/20">
+          <p className="text-sm mb-3 text-white/95">
+            Upgrade to Pro for advanced features
+          </p>
+          <Button
+            size="sm"
+            className="w-full bg-white text-blue-700 hover:bg-blue-50 active:bg-blue-100"
+            onClick={() => handlePageChange("subscription")}
+          >
+            <CreditCard className="w-4 h-4 mr-2" />
+            Upgrade Plan
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-xl p-4 bg-gradient-to-br from-blue-600 to-indigo-700 border border-blue-300/20 shadow-lg shadow-blue-950/20">
+        <p className="text-sm text-white/90 mb-1">Current Plan</p>
+        <p className="text-lg font-semibold capitalize mb-3 text-white">
+          {currentPlanLabel}
+        </p>
+        <Button
+          size="sm"
+          className="w-full bg-white text-blue-700 hover:bg-blue-50 active:bg-blue-100"
+          onClick={() => handlePageChange("subscription")}
+        >
+          <CreditCard className="w-4 h-4 mr-2" />
+          View Plan Details
+        </Button>
+      </div>
+    );
   };
 
   const menuItems = [
@@ -236,9 +283,9 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
               <div className="w-12 h-10 bg-gradient-to-br rounded-lg flex items-center justify-center">
-                  <img src="/images/Kitcheneye_logo.png" alt="" />
+                <img src="/images/Kitcheneye_logo.png" alt="" />
               </div>
-               <span className="text-2xl text-white tracking-tight">
+              <span className="text-2xl text-white tracking-tight">
                 Kitchen
                 <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   Eye
@@ -293,7 +340,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar">
           {menuItems.map((item) => (
             <button
               key={item.id}
@@ -312,17 +359,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
 
         {/* Subscription CTA */}
         <div className={`p-4 ${sidebarCollapsed ? "hidden" : ""}`}>
-          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-4">
-            <p className="text-sm mb-3">Upgrade to Pro for advanced features</p>
-            <Button
-              size="sm"
-              className="w-full bg-white text-blue-600 hover:bg-slate-100"
-              onClick={() => handlePageChange("subscription")}
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Upgrade Plan
-            </Button>
-          </div>
+          {renderPlanCard()}
         </div>
 
         {/* Logout */}
@@ -389,7 +426,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
               </div>
             </div>
 
-            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar">
               {menuItems.map((item) => (
                 <button
                   key={item.id}
@@ -407,19 +444,36 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
             </nav>
 
             <div className="p-4">
-              <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-4">
-                <p className="text-sm mb-3">
-                  Upgrade to Pro for advanced features
-                </p>
-                <Button
-                  size="sm"
-                  className="w-full bg-white text-blue-600 hover:bg-slate-100"
-                  onClick={() => handlePageChange("subscription", true)}
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Upgrade Plan
-                </Button>
-              </div>
+              {isBasicPlan ? (
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-4 border border-blue-300/20 shadow-lg shadow-blue-950/20">
+                  <p className="text-sm mb-3 text-white/95">
+                    Upgrade to Pro for advanced features
+                  </p>
+                  <Button
+                    size="sm"
+                    className="w-full bg-white text-blue-700 hover:bg-blue-50 active:bg-blue-100"
+                    onClick={() => handlePageChange("subscription", true)}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Upgrade Plan
+                  </Button>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-4 border border-blue-300/20 shadow-lg shadow-blue-950/20">
+                  <p className="text-sm text-white/90 mb-1">Current Plan</p>
+                  <p className="text-lg font-semibold capitalize mb-3 text-white">
+                    {currentPlanLabel}
+                  </p>
+                  <Button
+                    size="sm"
+                    className="w-full bg-white text-blue-700 hover:bg-blue-50 active:bg-blue-100"
+                    onClick={() => handlePageChange("subscription", true)}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    View Plan Details
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="p-4 border-t border-slate-800">
@@ -478,7 +532,9 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">{renderPage()}</main>
+        <main className="flex-1 overflow-y-auto no-scrollbar">
+          {renderPage()}
+        </main>
       </div>
     </div>
   );
