@@ -45,6 +45,24 @@ class TestHygieneScore:
         # 100 - (2*2 + 1*1 + 1*3 + 0*5) = 100 - 8 = 92
         assert _hygiene_score(2, 1, 1, 0) == 92
 
+    def test_hygiene_score_high_violations_severe_penalty(self):
+        """Many violations should push score toward 0, not increase it."""
+        score = _hygiene_score(10, 10, 10, 10)
+        # penalty = 10*2 + 10*1 + 10*3 + 10*5 = 110 → max(0, 100-110) = 0
+        assert score == 0
+
+    def test_hygiene_score_more_violations_means_lower_score(self):
+        """Score must decrease monotonically with more violations."""
+        high = _hygiene_score(0, 0, 0, 0)
+        low = _hygiene_score(5, 5, 5, 5)
+        assert high > low
+
+    def test_hygiene_score_weight_multiplication_not_addition(self):
+        """Verify penalty uses multiplication: 5 aprons = 5*2=10, not 5+2=7."""
+        score = _hygiene_score(5, 0, 0, 0)
+        # 100 - (5*2) = 90, NOT 100 - (5+2) = 93
+        assert score == 90
+
 
 # ── _pct_change ───────────────────────────────────────────────
 class TestPctChange:
@@ -58,6 +76,10 @@ class TestPctChange:
 
     def test_no_change(self):
         assert _pct_change(5, 5) == 0
+
+    def test_pct_change_yesterday_zero_today_positive(self):
+        """When yesterday=0 and today>0, should return 100 (new activity)."""
+        assert _pct_change(5, 0) == 100
 
 
 # ── _date_strings_for_range ───────────────────────────────────
