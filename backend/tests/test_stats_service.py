@@ -81,6 +81,18 @@ class TestPctChange:
         """When yesterday=0 and today>0, should return 100 (new activity)."""
         assert _pct_change(5, 0) == 100
 
+    def test_pct_change_both_zero(self):
+        """When both are zero, should return 0 (no change)."""
+        assert _pct_change(0, 0) == 0
+
+    def test_pct_change_new_activity_returns_100(self):
+        """New activity (yesterday=0, today>0) must report 100% increase."""
+        assert _pct_change(3, 0) == 100
+
+    def test_pct_change_no_activity_either_day_returns_0(self):
+        """No activity on either day must report 0% change."""
+        assert _pct_change(0, 0) == 0
+
 
 # ── _date_strings_for_range ───────────────────────────────────
 class TestDateStringsForRange:
@@ -104,3 +116,28 @@ class TestAggregateDays:
         result = _aggregate_days("user123", ["2026-05-01"])
         assert result["apron_count"] == 2
         assert result["total_count"] == 3
+
+    @patch("services.stats_service._get_daily")
+    def test_aggregate_apron_count_with_truthy_value(self, mock_get_daily):
+        """Verify or-coalescing: truthy counts must pass through, not be zeroed."""
+        mock_get_daily.return_value = {
+            "apron_count": 5, "gloves_count": 3,
+            "hairnet_count": 2, "fire_count": 1,
+        }
+        result = _aggregate_days("user123", ["2026-05-01"])
+        # With 'or 0': int(5 or 0) = int(5) = 5  ✓
+        # With 'and 0': int(5 and 0) = int(0) = 0  ✗
+        assert result["apron_count"] == 5
+        assert result["total_count"] == 11  # 5+3+2+1
+
+    @patch("services.stats_service._get_daily")
+    def test_aggregate_handles_none_values(self, mock_get_daily):
+        """When daily data has None values, or-coalescing should default to 0."""
+        mock_get_daily.return_value = {
+            "apron_count": None, "gloves_count": 0,
+            "hairnet_count": None, "fire_count": 1,
+        }
+        result = _aggregate_days("user123", ["2026-05-01"])
+        assert result["apron_count"] == 0   # None or 0 → 0
+        assert result["fire_count"] == 1
+        assert result["total_count"] == 1

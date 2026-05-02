@@ -1,0 +1,3063 @@
+<html><head>
+<style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; margin: 40px auto; max-width: 900px; line-height: 1.6; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); background: #fff; }
+    html { background-color: #f4f7f6; }
+    h1, h2, h3 { color: #2c3e50; }
+    h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 16px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background-color: #3498db; color: white; }
+    tr:hover { background-color: #f5f7fa; }
+    a { color: #3498db; text-decoration: none; font-weight: bold; }
+    a:hover { text-decoration: underline; }
+    pre { background-color: #282c34; color: #abb2bf; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Consolas', monospace; border-left: 4px solid #e06c75; line-height: 1.4; }
+</style>
+</head><body><h1>services/stats_service.py</h1>Killed 63 out of 365 mutants<h2>Survived</h2>Survived mutation testing. These mutants show holes in your test suite.<h3>Mutant 1</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -4,7 +4,7 @@
+ from app.database.db import db
+ 
+ # Category names (match Firestore field names)
+-CATEGORY_APRON   = "apron"
++CATEGORY_APRON   = "XXapronXX"
+ CATEGORY_GLOVES  = "gloves"
+ CATEGORY_HAIRNET = "hairnet"
+ CATEGORY_FIRE    = "fire"
+</pre><h3>Mutant 2</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -4,7 +4,7 @@
+ from app.database.db import db
+ 
+ # Category names (match Firestore field names)
+-CATEGORY_APRON   = "apron"
++CATEGORY_APRON   = None
+ CATEGORY_GLOVES  = "gloves"
+ CATEGORY_HAIRNET = "hairnet"
+ CATEGORY_FIRE    = "fire"
+</pre><h3>Mutant 3</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -5,7 +5,7 @@
+ 
+ # Category names (match Firestore field names)
+ CATEGORY_APRON   = "apron"
+-CATEGORY_GLOVES  = "gloves"
++CATEGORY_GLOVES  = "XXglovesXX"
+ CATEGORY_HAIRNET = "hairnet"
+ CATEGORY_FIRE    = "fire"
+ 
+</pre><h3>Mutant 4</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -5,7 +5,7 @@
+ 
+ # Category names (match Firestore field names)
+ CATEGORY_APRON   = "apron"
+-CATEGORY_GLOVES  = "gloves"
++CATEGORY_GLOVES  = None
+ CATEGORY_HAIRNET = "hairnet"
+ CATEGORY_FIRE    = "fire"
+ 
+</pre><h3>Mutant 5</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -6,7 +6,7 @@
+ # Category names (match Firestore field names)
+ CATEGORY_APRON   = "apron"
+ CATEGORY_GLOVES  = "gloves"
+-CATEGORY_HAIRNET = "hairnet"
++CATEGORY_HAIRNET = "XXhairnetXX"
+ CATEGORY_FIRE    = "fire"
+ 
+ # Violation type → category
+</pre><h3>Mutant 6</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -6,7 +6,7 @@
+ # Category names (match Firestore field names)
+ CATEGORY_APRON   = "apron"
+ CATEGORY_GLOVES  = "gloves"
+-CATEGORY_HAIRNET = "hairnet"
++CATEGORY_HAIRNET = None
+ CATEGORY_FIRE    = "fire"
+ 
+ # Violation type → category
+</pre><h3>Mutant 7</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -7,7 +7,7 @@
+ CATEGORY_APRON   = "apron"
+ CATEGORY_GLOVES  = "gloves"
+ CATEGORY_HAIRNET = "hairnet"
+-CATEGORY_FIRE    = "fire"
++CATEGORY_FIRE    = "XXfireXX"
+ 
+ # Violation type → category
+ TYPE_TO_CATEGORY = {
+</pre><h3>Mutant 8</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -7,7 +7,7 @@
+ CATEGORY_APRON   = "apron"
+ CATEGORY_GLOVES  = "gloves"
+ CATEGORY_HAIRNET = "hairnet"
+-CATEGORY_FIRE    = "fire"
++CATEGORY_FIRE    = None
+ 
+ # Violation type → category
+ TYPE_TO_CATEGORY = {
+</pre><h3>Mutant 11</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -13,7 +13,7 @@
+ TYPE_TO_CATEGORY = {
+     "no_apron":   CATEGORY_APRON,
+     "no_gloves":  CATEGORY_GLOVES,
+-    "no_hairnet": CATEGORY_HAIRNET,
++    "XXno_hairnetXX": CATEGORY_HAIRNET,
+     "fire":       CATEGORY_FIRE,
+ }
+ 
+</pre><h3>Mutant 17</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -22,7 +22,7 @@
+     CATEGORY_APRON:   2,
+     CATEGORY_GLOVES:  1,
+     CATEGORY_HAIRNET: 3,
+-    CATEGORY_FIRE:    5,
++    CATEGORY_FIRE:    6,
+ }
+ 
+ 
+</pre><h3>Mutant 21</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -33,7 +33,7 @@
+ def _hygiene_score(apron: int, gloves: int, hairnet: int, fire: int) -> int:
+     penalty = (
+         apron   * WEIGHTS[CATEGORY_APRON]
+-        + gloves  * WEIGHTS[CATEGORY_GLOVES]
++        + gloves  / WEIGHTS[CATEGORY_GLOVES]
+         + hairnet * WEIGHTS[CATEGORY_HAIRNET]
+         + fire    * WEIGHTS[CATEGORY_FIRE]
+     )
+</pre><h3>Mutant 24</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -35,7 +35,7 @@
+         apron   * WEIGHTS[CATEGORY_APRON]
+         + gloves  * WEIGHTS[CATEGORY_GLOVES]
+         + hairnet * WEIGHTS[CATEGORY_HAIRNET]
+-        + fire    * WEIGHTS[CATEGORY_FIRE]
++        - fire    * WEIGHTS[CATEGORY_FIRE]
+     )
+     return max(0, 100 - penalty)
+ 
+</pre><h3>Mutant 25</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -35,7 +35,7 @@
+         apron   * WEIGHTS[CATEGORY_APRON]
+         + gloves  * WEIGHTS[CATEGORY_GLOVES]
+         + hairnet * WEIGHTS[CATEGORY_HAIRNET]
+-        + fire    * WEIGHTS[CATEGORY_FIRE]
++        + fire    / WEIGHTS[CATEGORY_FIRE]
+     )
+     return max(0, 100 - penalty)
+ 
+</pre><h3>Mutant 27</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -37,7 +37,7 @@
+         + hairnet * WEIGHTS[CATEGORY_HAIRNET]
+         + fire    * WEIGHTS[CATEGORY_FIRE]
+     )
+-    return max(0, 100 - penalty)
++    return max(1, 100 - penalty)
+ 
+ 
+ def _pct_change(today: int, yesterday: int) -> int:
+</pre><h3>Mutant 30</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -41,7 +41,7 @@
+ 
+ 
+ def _pct_change(today: int, yesterday: int) -> int:
+-    if yesterday <= 0:
++    if yesterday < 0:
+         return 100 if today > 0 else 0
+     return round(((today - yesterday) / yesterday) * 100)
+ 
+</pre><h3>Mutant 31</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -41,7 +41,7 @@
+ 
+ 
+ def _pct_change(today: int, yesterday: int) -> int:
+-    if yesterday <= 0:
++    if yesterday <= 1:
+         return 100 if today > 0 else 0
+     return round(((today - yesterday) / yesterday) * 100)
+ 
+</pre><h3>Mutant 32</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -42,7 +42,7 @@
+ 
+ def _pct_change(today: int, yesterday: int) -> int:
+     if yesterday <= 0:
+-        return 100 if today > 0 else 0
++        return 101 if today > 0 else 0
+     return round(((today - yesterday) / yesterday) * 100)
+ 
+ 
+</pre><h3>Mutant 33</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -42,7 +42,7 @@
+ 
+ def _pct_change(today: int, yesterday: int) -> int:
+     if yesterday <= 0:
+-        return 100 if today > 0 else 0
++        return 100 if today >= 0 else 0
+     return round(((today - yesterday) / yesterday) * 100)
+ 
+ 
+</pre><h3>Mutant 34</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -42,7 +42,7 @@
+ 
+ def _pct_change(today: int, yesterday: int) -> int:
+     if yesterday <= 0:
+-        return 100 if today > 0 else 0
++        return 100 if today > 1 else 0
+     return round(((today - yesterday) / yesterday) * 100)
+ 
+ 
+</pre><h3>Mutant 35</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -42,7 +42,7 @@
+ 
+ def _pct_change(today: int, yesterday: int) -> int:
+     if yesterday <= 0:
+-        return 100 if today > 0 else 0
++        return 100 if today > 0 else 1
+     return round(((today - yesterday) / yesterday) * 100)
+ 
+ 
+</pre><h3>Mutant 40</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -47,7 +47,7 @@
+ 
+ 
+ def _get_daily(user_id: str, date_str: str) -> dict:
+-    doc = db.collection("stats_daily").document(f"{user_id}_{date_str}").get()
++    doc = db.collection("XXstats_dailyXX").document(f"{user_id}_{date_str}").get()
+     if doc.exists:
+         d = doc.to_dict() or {}
+         return {
+</pre><h3>Mutant 41</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -47,7 +47,7 @@
+ 
+ 
+ def _get_daily(user_id: str, date_str: str) -> dict:
+-    doc = db.collection("stats_daily").document(f"{user_id}_{date_str}").get()
++    doc = db.collection("stats_daily").document(f"XX{user_id}_{date_str}XX").get()
+     if doc.exists:
+         d = doc.to_dict() or {}
+         return {
+</pre><h3>Mutant 42</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -47,7 +47,7 @@
+ 
+ 
+ def _get_daily(user_id: str, date_str: str) -> dict:
+-    doc = db.collection("stats_daily").document(f"{user_id}_{date_str}").get()
++    doc = None
+     if doc.exists:
+         d = doc.to_dict() or {}
+         return {
+</pre><h3>Mutant 43</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -49,7 +49,7 @@
+ def _get_daily(user_id: str, date_str: str) -> dict:
+     doc = db.collection("stats_daily").document(f"{user_id}_{date_str}").get()
+     if doc.exists:
+-        d = doc.to_dict() or {}
++        d = doc.to_dict() and {}
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+</pre><h3>Mutant 44</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -49,7 +49,7 @@
+ def _get_daily(user_id: str, date_str: str) -> dict:
+     doc = db.collection("stats_daily").document(f"{user_id}_{date_str}").get()
+     if doc.exists:
+-        d = doc.to_dict() or {}
++        d = None
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+</pre><h3>Mutant 45</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -51,7 +51,7 @@
+     if doc.exists:
+         d = doc.to_dict() or {}
+         return {
+-            "apron_count":   int(d.get("apron_count",   0) or 0),
++            "XXapron_countXX":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+</pre><h3>Mutant 46</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -51,7 +51,7 @@
+     if doc.exists:
+         d = doc.to_dict() or {}
+         return {
+-            "apron_count":   int(d.get("apron_count",   0) or 0),
++            "apron_count":   int(d.get("XXapron_countXX",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+</pre><h3>Mutant 47</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -51,7 +51,7 @@
+     if doc.exists:
+         d = doc.to_dict() or {}
+         return {
+-            "apron_count":   int(d.get("apron_count",   0) or 0),
++            "apron_count":   int(d.get("apron_count",   1) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+</pre><h3>Mutant 48</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -51,7 +51,7 @@
+     if doc.exists:
+         d = doc.to_dict() or {}
+         return {
+-            "apron_count":   int(d.get("apron_count",   0) or 0),
++            "apron_count":   int(d.get("apron_count",   0) or 1),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+</pre><h3>Mutant 49</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -51,7 +51,7 @@
+     if doc.exists:
+         d = doc.to_dict() or {}
+         return {
+-            "apron_count":   int(d.get("apron_count",   0) or 0),
++            "apron_count":   int(d.get("apron_count",   0) and 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+</pre><h3>Mutant 50</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -52,7 +52,7 @@
+         d = doc.to_dict() or {}
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+-            "gloves_count":  int(d.get("gloves_count",  0) or 0),
++            "XXgloves_countXX":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+</pre><h3>Mutant 51</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -52,7 +52,7 @@
+         d = doc.to_dict() or {}
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+-            "gloves_count":  int(d.get("gloves_count",  0) or 0),
++            "gloves_count":  int(d.get("XXgloves_countXX",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+</pre><h3>Mutant 52</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -52,7 +52,7 @@
+         d = doc.to_dict() or {}
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+-            "gloves_count":  int(d.get("gloves_count",  0) or 0),
++            "gloves_count":  int(d.get("gloves_count",  1) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+</pre><h3>Mutant 53</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -52,7 +52,7 @@
+         d = doc.to_dict() or {}
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+-            "gloves_count":  int(d.get("gloves_count",  0) or 0),
++            "gloves_count":  int(d.get("gloves_count",  0) or 1),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+</pre><h3>Mutant 54</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -52,7 +52,7 @@
+         d = doc.to_dict() or {}
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+-            "gloves_count":  int(d.get("gloves_count",  0) or 0),
++            "gloves_count":  int(d.get("gloves_count",  0) and 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+</pre><h3>Mutant 55</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -53,7 +53,7 @@
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+-            "hairnet_count": int(d.get("hairnet_count", 0) or 0),
++            "XXhairnet_countXX": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+</pre><h3>Mutant 56</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -53,7 +53,7 @@
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+-            "hairnet_count": int(d.get("hairnet_count", 0) or 0),
++            "hairnet_count": int(d.get("XXhairnet_countXX", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+</pre><h3>Mutant 57</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -53,7 +53,7 @@
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+-            "hairnet_count": int(d.get("hairnet_count", 0) or 0),
++            "hairnet_count": int(d.get("hairnet_count", 1) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+</pre><h3>Mutant 58</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -53,7 +53,7 @@
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+-            "hairnet_count": int(d.get("hairnet_count", 0) or 0),
++            "hairnet_count": int(d.get("hairnet_count", 0) or 1),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+</pre><h3>Mutant 59</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -53,7 +53,7 @@
+         return {
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+-            "hairnet_count": int(d.get("hairnet_count", 0) or 0),
++            "hairnet_count": int(d.get("hairnet_count", 0) and 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+</pre><h3>Mutant 60</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -54,7 +54,7 @@
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+-            "fire_count":    int(d.get("fire_count",    0) or 0),
++            "XXfire_countXX":    int(d.get("fire_count",    0) or 0),
+         }
+     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+ 
+</pre><h3>Mutant 61</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -54,7 +54,7 @@
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+-            "fire_count":    int(d.get("fire_count",    0) or 0),
++            "fire_count":    int(d.get("XXfire_countXX",    0) or 0),
+         }
+     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+ 
+</pre><h3>Mutant 62</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -54,7 +54,7 @@
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+-            "fire_count":    int(d.get("fire_count",    0) or 0),
++            "fire_count":    int(d.get("fire_count",    1) or 0),
+         }
+     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+ 
+</pre><h3>Mutant 63</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -54,7 +54,7 @@
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+-            "fire_count":    int(d.get("fire_count",    0) or 0),
++            "fire_count":    int(d.get("fire_count",    0) or 1),
+         }
+     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+ 
+</pre><h3>Mutant 64</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -54,7 +54,7 @@
+             "apron_count":   int(d.get("apron_count",   0) or 0),
+             "gloves_count":  int(d.get("gloves_count",  0) or 0),
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+-            "fire_count":    int(d.get("fire_count",    0) or 0),
++            "fire_count":    int(d.get("fire_count",    0) and 0),
+         }
+     return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+ 
+</pre><h3>Mutant 65</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -56,7 +56,7 @@
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+-    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
++    return {"XXapron_countXX": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+ 
+ 
+ def _aggregate_days(user_id: str, date_strings: list[str]) -> dict:
+</pre><h3>Mutant 66</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -56,7 +56,7 @@
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+-    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
++    return {"apron_count": 1, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
+ 
+ 
+ def _aggregate_days(user_id: str, date_strings: list[str]) -> dict:
+</pre><h3>Mutant 67</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -56,7 +56,7 @@
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+-    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
++    return {"apron_count": 0, "XXgloves_countXX": 0, "hairnet_count": 0, "fire_count": 0}
+ 
+ 
+ def _aggregate_days(user_id: str, date_strings: list[str]) -> dict:
+</pre><h3>Mutant 68</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -56,7 +56,7 @@
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+-    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
++    return {"apron_count": 0, "gloves_count": 1, "hairnet_count": 0, "fire_count": 0}
+ 
+ 
+ def _aggregate_days(user_id: str, date_strings: list[str]) -> dict:
+</pre><h3>Mutant 69</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -56,7 +56,7 @@
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+-    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
++    return {"apron_count": 0, "gloves_count": 0, "XXhairnet_countXX": 0, "fire_count": 0}
+ 
+ 
+ def _aggregate_days(user_id: str, date_strings: list[str]) -> dict:
+</pre><h3>Mutant 70</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -56,7 +56,7 @@
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+-    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
++    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 1, "fire_count": 0}
+ 
+ 
+ def _aggregate_days(user_id: str, date_strings: list[str]) -> dict:
+</pre><h3>Mutant 71</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -56,7 +56,7 @@
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+-    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
++    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "XXfire_countXX": 0}
+ 
+ 
+ def _aggregate_days(user_id: str, date_strings: list[str]) -> dict:
+</pre><h3>Mutant 72</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -56,7 +56,7 @@
+             "hairnet_count": int(d.get("hairnet_count", 0) or 0),
+             "fire_count":    int(d.get("fire_count",    0) or 0),
+         }
+-    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 0}
++    return {"apron_count": 0, "gloves_count": 0, "hairnet_count": 0, "fire_count": 1}
+ 
+ 
+ def _aggregate_days(user_id: str, date_strings: list[str]) -> dict:
+</pre><h3>Mutant 84</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -69,7 +69,7 @@
+ 
+     for date_str in date_strings:
+         daily = _get_daily(user_id, date_str)
+-        totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
++        totals["apron_count"] = int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+</pre><h3>Mutant 87</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -69,7 +69,7 @@
+ 
+     for date_str in date_strings:
+         daily = _get_daily(user_id, date_str)
+-        totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
++        totals["apron_count"] += int(daily.get("apron_count", 1) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+</pre><h3>Mutant 88</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -69,7 +69,7 @@
+ 
+     for date_str in date_strings:
+         daily = _get_daily(user_id, date_str)
+-        totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
++        totals["apron_count"] += int(daily.get("apron_count", 0) or 1)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+</pre><h3>Mutant 91</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -70,7 +70,7 @@
+     for date_str in date_strings:
+         daily = _get_daily(user_id, date_str)
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+-        totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
++        totals["gloves_count"] = int(daily.get("gloves_count", 0) or 0)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+ 
+</pre><h3>Mutant 94</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -70,7 +70,7 @@
+     for date_str in date_strings:
+         daily = _get_daily(user_id, date_str)
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+-        totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
++        totals["gloves_count"] += int(daily.get("gloves_count", 1) or 0)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+ 
+</pre><h3>Mutant 95</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -70,7 +70,7 @@
+     for date_str in date_strings:
+         daily = _get_daily(user_id, date_str)
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+-        totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
++        totals["gloves_count"] += int(daily.get("gloves_count", 0) or 1)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+ 
+</pre><h3>Mutant 98</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -71,7 +71,7 @@
+         daily = _get_daily(user_id, date_str)
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+-        totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
++        totals["hairnet_count"] = int(daily.get("hairnet_count", 0) or 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+ 
+     totals["total_count"] = (
+</pre><h3>Mutant 99</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -71,7 +71,7 @@
+         daily = _get_daily(user_id, date_str)
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+-        totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
++        totals["hairnet_count"] -= int(daily.get("hairnet_count", 0) or 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+ 
+     totals["total_count"] = (
+</pre><h3>Mutant 100</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -71,7 +71,7 @@
+         daily = _get_daily(user_id, date_str)
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+-        totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
++        totals["hairnet_count"] += int(daily.get("XXhairnet_countXX", 0) or 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+ 
+     totals["total_count"] = (
+</pre><h3>Mutant 101</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -71,7 +71,7 @@
+         daily = _get_daily(user_id, date_str)
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+-        totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
++        totals["hairnet_count"] += int(daily.get("hairnet_count", 1) or 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+ 
+     totals["total_count"] = (
+</pre><h3>Mutant 103</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -71,7 +71,7 @@
+         daily = _get_daily(user_id, date_str)
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+-        totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
++        totals["hairnet_count"] += int(daily.get("hairnet_count", 0) and 0)
+         totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
+ 
+     totals["total_count"] = (
+</pre><h3>Mutant 105</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -72,7 +72,7 @@
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+-        totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
++        totals["fire_count"] = int(daily.get("fire_count", 0) or 0)
+ 
+     totals["total_count"] = (
+         totals["apron_count"]
+</pre><h3>Mutant 106</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -72,7 +72,7 @@
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+-        totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
++        totals["fire_count"] -= int(daily.get("fire_count", 0) or 0)
+ 
+     totals["total_count"] = (
+         totals["apron_count"]
+</pre><h3>Mutant 107</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -72,7 +72,7 @@
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+-        totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
++        totals["fire_count"] += int(daily.get("XXfire_countXX", 0) or 0)
+ 
+     totals["total_count"] = (
+         totals["apron_count"]
+</pre><h3>Mutant 108</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -72,7 +72,7 @@
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+-        totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
++        totals["fire_count"] += int(daily.get("fire_count", 1) or 0)
+ 
+     totals["total_count"] = (
+         totals["apron_count"]
+</pre><h3>Mutant 110</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -72,7 +72,7 @@
+         totals["apron_count"] += int(daily.get("apron_count", 0) or 0)
+         totals["gloves_count"] += int(daily.get("gloves_count", 0) or 0)
+         totals["hairnet_count"] += int(daily.get("hairnet_count", 0) or 0)
+-        totals["fire_count"] += int(daily.get("fire_count", 0) or 0)
++        totals["fire_count"] += int(daily.get("fire_count", 0) and 0)
+ 
+     totals["total_count"] = (
+         totals["apron_count"]
+</pre><h3>Mutant 115</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -77,7 +77,7 @@
+     totals["total_count"] = (
+         totals["apron_count"]
+         + totals["gloves_count"]
+-        + totals["hairnet_count"]
++        - totals["hairnet_count"]
+         + totals["fire_count"]
+     )
+     totals["hygiene_score"] = _hygiene_score(
+</pre><h3>Mutant 117</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -78,7 +78,7 @@
+         totals["apron_count"]
+         + totals["gloves_count"]
+         + totals["hairnet_count"]
+-        + totals["fire_count"]
++        - totals["fire_count"]
+     )
+     totals["hygiene_score"] = _hygiene_score(
+         totals["apron_count"],
+</pre><h3>Mutant 120</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -80,7 +80,7 @@
+         + totals["hairnet_count"]
+         + totals["fire_count"]
+     )
+-    totals["hygiene_score"] = _hygiene_score(
++    totals["XXhygiene_scoreXX"] = _hygiene_score(
+         totals["apron_count"],
+         totals["gloves_count"],
+         totals["hairnet_count"],
+</pre><h3>Mutant 125</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -80,12 +80,7 @@
+         + totals["hairnet_count"]
+         + totals["fire_count"]
+     )
+-    totals["hygiene_score"] = _hygiene_score(
+-        totals["apron_count"],
+-        totals["gloves_count"],
+-        totals["hairnet_count"],
+-        totals["fire_count"],
+-    )
++    totals["hygiene_score"] = None
+     return totals
+ 
+ 
+</pre><h3>Mutant 126</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -89,7 +89,7 @@
+     return totals
+ 
+ 
+-def _date_strings_for_range(days: int, offset_days: int = 0) -> list[str]:
++def _date_strings_for_range(days: int, offset_days: int = 1) -> list[str]:
+     today = datetime.now(timezone.utc).date()
+     days = max(1, int(days or 1))
+     result = []
+</pre><h3>Mutant 129</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -91,7 +91,7 @@
+ 
+ def _date_strings_for_range(days: int, offset_days: int = 0) -> list[str]:
+     today = datetime.now(timezone.utc).date()
+-    days = max(1, int(days or 1))
++    days = max(1, int(days or 2))
+     result = []
+     for i in range(days - 1, -1, -1):
+         result.append((today - timedelta(days=i + offset_days)).isoformat())
+</pre><h3>Mutant 139</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -94,7 +94,7 @@
+     days = max(1, int(days or 1))
+     result = []
+     for i in range(days - 1, -1, -1):
+-        result.append((today - timedelta(days=i + offset_days)).isoformat())
++        result.append((today + timedelta(days=i + offset_days)).isoformat())
+     return result
+ 
+ 
+</pre><h3>Mutant 140</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -94,7 +94,7 @@
+     days = max(1, int(days or 1))
+     result = []
+     for i in range(days - 1, -1, -1):
+-        result.append((today - timedelta(days=i + offset_days)).isoformat())
++        result.append((today - timedelta(days=i - offset_days)).isoformat())
+     return result
+ 
+ 
+</pre><h3>Mutant 141</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -100,7 +100,7 @@
+ 
+ def update_stats(user_id: str, violation_type: str):
+     """Called after every violation write. Updates stats_daily, stats_summary, violations_chart."""
+-    today     = datetime.now(timezone.utc).date().isoformat()
++    today     = None
+     yesterday = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
+     category  = _map_category(violation_type)
+ 
+</pre><h3>Mutant 142</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -101,7 +101,7 @@
+ def update_stats(user_id: str, violation_type: str):
+     """Called after every violation write. Updates stats_daily, stats_summary, violations_chart."""
+     today     = datetime.now(timezone.utc).date().isoformat()
+-    yesterday = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
++    yesterday = (datetime.now(timezone.utc).date() + timedelta(days=1)).isoformat()
+     category  = _map_category(violation_type)
+ 
+     if not category:
+</pre><h3>Mutant 143</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -101,7 +101,7 @@
+ def update_stats(user_id: str, violation_type: str):
+     """Called after every violation write. Updates stats_daily, stats_summary, violations_chart."""
+     today     = datetime.now(timezone.utc).date().isoformat()
+-    yesterday = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
++    yesterday = (datetime.now(timezone.utc).date() - timedelta(days=2)).isoformat()
+     category  = _map_category(violation_type)
+ 
+     if not category:
+</pre><h3>Mutant 144</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -101,7 +101,7 @@
+ def update_stats(user_id: str, violation_type: str):
+     """Called after every violation write. Updates stats_daily, stats_summary, violations_chart."""
+     today     = datetime.now(timezone.utc).date().isoformat()
+-    yesterday = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
++    yesterday = None
+     category  = _map_category(violation_type)
+ 
+     if not category:
+</pre><h3>Mutant 145</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -102,7 +102,7 @@
+     """Called after every violation write. Updates stats_daily, stats_summary, violations_chart."""
+     today     = datetime.now(timezone.utc).date().isoformat()
+     yesterday = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
+-    category  = _map_category(violation_type)
++    category  = None
+ 
+     if not category:
+         print(f"[stats] Unknown violation type: {violation_type} — skipping stats")
+</pre><h3>Mutant 146</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -104,7 +104,7 @@
+     yesterday = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
+     category  = _map_category(violation_type)
+ 
+-    if not category:
++    if  category:
+         print(f"[stats] Unknown violation type: {violation_type} — skipping stats")
+         return
+ 
+</pre><h3>Mutant 147</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -105,7 +105,7 @@
+     category  = _map_category(violation_type)
+ 
+     if not category:
+-        print(f"[stats] Unknown violation type: {violation_type} — skipping stats")
++        print(f"XX[stats] Unknown violation type: {violation_type} — skipping statsXX")
+         return
+ 
+     summary_ref = db.collection("stats_summary").document(user_id)
+</pre><h3>Mutant 148</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -108,7 +108,7 @@
+         print(f"[stats] Unknown violation type: {violation_type} — skipping stats")
+         return
+ 
+-    summary_ref = db.collection("stats_summary").document(user_id)
++    summary_ref = db.collection("XXstats_summaryXX").document(user_id)
+     summary_snap = summary_ref.get()
+     notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
+ 
+</pre><h3>Mutant 149</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -108,7 +108,7 @@
+         print(f"[stats] Unknown violation type: {violation_type} — skipping stats")
+         return
+ 
+-    summary_ref = db.collection("stats_summary").document(user_id)
++    summary_ref = None
+     summary_snap = summary_ref.get()
+     notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
+ 
+</pre><h3>Mutant 150</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -109,7 +109,7 @@
+         return
+ 
+     summary_ref = db.collection("stats_summary").document(user_id)
+-    summary_snap = summary_ref.get()
++    summary_snap = None
+     notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
+ 
+     daily_id  = f"{user_id}_{today}"
+</pre><h3>Mutant 151</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -110,7 +110,7 @@
+ 
+     summary_ref = db.collection("stats_summary").document(user_id)
+     summary_snap = summary_ref.get()
+-    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
++    notification_count = int((summary_snap.to_dict() and {}).get("notification_count", 0) or 0) + 1
+ 
+     daily_id  = f"{user_id}_{today}"
+     daily_ref = db.collection("stats_daily").document(daily_id)
+</pre><h3>Mutant 152</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -110,7 +110,7 @@
+ 
+     summary_ref = db.collection("stats_summary").document(user_id)
+     summary_snap = summary_ref.get()
+-    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
++    notification_count = int((summary_snap.to_dict() or {}).get("XXnotification_countXX", 0) or 0) + 1
+ 
+     daily_id  = f"{user_id}_{today}"
+     daily_ref = db.collection("stats_daily").document(daily_id)
+</pre><h3>Mutant 153</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -110,7 +110,7 @@
+ 
+     summary_ref = db.collection("stats_summary").document(user_id)
+     summary_snap = summary_ref.get()
+-    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
++    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 1) or 0) + 1
+ 
+     daily_id  = f"{user_id}_{today}"
+     daily_ref = db.collection("stats_daily").document(daily_id)
+</pre><h3>Mutant 154</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -110,7 +110,7 @@
+ 
+     summary_ref = db.collection("stats_summary").document(user_id)
+     summary_snap = summary_ref.get()
+-    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
++    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 1) + 1
+ 
+     daily_id  = f"{user_id}_{today}"
+     daily_ref = db.collection("stats_daily").document(daily_id)
+</pre><h3>Mutant 155</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -110,7 +110,7 @@
+ 
+     summary_ref = db.collection("stats_summary").document(user_id)
+     summary_snap = summary_ref.get()
+-    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
++    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) and 0) + 1
+ 
+     daily_id  = f"{user_id}_{today}"
+     daily_ref = db.collection("stats_daily").document(daily_id)
+</pre><h3>Mutant 156</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -110,7 +110,7 @@
+ 
+     summary_ref = db.collection("stats_summary").document(user_id)
+     summary_snap = summary_ref.get()
+-    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
++    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) - 1
+ 
+     daily_id  = f"{user_id}_{today}"
+     daily_ref = db.collection("stats_daily").document(daily_id)
+</pre><h3>Mutant 157</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -110,7 +110,7 @@
+ 
+     summary_ref = db.collection("stats_summary").document(user_id)
+     summary_snap = summary_ref.get()
+-    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
++    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 2
+ 
+     daily_id  = f"{user_id}_{today}"
+     daily_ref = db.collection("stats_daily").document(daily_id)
+</pre><h3>Mutant 158</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -110,7 +110,7 @@
+ 
+     summary_ref = db.collection("stats_summary").document(user_id)
+     summary_snap = summary_ref.get()
+-    notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
++    notification_count = None
+ 
+     daily_id  = f"{user_id}_{today}"
+     daily_ref = db.collection("stats_daily").document(daily_id)
+</pre><h3>Mutant 159</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -112,7 +112,7 @@
+     summary_snap = summary_ref.get()
+     notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
+ 
+-    daily_id  = f"{user_id}_{today}"
++    daily_id  = f"XX{user_id}_{today}XX"
+     daily_ref = db.collection("stats_daily").document(daily_id)
+     snap      = daily_ref.get()
+ 
+</pre><h3>Mutant 160</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -112,7 +112,7 @@
+     summary_snap = summary_ref.get()
+     notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
+ 
+-    daily_id  = f"{user_id}_{today}"
++    daily_id  = None
+     daily_ref = db.collection("stats_daily").document(daily_id)
+     snap      = daily_ref.get()
+ 
+</pre><h3>Mutant 161</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -113,7 +113,7 @@
+     notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
+ 
+     daily_id  = f"{user_id}_{today}"
+-    daily_ref = db.collection("stats_daily").document(daily_id)
++    daily_ref = db.collection("XXstats_dailyXX").document(daily_id)
+     snap      = daily_ref.get()
+ 
+     data = snap.to_dict() if snap.exists else {
+</pre><h3>Mutant 162</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -113,7 +113,7 @@
+     notification_count = int((summary_snap.to_dict() or {}).get("notification_count", 0) or 0) + 1
+ 
+     daily_id  = f"{user_id}_{today}"
+-    daily_ref = db.collection("stats_daily").document(daily_id)
++    daily_ref = None
+     snap      = daily_ref.get()
+ 
+     data = snap.to_dict() if snap.exists else {
+</pre><h3>Mutant 163</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -114,7 +114,7 @@
+ 
+     daily_id  = f"{user_id}_{today}"
+     daily_ref = db.collection("stats_daily").document(daily_id)
+-    snap      = daily_ref.get()
++    snap      = None
+ 
+     data = snap.to_dict() if snap.exists else {
+         "user_id":       user_id,
+</pre><h3>Mutant 164</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -117,7 +117,7 @@
+     snap      = daily_ref.get()
+ 
+     data = snap.to_dict() if snap.exists else {
+-        "user_id":       user_id,
++        "XXuser_idXX":       user_id,
+         "date":          today,
+         "apron_count":   0,
+         "gloves_count":  1,
+</pre><h3>Mutant 165</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -118,7 +118,7 @@
+ 
+     data = snap.to_dict() if snap.exists else {
+         "user_id":       user_id,
+-        "date":          today,
++        "XXdateXX":          today,
+         "apron_count":   0,
+         "gloves_count":  1,
+         "hairnet_count": 0,
+</pre><h3>Mutant 166</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -119,7 +119,7 @@
+     data = snap.to_dict() if snap.exists else {
+         "user_id":       user_id,
+         "date":          today,
+-        "apron_count":   0,
++        "XXapron_countXX":   0,
+         "gloves_count":  1,
+         "hairnet_count": 0,
+         "fire_count":    0,
+</pre><h3>Mutant 167</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -119,7 +119,7 @@
+     data = snap.to_dict() if snap.exists else {
+         "user_id":       user_id,
+         "date":          today,
+-        "apron_count":   0,
++        "apron_count":   1,
+         "gloves_count":  1,
+         "hairnet_count": 0,
+         "fire_count":    0,
+</pre><h3>Mutant 172</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -122,7 +122,7 @@
+         "apron_count":   0,
+         "gloves_count":  1,
+         "hairnet_count": 0,
+-        "fire_count":    0,
++        "XXfire_countXX":    0,
+         "total_count":   0,
+         "hygiene_score": 100,
+     }
+</pre><h3>Mutant 173</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -122,7 +122,7 @@
+         "apron_count":   0,
+         "gloves_count":  1,
+         "hairnet_count": 0,
+-        "fire_count":    0,
++        "fire_count":    1,
+         "total_count":   0,
+         "hygiene_score": 100,
+     }
+</pre><h3>Mutant 174</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -123,7 +123,7 @@
+         "gloves_count":  1,
+         "hairnet_count": 0,
+         "fire_count":    0,
+-        "total_count":   0,
++        "XXtotal_countXX":   0,
+         "hygiene_score": 100,
+     }
+ 
+</pre><h3>Mutant 175</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -123,7 +123,7 @@
+         "gloves_count":  1,
+         "hairnet_count": 0,
+         "fire_count":    0,
+-        "total_count":   0,
++        "total_count":   1,
+         "hygiene_score": 100,
+     }
+ 
+</pre><h3>Mutant 176</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -124,7 +124,7 @@
+         "hairnet_count": 0,
+         "fire_count":    0,
+         "total_count":   0,
+-        "hygiene_score": 100,
++        "XXhygiene_scoreXX": 100,
+     }
+ 
+     # Ensure int fields
+</pre><h3>Mutant 177</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -124,7 +124,7 @@
+         "hairnet_count": 0,
+         "fire_count":    0,
+         "total_count":   0,
+-        "hygiene_score": 100,
++        "hygiene_score": 101,
+     }
+ 
+     # Ensure int fields
+</pre><h3>Mutant 179</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -128,7 +128,7 @@
+     }
+ 
+     # Ensure int fields
+-    for f in ("apron_count", "gloves_count", "hairnet_count", "fire_count", "total_count"):
++    for f in ("XXapron_countXX", "gloves_count", "hairnet_count", "fire_count", "total_count"):
+         data[f] = int(data.get(f, 0) or 0)
+ 
+     # Increment the right counter
+</pre><h3>Mutant 180</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -128,7 +128,7 @@
+     }
+ 
+     # Ensure int fields
+-    for f in ("apron_count", "gloves_count", "hairnet_count", "fire_count", "total_count"):
++    for f in ("apron_count", "XXgloves_countXX", "hairnet_count", "fire_count", "total_count"):
+         data[f] = int(data.get(f, 0) or 0)
+ 
+     # Increment the right counter
+</pre><h3>Mutant 181</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -128,7 +128,7 @@
+     }
+ 
+     # Ensure int fields
+-    for f in ("apron_count", "gloves_count", "hairnet_count", "fire_count", "total_count"):
++    for f in ("apron_count", "gloves_count", "XXhairnet_countXX", "fire_count", "total_count"):
+         data[f] = int(data.get(f, 0) or 0)
+ 
+     # Increment the right counter
+</pre><h3>Mutant 182</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -128,7 +128,7 @@
+     }
+ 
+     # Ensure int fields
+-    for f in ("apron_count", "gloves_count", "hairnet_count", "fire_count", "total_count"):
++    for f in ("apron_count", "gloves_count", "hairnet_count", "XXfire_countXX", "total_count"):
+         data[f] = int(data.get(f, 0) or 0)
+ 
+     # Increment the right counter
+</pre><h3>Mutant 183</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -128,7 +128,7 @@
+     }
+ 
+     # Ensure int fields
+-    for f in ("apron_count", "gloves_count", "hairnet_count", "fire_count", "total_count"):
++    for f in ("apron_count", "gloves_count", "hairnet_count", "fire_count", "XXtotal_countXX"):
+         data[f] = int(data.get(f, 0) or 0)
+ 
+     # Increment the right counter
+</pre><h3>Mutant 184</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -129,7 +129,7 @@
+ 
+     # Ensure int fields
+     for f in ("apron_count", "gloves_count", "hairnet_count", "fire_count", "total_count"):
+-        data[f] = int(data.get(f, 0) or 0)
++        data[f] = int(data.get(f, 1) or 0)
+ 
+     # Increment the right counter
+     data[f"{category}_count"] += 1
+</pre><h3>Mutant 185</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -129,7 +129,7 @@
+ 
+     # Ensure int fields
+     for f in ("apron_count", "gloves_count", "hairnet_count", "fire_count", "total_count"):
+-        data[f] = int(data.get(f, 0) or 0)
++        data[f] = int(data.get(f, 0) or 1)
+ 
+     # Increment the right counter
+     data[f"{category}_count"] += 1
+</pre><h3>Mutant 186</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -129,7 +129,7 @@
+ 
+     # Ensure int fields
+     for f in ("apron_count", "gloves_count", "hairnet_count", "fire_count", "total_count"):
+-        data[f] = int(data.get(f, 0) or 0)
++        data[f] = int(data.get(f, 0) and 0)
+ 
+     # Increment the right counter
+     data[f"{category}_count"] += 1
+</pre><h3>Mutant 187</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -129,7 +129,7 @@
+ 
+     # Ensure int fields
+     for f in ("apron_count", "gloves_count", "hairnet_count", "fire_count", "total_count"):
+-        data[f] = int(data.get(f, 0) or 0)
++        data[f] = None
+ 
+     # Increment the right counter
+     data[f"{category}_count"] += 1
+</pre><h3>Mutant 188</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -132,7 +132,7 @@
+         data[f] = int(data.get(f, 0) or 0)
+ 
+     # Increment the right counter
+-    data[f"{category}_count"] += 1
++    data[f"XX{category}_countXX"] += 1
+     data["total_count"] = (
+         data["apron_count"] + data["gloves_count"]
+         + data["hairnet_count"] + data["fire_count"]
+</pre><h3>Mutant 189</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -132,7 +132,7 @@
+         data[f] = int(data.get(f, 0) or 0)
+ 
+     # Increment the right counter
+-    data[f"{category}_count"] += 1
++    data[f"{category}_count"] = 1
+     data["total_count"] = (
+         data["apron_count"] + data["gloves_count"]
+         + data["hairnet_count"] + data["fire_count"]
+</pre><h3>Mutant 190</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -132,7 +132,7 @@
+         data[f] = int(data.get(f, 0) or 0)
+ 
+     # Increment the right counter
+-    data[f"{category}_count"] += 1
++    data[f"{category}_count"] -= 1
+     data["total_count"] = (
+         data["apron_count"] + data["gloves_count"]
+         + data["hairnet_count"] + data["fire_count"]
+</pre><h3>Mutant 191</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -132,7 +132,7 @@
+         data[f] = int(data.get(f, 0) or 0)
+ 
+     # Increment the right counter
+-    data[f"{category}_count"] += 1
++    data[f"{category}_count"] += 2
+     data["total_count"] = (
+         data["apron_count"] + data["gloves_count"]
+         + data["hairnet_count"] + data["fire_count"]
+</pre><h3>Mutant 192</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -133,7 +133,7 @@
+ 
+     # Increment the right counter
+     data[f"{category}_count"] += 1
+-    data["total_count"] = (
++    data["XXtotal_countXX"] = (
+         data["apron_count"] + data["gloves_count"]
+         + data["hairnet_count"] + data["fire_count"]
+     )
+</pre><h3>Mutant 193</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -134,7 +134,7 @@
+     # Increment the right counter
+     data[f"{category}_count"] += 1
+     data["total_count"] = (
+-        data["apron_count"] + data["gloves_count"]
++        data["XXapron_countXX"] + data["gloves_count"]
+         + data["hairnet_count"] + data["fire_count"]
+     )
+     data["hygiene_score"] = _hygiene_score(
+</pre><h3>Mutant 194</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -134,7 +134,7 @@
+     # Increment the right counter
+     data[f"{category}_count"] += 1
+     data["total_count"] = (
+-        data["apron_count"] + data["gloves_count"]
++        data["apron_count"] - data["gloves_count"]
+         + data["hairnet_count"] + data["fire_count"]
+     )
+     data["hygiene_score"] = _hygiene_score(
+</pre><h3>Mutant 195</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -134,7 +134,7 @@
+     # Increment the right counter
+     data[f"{category}_count"] += 1
+     data["total_count"] = (
+-        data["apron_count"] + data["gloves_count"]
++        data["apron_count"] + data["XXgloves_countXX"]
+         + data["hairnet_count"] + data["fire_count"]
+     )
+     data["hygiene_score"] = _hygiene_score(
+</pre><h3>Mutant 196</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -135,7 +135,7 @@
+     data[f"{category}_count"] += 1
+     data["total_count"] = (
+         data["apron_count"] + data["gloves_count"]
+-        + data["hairnet_count"] + data["fire_count"]
++        - data["hairnet_count"] + data["fire_count"]
+     )
+     data["hygiene_score"] = _hygiene_score(
+         data["apron_count"], data["gloves_count"],
+</pre><h3>Mutant 197</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -135,7 +135,7 @@
+     data[f"{category}_count"] += 1
+     data["total_count"] = (
+         data["apron_count"] + data["gloves_count"]
+-        + data["hairnet_count"] + data["fire_count"]
++        + data["XXhairnet_countXX"] + data["fire_count"]
+     )
+     data["hygiene_score"] = _hygiene_score(
+         data["apron_count"], data["gloves_count"],
+</pre><h3>Mutant 198</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -135,7 +135,7 @@
+     data[f"{category}_count"] += 1
+     data["total_count"] = (
+         data["apron_count"] + data["gloves_count"]
+-        + data["hairnet_count"] + data["fire_count"]
++        + data["hairnet_count"] - data["fire_count"]
+     )
+     data["hygiene_score"] = _hygiene_score(
+         data["apron_count"], data["gloves_count"],
+</pre><h3>Mutant 199</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -135,7 +135,7 @@
+     data[f"{category}_count"] += 1
+     data["total_count"] = (
+         data["apron_count"] + data["gloves_count"]
+-        + data["hairnet_count"] + data["fire_count"]
++        + data["hairnet_count"] + data["XXfire_countXX"]
+     )
+     data["hygiene_score"] = _hygiene_score(
+         data["apron_count"], data["gloves_count"],
+</pre><h3>Mutant 201</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -137,7 +137,7 @@
+         data["apron_count"] + data["gloves_count"]
+         + data["hairnet_count"] + data["fire_count"]
+     )
+-    data["hygiene_score"] = _hygiene_score(
++    data["XXhygiene_scoreXX"] = _hygiene_score(
+         data["apron_count"], data["gloves_count"],
+         data["hairnet_count"], data["fire_count"],
+     )
+</pre><h3>Mutant 202</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -138,7 +138,7 @@
+         + data["hairnet_count"] + data["fire_count"]
+     )
+     data["hygiene_score"] = _hygiene_score(
+-        data["apron_count"], data["gloves_count"],
++        data["XXapron_countXX"], data["gloves_count"],
+         data["hairnet_count"], data["fire_count"],
+     )
+     daily_ref.set(data)
+</pre><h3>Mutant 203</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -138,7 +138,7 @@
+         + data["hairnet_count"] + data["fire_count"]
+     )
+     data["hygiene_score"] = _hygiene_score(
+-        data["apron_count"], data["gloves_count"],
++        data["apron_count"], data["XXgloves_countXX"],
+         data["hairnet_count"], data["fire_count"],
+     )
+     daily_ref.set(data)
+</pre><h3>Mutant 204</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -139,7 +139,7 @@
+     )
+     data["hygiene_score"] = _hygiene_score(
+         data["apron_count"], data["gloves_count"],
+-        data["hairnet_count"], data["fire_count"],
++        data["XXhairnet_countXX"], data["fire_count"],
+     )
+     daily_ref.set(data)
+ 
+</pre><h3>Mutant 205</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -139,7 +139,7 @@
+     )
+     data["hygiene_score"] = _hygiene_score(
+         data["apron_count"], data["gloves_count"],
+-        data["hairnet_count"], data["fire_count"],
++        data["hairnet_count"], data["XXfire_countXX"],
+     )
+     daily_ref.set(data)
+ 
+</pre><h3>Mutant 207</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -144,7 +144,7 @@
+     daily_ref.set(data)
+ 
+     # Summary (today vs yesterday)
+-    yd = _get_daily(user_id, yesterday)
++    yd = None
+     summary = {
+         "user_id":           user_id,
+         "last_updated":      fs.SERVER_TIMESTAMP,
+</pre><h3>Mutant 208</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -146,7 +146,7 @@
+     # Summary (today vs yesterday)
+     yd = _get_daily(user_id, yesterday)
+     summary = {
+-        "user_id":           user_id,
++        "XXuser_idXX":           user_id,
+         "last_updated":      fs.SERVER_TIMESTAMP,
+         "notification_count": notification_count,
+         "apron_count":       data["apron_count"],
+</pre><h3>Mutant 209</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -147,7 +147,7 @@
+     yd = _get_daily(user_id, yesterday)
+     summary = {
+         "user_id":           user_id,
+-        "last_updated":      fs.SERVER_TIMESTAMP,
++        "XXlast_updatedXX":      fs.SERVER_TIMESTAMP,
+         "notification_count": notification_count,
+         "apron_count":       data["apron_count"],
+         "gloves_count":      data["gloves_count"],
+</pre><h3>Mutant 210</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -148,7 +148,7 @@
+     summary = {
+         "user_id":           user_id,
+         "last_updated":      fs.SERVER_TIMESTAMP,
+-        "notification_count": notification_count,
++        "XXnotification_countXX": notification_count,
+         "apron_count":       data["apron_count"],
+         "gloves_count":      data["gloves_count"],
+         "hairnet_count":     data["hairnet_count"],
+</pre><h3>Mutant 211</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -149,7 +149,7 @@
+         "user_id":           user_id,
+         "last_updated":      fs.SERVER_TIMESTAMP,
+         "notification_count": notification_count,
+-        "apron_count":       data["apron_count"],
++        "XXapron_countXX":       data["apron_count"],
+         "gloves_count":      data["gloves_count"],
+         "hairnet_count":     data["hairnet_count"],
+         "fire_count":        data["fire_count"],
+</pre><h3>Mutant 212</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -149,7 +149,7 @@
+         "user_id":           user_id,
+         "last_updated":      fs.SERVER_TIMESTAMP,
+         "notification_count": notification_count,
+-        "apron_count":       data["apron_count"],
++        "apron_count":       data["XXapron_countXX"],
+         "gloves_count":      data["gloves_count"],
+         "hairnet_count":     data["hairnet_count"],
+         "fire_count":        data["fire_count"],
+</pre><h3>Mutant 213</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -150,7 +150,7 @@
+         "last_updated":      fs.SERVER_TIMESTAMP,
+         "notification_count": notification_count,
+         "apron_count":       data["apron_count"],
+-        "gloves_count":      data["gloves_count"],
++        "XXgloves_countXX":      data["gloves_count"],
+         "hairnet_count":     data["hairnet_count"],
+         "fire_count":        data["fire_count"],
+         "total_count":       data["total_count"],
+</pre><h3>Mutant 214</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -150,7 +150,7 @@
+         "last_updated":      fs.SERVER_TIMESTAMP,
+         "notification_count": notification_count,
+         "apron_count":       data["apron_count"],
+-        "gloves_count":      data["gloves_count"],
++        "gloves_count":      data["XXgloves_countXX"],
+         "hairnet_count":     data["hairnet_count"],
+         "fire_count":        data["fire_count"],
+         "total_count":       data["total_count"],
+</pre><h3>Mutant 215</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -151,7 +151,7 @@
+         "notification_count": notification_count,
+         "apron_count":       data["apron_count"],
+         "gloves_count":      data["gloves_count"],
+-        "hairnet_count":     data["hairnet_count"],
++        "XXhairnet_countXX":     data["hairnet_count"],
+         "fire_count":        data["fire_count"],
+         "total_count":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+</pre><h3>Mutant 216</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -151,7 +151,7 @@
+         "notification_count": notification_count,
+         "apron_count":       data["apron_count"],
+         "gloves_count":      data["gloves_count"],
+-        "hairnet_count":     data["hairnet_count"],
++        "hairnet_count":     data["XXhairnet_countXX"],
+         "fire_count":        data["fire_count"],
+         "total_count":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+</pre><h3>Mutant 217</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -152,7 +152,7 @@
+         "apron_count":       data["apron_count"],
+         "gloves_count":      data["gloves_count"],
+         "hairnet_count":     data["hairnet_count"],
+-        "fire_count":        data["fire_count"],
++        "XXfire_countXX":        data["fire_count"],
+         "total_count":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+</pre><h3>Mutant 218</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -152,7 +152,7 @@
+         "apron_count":       data["apron_count"],
+         "gloves_count":      data["gloves_count"],
+         "hairnet_count":     data["hairnet_count"],
+-        "fire_count":        data["fire_count"],
++        "fire_count":        data["XXfire_countXX"],
+         "total_count":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+</pre><h3>Mutant 219</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -153,7 +153,7 @@
+         "gloves_count":      data["gloves_count"],
+         "hairnet_count":     data["hairnet_count"],
+         "fire_count":        data["fire_count"],
+-        "total_count":       data["total_count"],
++        "XXtotal_countXX":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+</pre><h3>Mutant 220</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -153,7 +153,7 @@
+         "gloves_count":      data["gloves_count"],
+         "hairnet_count":     data["hairnet_count"],
+         "fire_count":        data["fire_count"],
+-        "total_count":       data["total_count"],
++        "total_count":       data["XXtotal_countXX"],
+         "hygiene_score":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+</pre><h3>Mutant 221</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -154,7 +154,7 @@
+         "hairnet_count":     data["hairnet_count"],
+         "fire_count":        data["fire_count"],
+         "total_count":       data["total_count"],
+-        "hygiene_score":     data["hygiene_score"],
++        "XXhygiene_scoreXX":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+</pre><h3>Mutant 222</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -154,7 +154,7 @@
+         "hairnet_count":     data["hairnet_count"],
+         "fire_count":        data["fire_count"],
+         "total_count":       data["total_count"],
+-        "hygiene_score":     data["hygiene_score"],
++        "hygiene_score":     data["XXhygiene_scoreXX"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+</pre><h3>Mutant 223</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -155,7 +155,7 @@
+         "fire_count":        data["fire_count"],
+         "total_count":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+-        "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
++        "XXapron_change_pctXX":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+         "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
+</pre><h3>Mutant 224</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -155,7 +155,7 @@
+         "fire_count":        data["fire_count"],
+         "total_count":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+-        "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
++        "apron_change_pct":   _pct_change(data["XXapron_countXX"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+         "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
+</pre><h3>Mutant 225</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -155,7 +155,7 @@
+         "fire_count":        data["fire_count"],
+         "total_count":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+-        "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
++        "apron_change_pct":   _pct_change(data["apron_count"],   yd["XXapron_countXX"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+         "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
+</pre><h3>Mutant 226</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -156,7 +156,7 @@
+         "total_count":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+-        "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
++        "XXgloves_change_pctXX":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+         "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
+     }
+</pre><h3>Mutant 227</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -156,7 +156,7 @@
+         "total_count":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+-        "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
++        "gloves_change_pct":  _pct_change(data["XXgloves_countXX"],  yd["gloves_count"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+         "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
+     }
+</pre><h3>Mutant 228</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -156,7 +156,7 @@
+         "total_count":       data["total_count"],
+         "hygiene_score":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+-        "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
++        "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["XXgloves_countXX"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+         "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
+     }
+</pre><h3>Mutant 229</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -157,7 +157,7 @@
+         "hygiene_score":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+-        "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
++        "XXhairnet_change_pctXX": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+         "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
+     }
+     db.collection("stats_summary").document(user_id).set(summary)
+</pre><h3>Mutant 230</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -157,7 +157,7 @@
+         "hygiene_score":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+-        "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
++        "hairnet_change_pct": _pct_change(data["XXhairnet_countXX"], yd["hairnet_count"]),
+         "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
+     }
+     db.collection("stats_summary").document(user_id).set(summary)
+</pre><h3>Mutant 231</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -157,7 +157,7 @@
+         "hygiene_score":     data["hygiene_score"],
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+-        "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
++        "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["XXhairnet_countXX"]),
+         "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
+     }
+     db.collection("stats_summary").document(user_id).set(summary)
+</pre><h3>Mutant 232</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -158,7 +158,7 @@
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+-        "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
++        "XXfire_change_pctXX":    _pct_change(data["fire_count"],    yd["fire_count"]),
+     }
+     db.collection("stats_summary").document(user_id).set(summary)
+ 
+</pre><h3>Mutant 233</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -158,7 +158,7 @@
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+-        "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
++        "fire_change_pct":    _pct_change(data["XXfire_countXX"],    yd["fire_count"]),
+     }
+     db.collection("stats_summary").document(user_id).set(summary)
+ 
+</pre><h3>Mutant 234</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -158,7 +158,7 @@
+         "apron_change_pct":   _pct_change(data["apron_count"],   yd["apron_count"]),
+         "gloves_change_pct":  _pct_change(data["gloves_count"],  yd["gloves_count"]),
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+-        "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
++        "fire_change_pct":    _pct_change(data["fire_count"],    yd["XXfire_countXX"]),
+     }
+     db.collection("stats_summary").document(user_id).set(summary)
+ 
+</pre><h3>Mutant 236</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -160,7 +160,7 @@
+         "hairnet_change_pct": _pct_change(data["hairnet_count"], yd["hairnet_count"]),
+         "fire_change_pct":    _pct_change(data["fire_count"],    yd["fire_count"]),
+     }
+-    db.collection("stats_summary").document(user_id).set(summary)
++    db.collection("XXstats_summaryXX").document(user_id).set(summary)
+ 
+     # Chart cache
+     chart_days = build_chart_days(user_id=user_id, days=30)
+</pre><h3>Mutant 237</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -163,7 +163,7 @@
+     db.collection("stats_summary").document(user_id).set(summary)
+ 
+     # Chart cache
+-    chart_days = build_chart_days(user_id=user_id, days=30)
++    chart_days = build_chart_days(user_id=user_id, days=31)
+     db.collection("violations_chart").document(user_id).set({
+         "user_id":      user_id,
+         "last_updated": fs.SERVER_TIMESTAMP,
+</pre><h3>Mutant 238</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -163,7 +163,7 @@
+     db.collection("stats_summary").document(user_id).set(summary)
+ 
+     # Chart cache
+-    chart_days = build_chart_days(user_id=user_id, days=30)
++    chart_days = None
+     db.collection("violations_chart").document(user_id).set({
+         "user_id":      user_id,
+         "last_updated": fs.SERVER_TIMESTAMP,
+</pre><h3>Mutant 239</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -164,7 +164,7 @@
+ 
+     # Chart cache
+     chart_days = build_chart_days(user_id=user_id, days=30)
+-    db.collection("violations_chart").document(user_id).set({
++    db.collection("XXviolations_chartXX").document(user_id).set({
+         "user_id":      user_id,
+         "last_updated": fs.SERVER_TIMESTAMP,
+         "days":         chart_days,
+</pre><h3>Mutant 240</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -165,7 +165,7 @@
+     # Chart cache
+     chart_days = build_chart_days(user_id=user_id, days=30)
+     db.collection("violations_chart").document(user_id).set({
+-        "user_id":      user_id,
++        "XXuser_idXX":      user_id,
+         "last_updated": fs.SERVER_TIMESTAMP,
+         "days":         chart_days,
+     })
+</pre><h3>Mutant 241</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -166,7 +166,7 @@
+     chart_days = build_chart_days(user_id=user_id, days=30)
+     db.collection("violations_chart").document(user_id).set({
+         "user_id":      user_id,
+-        "last_updated": fs.SERVER_TIMESTAMP,
++        "XXlast_updatedXX": fs.SERVER_TIMESTAMP,
+         "days":         chart_days,
+     })
+ 
+</pre><h3>Mutant 242</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -167,7 +167,7 @@
+     db.collection("violations_chart").document(user_id).set({
+         "user_id":      user_id,
+         "last_updated": fs.SERVER_TIMESTAMP,
+-        "days":         chart_days,
++        "XXdaysXX":         chart_days,
+     })
+ 
+ 
+</pre><h3>Mutant 244</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -172,7 +172,7 @@
+ 
+ 
+ def build_summary_for_days(user_id: str, days: int) -> dict:
+-    days = max(1, int(days or 1))
++    days = max(1, int(days or 2))
+     if days == 2:
+         current_dates = _date_strings_for_range(1, offset_days=1)
+         previous_dates = _date_strings_for_range(1, offset_days=2)
+</pre><h3>Mutant 247</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -173,7 +173,7 @@
+ 
+ def build_summary_for_days(user_id: str, days: int) -> dict:
+     days = max(1, int(days or 1))
+-    if days == 2:
++    if days != 2:
+         current_dates = _date_strings_for_range(1, offset_days=1)
+         previous_dates = _date_strings_for_range(1, offset_days=2)
+     else:
+</pre><h3>Mutant 248</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -173,7 +173,7 @@
+ 
+ def build_summary_for_days(user_id: str, days: int) -> dict:
+     days = max(1, int(days or 1))
+-    if days == 2:
++    if days == 3:
+         current_dates = _date_strings_for_range(1, offset_days=1)
+         previous_dates = _date_strings_for_range(1, offset_days=2)
+     else:
+</pre><h3>Mutant 249</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -174,7 +174,7 @@
+ def build_summary_for_days(user_id: str, days: int) -> dict:
+     days = max(1, int(days or 1))
+     if days == 2:
+-        current_dates = _date_strings_for_range(1, offset_days=1)
++        current_dates = _date_strings_for_range(2, offset_days=1)
+         previous_dates = _date_strings_for_range(1, offset_days=2)
+     else:
+         current_dates = _date_strings_for_range(days)
+</pre><h3>Mutant 250</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -174,7 +174,7 @@
+ def build_summary_for_days(user_id: str, days: int) -> dict:
+     days = max(1, int(days or 1))
+     if days == 2:
+-        current_dates = _date_strings_for_range(1, offset_days=1)
++        current_dates = _date_strings_for_range(1, offset_days=2)
+         previous_dates = _date_strings_for_range(1, offset_days=2)
+     else:
+         current_dates = _date_strings_for_range(days)
+</pre><h3>Mutant 251</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -174,7 +174,7 @@
+ def build_summary_for_days(user_id: str, days: int) -> dict:
+     days = max(1, int(days or 1))
+     if days == 2:
+-        current_dates = _date_strings_for_range(1, offset_days=1)
++        current_dates = None
+         previous_dates = _date_strings_for_range(1, offset_days=2)
+     else:
+         current_dates = _date_strings_for_range(days)
+</pre><h3>Mutant 252</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -175,7 +175,7 @@
+     days = max(1, int(days or 1))
+     if days == 2:
+         current_dates = _date_strings_for_range(1, offset_days=1)
+-        previous_dates = _date_strings_for_range(1, offset_days=2)
++        previous_dates = _date_strings_for_range(2, offset_days=2)
+     else:
+         current_dates = _date_strings_for_range(days)
+         previous_dates = _date_strings_for_range(days, offset_days=days)
+</pre><h3>Mutant 253</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -175,7 +175,7 @@
+     days = max(1, int(days or 1))
+     if days == 2:
+         current_dates = _date_strings_for_range(1, offset_days=1)
+-        previous_dates = _date_strings_for_range(1, offset_days=2)
++        previous_dates = _date_strings_for_range(1, offset_days=3)
+     else:
+         current_dates = _date_strings_for_range(days)
+         previous_dates = _date_strings_for_range(days, offset_days=days)
+</pre><h3>Mutant 254</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -175,7 +175,7 @@
+     days = max(1, int(days or 1))
+     if days == 2:
+         current_dates = _date_strings_for_range(1, offset_days=1)
+-        previous_dates = _date_strings_for_range(1, offset_days=2)
++        previous_dates = None
+     else:
+         current_dates = _date_strings_for_range(days)
+         previous_dates = _date_strings_for_range(days, offset_days=days)
+</pre><h3>Mutant 255</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -177,7 +177,7 @@
+         current_dates = _date_strings_for_range(1, offset_days=1)
+         previous_dates = _date_strings_for_range(1, offset_days=2)
+     else:
+-        current_dates = _date_strings_for_range(days)
++        current_dates = None
+         previous_dates = _date_strings_for_range(days, offset_days=days)
+ 
+     current = _aggregate_days(user_id, current_dates)
+</pre><h3>Mutant 256</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -178,7 +178,7 @@
+         previous_dates = _date_strings_for_range(1, offset_days=2)
+     else:
+         current_dates = _date_strings_for_range(days)
+-        previous_dates = _date_strings_for_range(days, offset_days=days)
++        previous_dates = None
+ 
+     current = _aggregate_days(user_id, current_dates)
+     previous = _aggregate_days(user_id, previous_dates)
+</pre><h3>Mutant 257</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -180,7 +180,7 @@
+         current_dates = _date_strings_for_range(days)
+         previous_dates = _date_strings_for_range(days, offset_days=days)
+ 
+-    current = _aggregate_days(user_id, current_dates)
++    current = None
+     previous = _aggregate_days(user_id, previous_dates)
+ 
+     return {
+</pre><h3>Mutant 258</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -181,7 +181,7 @@
+         previous_dates = _date_strings_for_range(days, offset_days=days)
+ 
+     current = _aggregate_days(user_id, current_dates)
+-    previous = _aggregate_days(user_id, previous_dates)
++    previous = None
+ 
+     return {
+         "user_id": user_id,
+</pre><h3>Mutant 259</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -184,7 +184,7 @@
+     previous = _aggregate_days(user_id, previous_dates)
+ 
+     return {
+-        "user_id": user_id,
++        "XXuser_idXX": user_id,
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+         "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+         "apron_count": current["apron_count"],
+</pre><h3>Mutant 260</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -185,7 +185,7 @@
+ 
+     return {
+         "user_id": user_id,
+-        "last_updated": datetime.now(timezone.utc).isoformat(),
++        "XXlast_updatedXX": datetime.now(timezone.utc).isoformat(),
+         "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+</pre><h3>Mutant 261</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -186,7 +186,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+-        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
++        "XXnotification_countXX": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+</pre><h3>Mutant 262</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -186,7 +186,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+-        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
++        "notification_count": int((db.collection("XXstats_summaryXX").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+</pre><h3>Mutant 263</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -186,7 +186,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+-        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
++        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() and {}).get("notification_count", 0) or 0),
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+</pre><h3>Mutant 264</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -186,7 +186,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+-        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
++        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("XXnotification_countXX", 0) or 0),
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+</pre><h3>Mutant 265</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -186,7 +186,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+-        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
++        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 1) or 0),
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+</pre><h3>Mutant 266</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -186,7 +186,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+-        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
++        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 1),
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+</pre><h3>Mutant 267</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -186,7 +186,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+-        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
++        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) and 0),
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+</pre><h3>Mutant 268</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -187,7 +187,7 @@
+         "user_id": user_id,
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+         "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+-        "apron_count": current["apron_count"],
++        "XXapron_countXX": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+         "fire_count": current["fire_count"],
+</pre><h3>Mutant 269</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -187,7 +187,7 @@
+         "user_id": user_id,
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+         "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+-        "apron_count": current["apron_count"],
++        "apron_count": current["XXapron_countXX"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+         "fire_count": current["fire_count"],
+</pre><h3>Mutant 270</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -188,7 +188,7 @@
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+         "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+         "apron_count": current["apron_count"],
+-        "gloves_count": current["gloves_count"],
++        "XXgloves_countXX": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+         "fire_count": current["fire_count"],
+         "total_count": current["total_count"],
+</pre><h3>Mutant 271</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -188,7 +188,7 @@
+         "last_updated": datetime.now(timezone.utc).isoformat(),
+         "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+         "apron_count": current["apron_count"],
+-        "gloves_count": current["gloves_count"],
++        "gloves_count": current["XXgloves_countXX"],
+         "hairnet_count": current["hairnet_count"],
+         "fire_count": current["fire_count"],
+         "total_count": current["total_count"],
+</pre><h3>Mutant 272</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -189,7 +189,7 @@
+         "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+-        "hairnet_count": current["hairnet_count"],
++        "XXhairnet_countXX": current["hairnet_count"],
+         "fire_count": current["fire_count"],
+         "total_count": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+</pre><h3>Mutant 273</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -189,7 +189,7 @@
+         "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+-        "hairnet_count": current["hairnet_count"],
++        "hairnet_count": current["XXhairnet_countXX"],
+         "fire_count": current["fire_count"],
+         "total_count": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+</pre><h3>Mutant 274</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -190,7 +190,7 @@
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+-        "fire_count": current["fire_count"],
++        "XXfire_countXX": current["fire_count"],
+         "total_count": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+</pre><h3>Mutant 275</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -190,7 +190,7 @@
+         "apron_count": current["apron_count"],
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+-        "fire_count": current["fire_count"],
++        "fire_count": current["XXfire_countXX"],
+         "total_count": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+</pre><h3>Mutant 276</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -191,7 +191,7 @@
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+         "fire_count": current["fire_count"],
+-        "total_count": current["total_count"],
++        "XXtotal_countXX": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+</pre><h3>Mutant 277</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -191,7 +191,7 @@
+         "gloves_count": current["gloves_count"],
+         "hairnet_count": current["hairnet_count"],
+         "fire_count": current["fire_count"],
+-        "total_count": current["total_count"],
++        "total_count": current["XXtotal_countXX"],
+         "hygiene_score": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+</pre><h3>Mutant 278</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -192,7 +192,7 @@
+         "hairnet_count": current["hairnet_count"],
+         "fire_count": current["fire_count"],
+         "total_count": current["total_count"],
+-        "hygiene_score": current["hygiene_score"],
++        "XXhygiene_scoreXX": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+</pre><h3>Mutant 279</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -192,7 +192,7 @@
+         "hairnet_count": current["hairnet_count"],
+         "fire_count": current["fire_count"],
+         "total_count": current["total_count"],
+-        "hygiene_score": current["hygiene_score"],
++        "hygiene_score": current["XXhygiene_scoreXX"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+</pre><h3>Mutant 280</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -193,7 +193,7 @@
+         "fire_count": current["fire_count"],
+         "total_count": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+-        "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
++        "XXapron_change_pctXX": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+         "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+</pre><h3>Mutant 281</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -193,7 +193,7 @@
+         "fire_count": current["fire_count"],
+         "total_count": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+-        "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
++        "apron_change_pct": _pct_change(current["XXapron_countXX"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+         "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+</pre><h3>Mutant 282</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -193,7 +193,7 @@
+         "fire_count": current["fire_count"],
+         "total_count": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+-        "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
++        "apron_change_pct": _pct_change(current["apron_count"], previous["XXapron_countXX"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+         "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+</pre><h3>Mutant 283</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -194,7 +194,7 @@
+         "total_count": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+-        "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
++        "XXgloves_change_pctXX": _pct_change(current["gloves_count"], previous["gloves_count"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+         "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+     }
+</pre><h3>Mutant 284</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -194,7 +194,7 @@
+         "total_count": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+-        "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
++        "gloves_change_pct": _pct_change(current["XXgloves_countXX"], previous["gloves_count"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+         "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+     }
+</pre><h3>Mutant 285</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -194,7 +194,7 @@
+         "total_count": current["total_count"],
+         "hygiene_score": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+-        "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
++        "gloves_change_pct": _pct_change(current["gloves_count"], previous["XXgloves_countXX"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+         "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+     }
+</pre><h3>Mutant 286</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -195,7 +195,7 @@
+         "hygiene_score": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+-        "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
++        "XXhairnet_change_pctXX": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+         "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+     }
+ 
+</pre><h3>Mutant 287</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -195,7 +195,7 @@
+         "hygiene_score": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+-        "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
++        "hairnet_change_pct": _pct_change(current["XXhairnet_countXX"], previous["hairnet_count"]),
+         "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+     }
+ 
+</pre><h3>Mutant 288</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -195,7 +195,7 @@
+         "hygiene_score": current["hygiene_score"],
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+-        "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
++        "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["XXhairnet_countXX"]),
+         "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+     }
+ 
+</pre><h3>Mutant 289</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -196,7 +196,7 @@
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+-        "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
++        "XXfire_change_pctXX": _pct_change(current["fire_count"], previous["fire_count"]),
+     }
+ 
+ 
+</pre><h3>Mutant 290</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -196,7 +196,7 @@
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+-        "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
++        "fire_change_pct": _pct_change(current["XXfire_countXX"], previous["fire_count"]),
+     }
+ 
+ 
+</pre><h3>Mutant 291</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -196,7 +196,7 @@
+         "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+         "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+         "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+-        "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
++        "fire_change_pct": _pct_change(current["fire_count"], previous["XXfire_countXX"]),
+     }
+ 
+ 
+</pre><h3>Mutant 292</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -200,7 +200,7 @@
+     }
+ 
+ 
+-def build_chart_days(user_id: str, days: int = 30) -> list:
++def build_chart_days(user_id: str, days: int = 31) -> list:
+     """Returns [{date, apron, gloves, hairnet, fire}] for last N days. Missing days zero-filled."""
+     today = datetime.now(timezone.utc).date()
+     result = []
+</pre><h3>Mutant 301</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -205,7 +205,7 @@
+     today = datetime.now(timezone.utc).date()
+     result = []
+     for i in range(days - 1, -1, -1):
+-        date_str = (today - timedelta(days=i)).isoformat()
++        date_str = (today + timedelta(days=i)).isoformat()
+         d = _get_daily(user_id, date_str)
+         result.append({
+             "date":    date_str,
+</pre><h3>Mutant 302</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -205,7 +205,7 @@
+     today = datetime.now(timezone.utc).date()
+     result = []
+     for i in range(days - 1, -1, -1):
+-        date_str = (today - timedelta(days=i)).isoformat()
++        date_str = None
+         d = _get_daily(user_id, date_str)
+         result.append({
+             "date":    date_str,
+</pre><h3>Mutant 303</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -206,7 +206,7 @@
+     result = []
+     for i in range(days - 1, -1, -1):
+         date_str = (today - timedelta(days=i)).isoformat()
+-        d = _get_daily(user_id, date_str)
++        d = None
+         result.append({
+             "date":    date_str,
+             "apron":   d["apron_count"],
+</pre><h3>Mutant 304</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -208,7 +208,7 @@
+         date_str = (today - timedelta(days=i)).isoformat()
+         d = _get_daily(user_id, date_str)
+         result.append({
+-            "date":    date_str,
++            "XXdateXX":    date_str,
+             "apron":   d["apron_count"],
+             "gloves":  d["gloves_count"],
+             "hairnet": d["hairnet_count"],
+</pre><h3>Mutant 305</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -209,7 +209,7 @@
+         d = _get_daily(user_id, date_str)
+         result.append({
+             "date":    date_str,
+-            "apron":   d["apron_count"],
++            "XXapronXX":   d["apron_count"],
+             "gloves":  d["gloves_count"],
+             "hairnet": d["hairnet_count"],
+             "fire":    d["fire_count"],
+</pre><h3>Mutant 306</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -209,7 +209,7 @@
+         d = _get_daily(user_id, date_str)
+         result.append({
+             "date":    date_str,
+-            "apron":   d["apron_count"],
++            "apron":   d["XXapron_countXX"],
+             "gloves":  d["gloves_count"],
+             "hairnet": d["hairnet_count"],
+             "fire":    d["fire_count"],
+</pre><h3>Mutant 307</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -210,7 +210,7 @@
+         result.append({
+             "date":    date_str,
+             "apron":   d["apron_count"],
+-            "gloves":  d["gloves_count"],
++            "XXglovesXX":  d["gloves_count"],
+             "hairnet": d["hairnet_count"],
+             "fire":    d["fire_count"],
+         })
+</pre><h3>Mutant 308</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -210,7 +210,7 @@
+         result.append({
+             "date":    date_str,
+             "apron":   d["apron_count"],
+-            "gloves":  d["gloves_count"],
++            "gloves":  d["XXgloves_countXX"],
+             "hairnet": d["hairnet_count"],
+             "fire":    d["fire_count"],
+         })
+</pre><h3>Mutant 309</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -211,7 +211,7 @@
+             "date":    date_str,
+             "apron":   d["apron_count"],
+             "gloves":  d["gloves_count"],
+-            "hairnet": d["hairnet_count"],
++            "XXhairnetXX": d["hairnet_count"],
+             "fire":    d["fire_count"],
+         })
+     return result
+</pre><h3>Mutant 310</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -211,7 +211,7 @@
+             "date":    date_str,
+             "apron":   d["apron_count"],
+             "gloves":  d["gloves_count"],
+-            "hairnet": d["hairnet_count"],
++            "hairnet": d["XXhairnet_countXX"],
+             "fire":    d["fire_count"],
+         })
+     return result
+</pre><h3>Mutant 311</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -212,7 +212,7 @@
+             "apron":   d["apron_count"],
+             "gloves":  d["gloves_count"],
+             "hairnet": d["hairnet_count"],
+-            "fire":    d["fire_count"],
++            "XXfireXX":    d["fire_count"],
+         })
+     return result
+ 
+</pre><h3>Mutant 312</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -212,7 +212,7 @@
+             "apron":   d["apron_count"],
+             "gloves":  d["gloves_count"],
+             "hairnet": d["hairnet_count"],
+-            "fire":    d["fire_count"],
++            "fire":    d["XXfire_countXX"],
+         })
+     return result
+ 
+</pre><h3>Mutant 313</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -219,7 +219,7 @@
+ 
+ def empty_summary(user_id: str) -> dict:
+     return {
+-        "user_id": user_id,
++        "XXuser_idXX": user_id,
+         "last_updated": None,
+         "notification_count": 0,
+         "apron_count": 0,
+</pre><h3>Mutant 314</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -220,7 +220,7 @@
+ def empty_summary(user_id: str) -> dict:
+     return {
+         "user_id": user_id,
+-        "last_updated": None,
++        "XXlast_updatedXX": None,
+         "notification_count": 0,
+         "apron_count": 0,
+         "gloves_count": 0,
+</pre><h3>Mutant 315</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -221,7 +221,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": None,
+-        "notification_count": 0,
++        "XXnotification_countXX": 0,
+         "apron_count": 0,
+         "gloves_count": 0,
+         "hairnet_count": 0,
+</pre><h3>Mutant 316</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -221,7 +221,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": None,
+-        "notification_count": 0,
++        "notification_count": 1,
+         "apron_count": 0,
+         "gloves_count": 0,
+         "hairnet_count": 0,
+</pre><h3>Mutant 325</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -226,7 +226,7 @@
+         "gloves_count": 0,
+         "hairnet_count": 0,
+         "fire_count": 0,
+-        "total_count": 0,
++        "XXtotal_countXX": 0,
+         "hygiene_score": 100,
+         "apron_change_pct": 0,
+         "gloves_change_pct": 0,
+</pre><h3>Mutant 326</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -226,7 +226,7 @@
+         "gloves_count": 0,
+         "hairnet_count": 0,
+         "fire_count": 0,
+-        "total_count": 0,
++        "total_count": 1,
+         "hygiene_score": 100,
+         "apron_change_pct": 0,
+         "gloves_change_pct": 0,
+</pre><h3>Mutant 327</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -227,7 +227,7 @@
+         "hairnet_count": 0,
+         "fire_count": 0,
+         "total_count": 0,
+-        "hygiene_score": 100,
++        "XXhygiene_scoreXX": 100,
+         "apron_change_pct": 0,
+         "gloves_change_pct": 0,
+         "hairnet_change_pct": 0,
+</pre><h3>Mutant 328</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -227,7 +227,7 @@
+         "hairnet_count": 0,
+         "fire_count": 0,
+         "total_count": 0,
+-        "hygiene_score": 100,
++        "hygiene_score": 101,
+         "apron_change_pct": 0,
+         "gloves_change_pct": 0,
+         "hairnet_change_pct": 0,
+</pre><h3>Mutant 329</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -228,7 +228,7 @@
+         "fire_count": 0,
+         "total_count": 0,
+         "hygiene_score": 100,
+-        "apron_change_pct": 0,
++        "XXapron_change_pctXX": 0,
+         "gloves_change_pct": 0,
+         "hairnet_change_pct": 0,
+         "fire_change_pct": 0,
+</pre><h3>Mutant 330</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -228,7 +228,7 @@
+         "fire_count": 0,
+         "total_count": 0,
+         "hygiene_score": 100,
+-        "apron_change_pct": 0,
++        "apron_change_pct": 1,
+         "gloves_change_pct": 0,
+         "hairnet_change_pct": 0,
+         "fire_change_pct": 0,
+</pre><h3>Mutant 331</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -229,7 +229,7 @@
+         "total_count": 0,
+         "hygiene_score": 100,
+         "apron_change_pct": 0,
+-        "gloves_change_pct": 0,
++        "XXgloves_change_pctXX": 0,
+         "hairnet_change_pct": 0,
+         "fire_change_pct": 0,
+     }
+</pre><h3>Mutant 332</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -229,7 +229,7 @@
+         "total_count": 0,
+         "hygiene_score": 100,
+         "apron_change_pct": 0,
+-        "gloves_change_pct": 0,
++        "gloves_change_pct": 1,
+         "hairnet_change_pct": 0,
+         "fire_change_pct": 0,
+     }
+</pre><h3>Mutant 333</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -230,7 +230,7 @@
+         "hygiene_score": 100,
+         "apron_change_pct": 0,
+         "gloves_change_pct": 0,
+-        "hairnet_change_pct": 0,
++        "XXhairnet_change_pctXX": 0,
+         "fire_change_pct": 0,
+     }
+ 
+</pre><h3>Mutant 334</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -230,7 +230,7 @@
+         "hygiene_score": 100,
+         "apron_change_pct": 0,
+         "gloves_change_pct": 0,
+-        "hairnet_change_pct": 0,
++        "hairnet_change_pct": 1,
+         "fire_change_pct": 0,
+     }
+ 
+</pre><h3>Mutant 335</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -231,7 +231,7 @@
+         "apron_change_pct": 0,
+         "gloves_change_pct": 0,
+         "hairnet_change_pct": 0,
+-        "fire_change_pct": 0,
++        "XXfire_change_pctXX": 0,
+     }
+ 
+ 
+</pre><h3>Mutant 336</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -231,7 +231,7 @@
+         "apron_change_pct": 0,
+         "gloves_change_pct": 0,
+         "hairnet_change_pct": 0,
+-        "fire_change_pct": 0,
++        "fire_change_pct": 1,
+     }
+ 
+ 
+</pre><h3>Mutant 337</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -240,7 +240,7 @@
+         try:
+             return int(v)
+         except Exception:
+-            return 0
++            return 1
+ 
+     return {
+         "user_id": user_id,
+</pre><h3>Mutant 338</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -243,7 +243,7 @@
+             return 0
+ 
+     return {
+-        "user_id": user_id,
++        "XXuser_idXX": user_id,
+         "last_updated": str(raw.get("last_updated", "")),
+         "notification_count": si(raw.get("notification_count", 0)),
+         "apron_count": si(raw.get("apron_count")),
+</pre><h3>Mutant 339</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -244,7 +244,7 @@
+ 
+     return {
+         "user_id": user_id,
+-        "last_updated": str(raw.get("last_updated", "")),
++        "XXlast_updatedXX": str(raw.get("last_updated", "")),
+         "notification_count": si(raw.get("notification_count", 0)),
+         "apron_count": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+</pre><h3>Mutant 340</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -244,7 +244,7 @@
+ 
+     return {
+         "user_id": user_id,
+-        "last_updated": str(raw.get("last_updated", "")),
++        "last_updated": str(raw.get("XXlast_updatedXX", "")),
+         "notification_count": si(raw.get("notification_count", 0)),
+         "apron_count": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+</pre><h3>Mutant 341</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -244,7 +244,7 @@
+ 
+     return {
+         "user_id": user_id,
+-        "last_updated": str(raw.get("last_updated", "")),
++        "last_updated": str(raw.get("last_updated", "XXXX")),
+         "notification_count": si(raw.get("notification_count", 0)),
+         "apron_count": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+</pre><h3>Mutant 342</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -245,7 +245,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": str(raw.get("last_updated", "")),
+-        "notification_count": si(raw.get("notification_count", 0)),
++        "XXnotification_countXX": si(raw.get("notification_count", 0)),
+         "apron_count": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+</pre><h3>Mutant 343</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -245,7 +245,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": str(raw.get("last_updated", "")),
+-        "notification_count": si(raw.get("notification_count", 0)),
++        "notification_count": si(raw.get("XXnotification_countXX", 0)),
+         "apron_count": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+</pre><h3>Mutant 344</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -245,7 +245,7 @@
+     return {
+         "user_id": user_id,
+         "last_updated": str(raw.get("last_updated", "")),
+-        "notification_count": si(raw.get("notification_count", 0)),
++        "notification_count": si(raw.get("notification_count", 1)),
+         "apron_count": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+</pre><h3>Mutant 345</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -246,7 +246,7 @@
+         "user_id": user_id,
+         "last_updated": str(raw.get("last_updated", "")),
+         "notification_count": si(raw.get("notification_count", 0)),
+-        "apron_count": si(raw.get("apron_count")),
++        "XXapron_countXX": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+         "fire_count": si(raw.get("fire_count")),
+</pre><h3>Mutant 346</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -246,7 +246,7 @@
+         "user_id": user_id,
+         "last_updated": str(raw.get("last_updated", "")),
+         "notification_count": si(raw.get("notification_count", 0)),
+-        "apron_count": si(raw.get("apron_count")),
++        "apron_count": si(raw.get("XXapron_countXX")),
+         "gloves_count": si(raw.get("gloves_count")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+         "fire_count": si(raw.get("fire_count")),
+</pre><h3>Mutant 347</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -247,7 +247,7 @@
+         "last_updated": str(raw.get("last_updated", "")),
+         "notification_count": si(raw.get("notification_count", 0)),
+         "apron_count": si(raw.get("apron_count")),
+-        "gloves_count": si(raw.get("gloves_count")),
++        "XXgloves_countXX": si(raw.get("gloves_count")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+         "fire_count": si(raw.get("fire_count")),
+         "total_count": si(raw.get("total_count")),
+</pre><h3>Mutant 348</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -247,7 +247,7 @@
+         "last_updated": str(raw.get("last_updated", "")),
+         "notification_count": si(raw.get("notification_count", 0)),
+         "apron_count": si(raw.get("apron_count")),
+-        "gloves_count": si(raw.get("gloves_count")),
++        "gloves_count": si(raw.get("XXgloves_countXX")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+         "fire_count": si(raw.get("fire_count")),
+         "total_count": si(raw.get("total_count")),
+</pre><h3>Mutant 349</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -248,7 +248,7 @@
+         "notification_count": si(raw.get("notification_count", 0)),
+         "apron_count": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+-        "hairnet_count": si(raw.get("hairnet_count")),
++        "XXhairnet_countXX": si(raw.get("hairnet_count")),
+         "fire_count": si(raw.get("fire_count")),
+         "total_count": si(raw.get("total_count")),
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+</pre><h3>Mutant 350</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -248,7 +248,7 @@
+         "notification_count": si(raw.get("notification_count", 0)),
+         "apron_count": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+-        "hairnet_count": si(raw.get("hairnet_count")),
++        "hairnet_count": si(raw.get("XXhairnet_countXX")),
+         "fire_count": si(raw.get("fire_count")),
+         "total_count": si(raw.get("total_count")),
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+</pre><h3>Mutant 351</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -249,7 +249,7 @@
+         "apron_count": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+-        "fire_count": si(raw.get("fire_count")),
++        "XXfire_countXX": si(raw.get("fire_count")),
+         "total_count": si(raw.get("total_count")),
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+</pre><h3>Mutant 352</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -249,7 +249,7 @@
+         "apron_count": si(raw.get("apron_count")),
+         "gloves_count": si(raw.get("gloves_count")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+-        "fire_count": si(raw.get("fire_count")),
++        "fire_count": si(raw.get("XXfire_countXX")),
+         "total_count": si(raw.get("total_count")),
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+</pre><h3>Mutant 353</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -250,7 +250,7 @@
+         "gloves_count": si(raw.get("gloves_count")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+         "fire_count": si(raw.get("fire_count")),
+-        "total_count": si(raw.get("total_count")),
++        "XXtotal_countXX": si(raw.get("total_count")),
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+</pre><h3>Mutant 354</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -250,7 +250,7 @@
+         "gloves_count": si(raw.get("gloves_count")),
+         "hairnet_count": si(raw.get("hairnet_count")),
+         "fire_count": si(raw.get("fire_count")),
+-        "total_count": si(raw.get("total_count")),
++        "total_count": si(raw.get("XXtotal_countXX")),
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+</pre><h3>Mutant 355</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -251,7 +251,7 @@
+         "hairnet_count": si(raw.get("hairnet_count")),
+         "fire_count": si(raw.get("fire_count")),
+         "total_count": si(raw.get("total_count")),
+-        "hygiene_score": si(raw.get("hygiene_score", 100)),
++        "XXhygiene_scoreXX": si(raw.get("hygiene_score", 100)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+         "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
+</pre><h3>Mutant 356</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -251,7 +251,7 @@
+         "hairnet_count": si(raw.get("hairnet_count")),
+         "fire_count": si(raw.get("fire_count")),
+         "total_count": si(raw.get("total_count")),
+-        "hygiene_score": si(raw.get("hygiene_score", 100)),
++        "hygiene_score": si(raw.get("XXhygiene_scoreXX", 100)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+         "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
+</pre><h3>Mutant 357</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -251,7 +251,7 @@
+         "hairnet_count": si(raw.get("hairnet_count")),
+         "fire_count": si(raw.get("fire_count")),
+         "total_count": si(raw.get("total_count")),
+-        "hygiene_score": si(raw.get("hygiene_score", 100)),
++        "hygiene_score": si(raw.get("hygiene_score", 101)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+         "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
+</pre><h3>Mutant 358</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -252,7 +252,7 @@
+         "fire_count": si(raw.get("fire_count")),
+         "total_count": si(raw.get("total_count")),
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+-        "apron_change_pct": si(raw.get("apron_change_pct")),
++        "XXapron_change_pctXX": si(raw.get("apron_change_pct")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+         "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
+         "fire_change_pct": si(raw.get("fire_change_pct")),
+</pre><h3>Mutant 359</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -252,7 +252,7 @@
+         "fire_count": si(raw.get("fire_count")),
+         "total_count": si(raw.get("total_count")),
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+-        "apron_change_pct": si(raw.get("apron_change_pct")),
++        "apron_change_pct": si(raw.get("XXapron_change_pctXX")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+         "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
+         "fire_change_pct": si(raw.get("fire_change_pct")),
+</pre><h3>Mutant 360</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -253,7 +253,7 @@
+         "total_count": si(raw.get("total_count")),
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+-        "gloves_change_pct": si(raw.get("gloves_change_pct")),
++        "XXgloves_change_pctXX": si(raw.get("gloves_change_pct")),
+         "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
+         "fire_change_pct": si(raw.get("fire_change_pct")),
+     }
+</pre><h3>Mutant 361</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -253,7 +253,7 @@
+         "total_count": si(raw.get("total_count")),
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+-        "gloves_change_pct": si(raw.get("gloves_change_pct")),
++        "gloves_change_pct": si(raw.get("XXgloves_change_pctXX")),
+         "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
+         "fire_change_pct": si(raw.get("fire_change_pct")),
+     }
+</pre><h3>Mutant 362</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -254,6 +254,6 @@
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+-        "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
++        "XXhairnet_change_pctXX": si(raw.get("hairnet_change_pct")),
+         "fire_change_pct": si(raw.get("fire_change_pct")),
+     }
+</pre><h3>Mutant 363</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -254,6 +254,6 @@
+         "hygiene_score": si(raw.get("hygiene_score", 100)),
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+-        "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
++        "hairnet_change_pct": si(raw.get("XXhairnet_change_pctXX")),
+         "fire_change_pct": si(raw.get("fire_change_pct")),
+     }
+</pre><h3>Mutant 364</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -255,5 +255,5 @@
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+         "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
+-        "fire_change_pct": si(raw.get("fire_change_pct")),
+-    }
++        "XXfire_change_pctXX": si(raw.get("fire_change_pct")),
++    }
+</pre><h3>Mutant 365</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -255,5 +255,5 @@
+         "apron_change_pct": si(raw.get("apron_change_pct")),
+         "gloves_change_pct": si(raw.get("gloves_change_pct")),
+         "hairnet_change_pct": si(raw.get("hairnet_change_pct")),
+-        "fire_change_pct": si(raw.get("fire_change_pct")),
+-    }
++        "fire_change_pct": si(raw.get("XXfire_change_pctXX")),
++    }
+</pre><h3>Mutant 366</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -120,7 +120,7 @@
+         "user_id":       user_id,
+         "date":          today,
+         "apron_count":   0,
+-        "gloves_count":  1,
++        "XXgloves_countXX":  1,
+         "hairnet_count": 0,
+         "fire_count":    0,
+         "total_count":   0,
+</pre><h3>Mutant 367</h3><pre>--- services/stats_service.py
++++ services/stats_service.py
+@@ -120,7 +120,7 @@
+         "user_id":       user_id,
+         "date":          today,
+         "apron_count":   0,
+-        "gloves_count":  1,
++        "gloves_count":  2,
+         "hairnet_count": 0,
+         "fire_count":    0,
+         "total_count":   0,
+</pre></body></html>
