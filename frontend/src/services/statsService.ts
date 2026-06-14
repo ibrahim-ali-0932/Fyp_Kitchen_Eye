@@ -7,7 +7,6 @@ const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || "http://localhos
 async function authHeaders(): Promise<HeadersInit> {
   const token = await getAuthToken();
   return {
-    "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
 }

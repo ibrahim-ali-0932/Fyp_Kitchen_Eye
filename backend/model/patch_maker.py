@@ -1,21 +1,33 @@
-
 import os
 import re
 import time
 import subprocess
+import sys
 from pathlib import Path
 
-FFMPEG_EXE  = r"C:\ffmpeg\ffmpeg-8.1-essentials_build\bin\ffmpeg.exe"
-FFPROBE_EXE = r"C:\ffmpeg\ffmpeg-8.1-essentials_build\bin\ffprobe.exe"
-VIDEO_DIR            = r"D:\sem 7\FYP\Frontend\backend\app\videos"          # Folder containing Cam-001.mp4 etc.
-PATCH_DIR            = r"D:\sem 7\FYP\Frontend\backend\model\patches"         # Output folder for patches
-PATCH_LENGTH_SEC     = 3                    # Duration of each patch in seconds
-OVERLAP_SEC          = 2                     # Overlap between consecutive patches
-REFRESH_INTERVAL_SEC = 60                    # How often to re-scan VIDEO_DIR (seconds)
+FFMPEG_EXE = r"C:\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffmpeg.exe"
+FFPROBE_EXE = r"C:\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffprobe.exe"
+MODEL_DIR = Path(__file__).resolve().parent
+_backend_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
 
-VIDEO_EXTENSIONS     = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
-FFMPEG_EXE  = None    # e.g. r"C:\ffmpeg\bin\ffmpeg.exe"
-FFPROBE_EXE = None    # e.g. r"C:\ffmpeg\bin\ffprobe.exe"
+from app.database.db import db
+
+VIDEO_DIR_CANDIDATES = [
+    MODEL_DIR.parent / "videos",
+    MODEL_DIR.parent / "video",
+    MODEL_DIR.parent / "app" / "videos",
+]
+VIDEO_DIR = next(
+    (path for path in VIDEO_DIR_CANDIDATES if path.is_dir()), VIDEO_DIR_CANDIDATES[0]
+)
+PATCH_DIR = MODEL_DIR / "patches"
+PATCH_LENGTH_SEC = 3  # Duration of each patch in seconds
+OVERLAP_SEC = 2  # Overlap between consecutive patches
+REFRESH_INTERVAL_SEC = 60  # How often to re-scan VIDEO_DIR (seconds)
+
+VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
 # ─────────────────────────────────────────────────────────────
 # ============================================================
 
@@ -43,7 +55,7 @@ def _resolve_exe(name, override):
     return name  # fall back to PATH
 
 
-_FFMPEG  = _resolve_exe("ffmpeg",  FFMPEG_EXE)
+_FFMPEG = _resolve_exe("ffmpeg", FFMPEG_EXE)
 _FFPROBE = _resolve_exe("ffprobe", FFPROBE_EXE)
 
 
@@ -65,6 +77,8 @@ def _check_tools():
         print('       FFPROBE_EXE = r"C:\\ffmpeg\\bin\\ffprobe.exe"')
         print("  2) Add ffmpeg's /bin folder to your system PATH")
         raise SystemExit(1)
+
+
 # ─────────────────────────────────────────────────────────────
 
 
@@ -72,9 +86,13 @@ def get_video_duration(video_path: Path) -> float:
     """Return duration of video in seconds using ffprobe."""
     result = subprocess.run(
         [
-            _FFPROBE, "-v", "error",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
+            _FFPROBE,
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
             str(video_path),
         ],
         capture_output=True,
@@ -111,6 +129,48 @@ def normalize_camera_id(stem: str) -> str:
     return f"CAM-{num}"
 
 
+def resolve_camera_label(video_path: Path) -> tuple[str, str | None]:
+    """
+    Return the best camera label for a source video and, if possible, the
+    Firestore camera document id that owns it.
+    """
+    video_name = video_path.name.upper()
+    video_stem = video_path.stem.upper()
+
+    try:
+        for doc in db.collection("cameras").stream():
+            payload = doc.to_dict() or {}
+            branch = str(payload.get("branch") or "").strip()
+            source_value = str(payload.get("source_value") or "").strip()
+            stream_url = str(payload.get("stream_url") or "").strip()
+            camera_name = str(payload.get("name") or branch or "").strip()
+
+            candidates = {
+                branch.upper(),
+                source_value.upper(),
+                stream_url.upper(),
+                Path(source_value).name.upper(),
+                Path(stream_url).name.upper(),
+            }
+
+            if video_name in candidates or video_stem in candidates:
+                label = camera_name or branch or normalize_camera_id(video_path.stem)
+                return label, str(doc.id)
+
+            if any(
+                candidate and (video_name in candidate or video_stem in candidate)
+                for candidate in candidates
+            ):
+                label = camera_name or branch or normalize_camera_id(video_path.stem)
+                return label, str(doc.id)
+    except Exception as exc:
+        print(
+            f"[patch_maker] Warning: could not resolve camera label for {video_path.name}: {exc}"
+        )
+
+    return normalize_camera_id(video_path.stem), None
+
+
 def split_video(video_path: Path):
     """Split a single video into overlapping patches and save to PATCH_DIR."""
     duration = get_video_duration(video_path)
@@ -118,8 +178,8 @@ def split_video(video_path: Path):
         print(f"  [WARN] Could not read duration for {video_path.name}, skipping.")
         return
 
-    cam_id = normalize_camera_id(video_path.stem)   # e.g. CAM-001
-    step   = PATCH_LENGTH_SEC - OVERLAP_SEC          # advance per patch
+    cam_id, camera_doc_id = resolve_camera_label(video_path)
+    step = PATCH_LENGTH_SEC - OVERLAP_SEC  # advance per patch
 
     starts = []
     t = 0.0
@@ -128,12 +188,16 @@ def split_video(video_path: Path):
         t += step
 
     total = len(starts)
-    print(f"  → {cam_id} | duration={duration:.1f}s | {total} patches "
-          f"({PATCH_LENGTH_SEC}s each, {OVERLAP_SEC}s overlap)")
+    print(
+        f"  → {cam_id} | duration={duration:.1f}s | {total} patches "
+        f"({PATCH_LENGTH_SEC}s each, {OVERLAP_SEC}s overlap)"
+    )
+    if camera_doc_id:
+        print(f"    [MAP] camera_doc_id={camera_doc_id}")
 
     for idx, start in enumerate(starts, start=1):
         patch_name = f"{cam_id}_patch_{idx:03d}.mp4"
-        out_path   = PATCH_DIR_PATH / patch_name
+        out_path = PATCH_DIR_PATH / patch_name
 
         if out_path.exists():
             print(f"    [SKIP] {patch_name} already exists")
@@ -146,12 +210,17 @@ def split_video(video_path: Path):
 
         cmd = [
             _FFMPEG,
-            "-y",                          # overwrite if exists
-            "-ss", str(start),             # seek BEFORE input = fast
-            "-i", str(video_path),
-            "-t", str(actual_len),
-            "-c", "copy",                  # no re-encoding, very fast
-            "-avoid_negative_ts", "1",
+            "-y",  # overwrite if exists
+            "-ss",
+            str(start),  # seek BEFORE input = fast
+            "-i",
+            str(video_path),
+            "-t",
+            str(actual_len),
+            "-c",
+            "copy",  # no re-encoding, very fast
+            "-avoid_negative_ts",
+            "1",
             str(out_path),
         ]
 
@@ -167,7 +236,8 @@ def split_video(video_path: Path):
 
 def scan_and_patch():
     videos = sorted(
-        p for p in VIDEO_DIR_PATH.iterdir()
+        p
+        for p in VIDEO_DIR_PATH.iterdir()
         if p.is_file() and p.suffix.lower() in VIDEO_EXTENSIONS
     )
 

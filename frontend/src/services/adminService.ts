@@ -12,12 +12,17 @@ export interface User {
 
 export interface Camera {
   id: string;
+  name?: string;
   branch: string;
   ip_address: string;
   location: string;
   status: string;
+  image?: string;
   user_id?: string;
   starting_date?: string;
+  source_type?: string;
+  source_value?: string;
+  stream_url?: string;
 }
 
 export const usersAPI = {
@@ -120,8 +125,13 @@ export const plansAPI = {
 
 export const camerasAPI = {
   // Get all cameras
-  async getAll(token: string): Promise<Camera[]> {
-    const response = await fetch(`${API_BASE_URL}/auth/cameras/`, {
+  async getAll(token: string, userId?: string): Promise<Camera[]> {
+    const url = new URL(`${API_BASE_URL}/auth/cameras/`);
+    if (userId) {
+      url.searchParams.set("user_id", userId);
+    }
+
+    const response = await fetch(url.toString(), {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -157,6 +167,8 @@ export const camerasAPI = {
       location: string;
       status?: string;
       user_id?: string;
+      source_type?: string;
+      source_value?: string;
     },
     token: string
   ): Promise<any> {
@@ -187,5 +199,34 @@ export const camerasAPI = {
     const result = await response.json();
     console.log("✅ Camera created successfully:", result);
     return result;
+  },
+
+  async test(
+    cameraData: {
+      source_type: string;
+      source_value: string;
+    },
+    token: string,
+  ): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/auth/cameras/test`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(cameraData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      try {
+        const error = JSON.parse(errorText);
+        throw new Error(error.detail || "Failed to test camera source");
+      } catch {
+        throw new Error(`Failed to test camera source: ${response.status} ${response.statusText}`);
+      }
+    }
+
+    return response.json();
   },
 };

@@ -3,7 +3,15 @@ import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, Camera, Wifi, MapPin, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Camera,
+  Wifi,
+  MapPin,
+  CheckCircle,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 import { camerasAPI } from "../services/adminService";
 import {
   Select,
@@ -37,6 +45,7 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
     ipAddress: "",
     location: "",
     userId: "",
+    sourceType: "ip" as "ip" | "video",
     status: "Offline" as "Online" | "Offline",
   });
 
@@ -45,10 +54,13 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
     ipAddress: "",
     location: "",
     userId: "",
+    sourceType: "",
   });
 
   const [testingConnection, setTestingConnection] = useState(false);
-  const [connectionResult, setConnectionResult] = useState<"success" | "error" | null>(null);
+  const [connectionResult, setConnectionResult] = useState<
+    "success" | "error" | null
+  >(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
@@ -57,6 +69,7 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
       ipAddress: "",
       location: "",
       userId: "",
+      sourceType: "",
     };
 
     if (!formData.name.trim()) {
@@ -64,8 +77,14 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
     }
 
     if (!formData.ipAddress.trim()) {
-      newErrors.ipAddress = "IP address is required";
-    } else if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(formData.ipAddress)) {
+      newErrors.ipAddress =
+        formData.sourceType === "video"
+          ? "Video URL or file name is required"
+          : "IP address is required";
+    } else if (
+      formData.sourceType === "ip" &&
+      !/^(\d{1,3}\.){3}\d{1,3}$/.test(formData.ipAddress)
+    ) {
       newErrors.ipAddress = "Invalid IP address format (e.g., 192.168.1.100)";
     }
 
@@ -78,27 +97,44 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
     }
 
     setErrors(newErrors);
-    return !newErrors.name && !newErrors.ipAddress && !newErrors.location && !newErrors.userId;
+    return (
+      !newErrors.name &&
+      !newErrors.ipAddress &&
+      !newErrors.location &&
+      !newErrors.userId
+    );
   };
 
   const handleTestConnection = () => {
     if (!formData.ipAddress.trim()) {
-      setErrors({ ...errors, ipAddress: "Enter IP address first" });
+      setErrors({ ...errors, ipAddress: "Enter a source first" });
       return;
     }
 
     setTestingConnection(true);
     setConnectionResult(null);
 
-    // Simulate connection test
-    setTimeout(() => {
-      const success = Math.random() > 0.3;
-      setConnectionResult(success ? "success" : "error");
-      if (success) {
+    (async () => {
+      try {
+        const token = localStorage.getItem("token") || "admin_bypass";
+        const result = await camerasAPI.test(
+          {
+            source_type: formData.sourceType,
+            source_value: formData.ipAddress,
+          },
+          token,
+        );
+
+        console.log("✅ Camera test result:", result);
+        setConnectionResult("success");
         setFormData({ ...formData, status: "Online" });
+      } catch (error) {
+        console.error("❌ Camera test failed:", error);
+        setConnectionResult("error");
+      } finally {
+        setTestingConnection(false);
       }
-      setTestingConnection(false);
-    }, 2000);
+    })();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,7 +144,7 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
     try {
       setIsLoading(true);
       let token = localStorage.getItem("token");
-      
+
       // Admin bypass if no token
       if (!token) {
         token = "admin_bypass";
@@ -120,8 +156,10 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
         location: formData.location,
         status: formData.status === "Online" ? "active" : "inactive",
         user_id: formData.userId,
+        source_type: formData.sourceType,
+        source_value: formData.ipAddress,
       };
-      
+
       console.log("📤 Creating camera with data:", cameraData);
       const result = await camerasAPI.create(cameraData, token);
       console.log("✅ Camera created:", result);
@@ -149,7 +187,9 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Add New Camera</h1>
-            <p className="text-slate-600 mt-1">Configure a new camera for the KitchenEye system</p>
+            <p className="text-slate-600 mt-1">
+              Configure a new camera for the KitchenEye system
+            </p>
           </div>
         </div>
 
@@ -164,9 +204,13 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
               </label>
               <Select
                 value={formData.userId}
-                onValueChange={(value: string) => setFormData({ ...formData, userId: value })}
+                onValueChange={(value: string) =>
+                  setFormData({ ...formData, userId: value })
+                }
               >
-                <SelectTrigger className={errors.userId ? "border-red-500" : ""}>
+                <SelectTrigger
+                  className={errors.userId ? "border-red-500" : ""}
+                >
                   <SelectValue placeholder="Select a user" />
                 </SelectTrigger>
                 <SelectContent>
@@ -174,17 +218,22 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
                     <SelectItem key={user.id} value={user.id}>
                       <div className="flex flex-col">
                         <span className="font-medium">{user.name}</span>
-                        <span className="text-xs text-slate-500">{user.email}</span>
+                        <span className="text-xs text-slate-500">
+                          {user.email}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.userId && <p className="text-sm text-red-500 mt-1">{errors.userId}</p>}
+              {errors.userId && (
+                <p className="text-sm text-red-500 mt-1">{errors.userId}</p>
+              )}
               {selectedUser && (
                 <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
                   <p className="text-sm text-blue-800">
-                    Camera will be assigned to <strong>{selectedUser.name}</strong>
+                    Camera will be assigned to{" "}
+                    <strong>{selectedUser.name}</strong>
                   </p>
                 </div>
               )}
@@ -199,23 +248,61 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
               <Input
                 placeholder="e.g., Main Kitchen Camera"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className={errors.name ? "border-red-500" : ""}
               />
-              {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
+              {errors.name && (
+                <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+              )}
             </div>
 
-            {/* IP Address */}
+            {/* Source Type */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Camera Source Type
+              </label>
+              <Select
+                value={formData.sourceType}
+                onValueChange={(value: "ip" | "video") =>
+                  setFormData({
+                    ...formData,
+                    sourceType: value,
+                    status: "Offline",
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose source type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ip">Camera IP</SelectItem>
+                  <SelectItem value="video">Local video file / URL</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Source Value */}
             <div>
               <label className="text-sm font-medium mb-2 flex items-center gap-2">
                 <Wifi className="w-4 h-4" />
-                IP Address <span className="text-red-500">*</span>
+                {formData.sourceType === "video"
+                  ? "Video URL / File name"
+                  : "IP Address"}
+                <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="192.168.1.100"
+                  placeholder={
+                    formData.sourceType === "video"
+                      ? "demo.mp4 or http://localhost:8000/videos/demo.mp4"
+                      : "192.168.1.100"
+                  }
                   value={formData.ipAddress}
-                  onChange={(e) => setFormData({ ...formData, ipAddress: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, ipAddress: e.target.value })
+                  }
                   className={errors.ipAddress ? "border-red-500" : ""}
                 />
                 <Button
@@ -238,25 +325,30 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
                   )}
                 </Button>
               </div>
-              {errors.ipAddress && <p className="text-sm text-red-500 mt-1">{errors.ipAddress}</p>}
+              {errors.ipAddress && (
+                <p className="text-sm text-red-500 mt-1">{errors.ipAddress}</p>
+              )}
               {connectionResult && (
-                <div className={`mt-2 p-3 rounded-lg flex items-center gap-2 ${
-                  connectionResult === "success" 
-                    ? "bg-green-50 border border-green-200" 
-                    : "bg-red-50 border border-red-200"
-                }`}>
+                <div
+                  className={`mt-2 p-3 rounded-lg flex items-center gap-2 ${
+                    connectionResult === "success"
+                      ? "bg-green-50 border border-green-200"
+                      : "bg-red-50 border border-red-200"
+                  }`}
+                >
                   {connectionResult === "success" ? (
                     <>
                       <CheckCircle className="w-5 h-5 text-green-600" />
                       <span className="text-sm text-green-800 font-medium">
-                        Connection successful! Camera is online.
+                        Source validated successfully. Camera can be added.
                       </span>
                     </>
                   ) : (
                     <>
                       <XCircle className="w-5 h-5 text-red-600" />
                       <span className="text-sm text-red-800 font-medium">
-                        Connection failed. Please check IP address and network.
+                        Connection failed. Please check the source and try
+                        again.
                       </span>
                     </>
                   )}
@@ -273,15 +365,21 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
               <Input
                 placeholder="e.g., Kitchen - Zone A"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
                 className={errors.location ? "border-red-500" : ""}
               />
-              {errors.location && <p className="text-sm text-red-500 mt-1">{errors.location}</p>}
+              {errors.location && (
+                <p className="text-sm text-red-500 mt-1">{errors.location}</p>
+              )}
             </div>
 
             {/* Status Display */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Current Status</label>
+              <label className="text-sm font-medium mb-2 block">
+                Current Status
+              </label>
               <Badge
                 className={
                   formData.status === "Online"
@@ -303,10 +401,20 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={onBack} className="flex-1" disabled={isLoading}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onBack}
+                className="flex-1"
+                disabled={isLoading}
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                disabled={isLoading}
+              >
                 {isLoading ? "Adding..." : "Add Camera"}
               </Button>
             </div>

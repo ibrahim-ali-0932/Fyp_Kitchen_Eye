@@ -4,6 +4,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Camera, ArrowLeft } from "lucide-react";
 import { resetPassword, loginUser } from "../services/authService";
+import { API_URL } from "../services/api";
 // import { useNavigate } from "react-router-dom"; // not used
 // import { auth } from "../firebase";
 // import { signInWithEmailAndPassword } from "firebase/auth";
@@ -203,8 +204,25 @@ export default function LoginPage({
       // Sign in using authService (will throw if not verified, per authService)
       const { idToken, user } = await loginUser(email, password);
 
-      // Store token in localStorage
-      localStorage.setItem("token", idToken);
+      // Ensure Firestore profile exists for admin panel visibility
+      const profileResponse = await fetch(`${API_URL}/auth/login/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      if (!profileResponse.ok) {
+        const profileError = await profileResponse.json().catch(() => ({}));
+        localStorage.removeItem("token");
+        localStorage.removeItem("token_uid");
+        localStorage.removeItem("user_email");
+        throw new Error(
+          profileError.detail ||
+            "Login succeeded but profile sync failed. Please try again.",
+        );
+      }
+
       console.log("Token stored successfully");
 
       // Login successful - Firebase authentication is sufficient

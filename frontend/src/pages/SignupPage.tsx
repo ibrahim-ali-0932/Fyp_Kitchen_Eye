@@ -13,9 +13,11 @@ import { Camera, ArrowLeft, EyeOff } from "lucide-react";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
-  signOut, // add this
+  signOut,
+  deleteUser,
 } from "firebase/auth";
 import { auth } from "../firebase";
+import { API_URL } from "../services/api";
 import {
   Shield,
   TrendingUp,
@@ -39,7 +41,6 @@ import {
 } from "lucide-react";
 import { motion, useInView, Variants } from "motion/react";
 import { useRef, useEffect, useMemo } from "react";
-import { signup } from "../services/authService";
 
 interface SignupPageProps {
   onSignup: (success: boolean) => void;
@@ -264,7 +265,7 @@ export default function SignupPage({
       }
 
       // Step 5: Send profile data to backend with token
-      const response = await fetch("http://localhost:8000/auth/signup/", {
+      const response = await fetch(`${API_URL}/auth/signup/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -279,7 +280,12 @@ export default function SignupPage({
       try {
         data = await response.json();
       } catch (jsonError) {
-        // If response is not JSON, sign out user, clear token, and show error
+        // If response is not JSON, remove the orphaned auth account and show error
+        try {
+          await deleteUser(user);
+        } catch (deleteError) {
+          console.error("Failed to delete orphaned auth user:", deleteError);
+        }
         await signOut(auth);
         localStorage.removeItem("token");
         setErrorMsg("Failed to create profile. Please try again.");
@@ -305,7 +311,12 @@ export default function SignupPage({
         // Redirect to LOGIN page (not dashboard) - user must verify email and login
         onLogin();
       } else {
-        // Profile creation failed - sign out user and clear any tokens
+        // Profile creation failed - remove orphaned auth account and clear tokens
+        try {
+          await deleteUser(user);
+        } catch (deleteError) {
+          console.error("Failed to delete orphaned auth user:", deleteError);
+        }
         await signOut(auth);
         localStorage.removeItem("token");
 
@@ -334,18 +345,23 @@ export default function SignupPage({
     } catch (err: any) {
       console.error(err);
 
-      // If user was created but something else failed, sign them out and clear token
+      // If user was created but something else failed, remove the auth account
       try {
         const currentUser = auth.currentUser;
         if (currentUser) {
-          await signOut(auth);
-          console.log("Signed out user due to error");
+          try {
+            await deleteUser(currentUser);
+          } catch (deleteError) {
+            console.error("Failed to delete orphaned auth user:", deleteError);
+            await signOut(auth);
+          }
+          console.log("Removed orphaned auth user due to error");
         }
         // Always clear any old token on error
         localStorage.removeItem("token");
         console.log("Token cleared from localStorage due to error");
       } catch (signOutError) {
-        console.error("Error signing out:", signOutError);
+        console.error("Error cleaning up auth user:", signOutError);
       }
 
       let errorMessage = "Unable to create account. Please try again.";

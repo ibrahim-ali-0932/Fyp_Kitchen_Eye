@@ -42,6 +42,9 @@ export interface CameraInfo {
   status: "Online" | "Offline";
   thumbnail: string;
   userId: string;
+  sourceType?: "ip" | "video";
+  sourceValue?: string;
+  streamUrl?: string;
 }
 
 interface AdminPanelProps {
@@ -172,14 +175,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
     setIsLoading(true);
 
     try {
-      // Admin bypass - create a dummy token for admin operations
-      let token = localStorage.getItem("token");
-
-      if (!token) {
-        console.warn("⚠️ No token found - using admin mode");
-        // For admin, we'll try without authentication first
-        token = "admin_bypass";
-      }
+      const token = "admin_bypass";
 
       console.log("📡 Fetching users and cameras...");
       const [usersData, camerasData, plansData] = await Promise.all([
@@ -216,6 +212,9 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
           thumbnail:
             "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=300&h=200&fit=crop",
           userId: camera.user_id || "",
+          sourceType: (camera.source_type as CameraInfo["sourceType"]) || "ip",
+          sourceValue: camera.source_value || camera.ip_address,
+          streamUrl: camera.stream_url || undefined,
         }),
       );
 
@@ -647,7 +646,19 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-4 flex-1">
                             <div className="w-20 h-20 bg-slate-100 rounded-lg overflow-hidden relative">
-                              {camera.thumbnail ? (
+                              {camera.streamUrl &&
+                              camera.status === "Online" ? (
+                                <video
+                                  key={camera.streamUrl}
+                                  autoPlay
+                                  loop
+                                  muted
+                                  playsInline
+                                  className="w-full h-full object-cover"
+                                >
+                                  <source src={camera.streamUrl} />
+                                </video>
+                              ) : camera.thumbnail ? (
                                 <img
                                   src={camera.thumbnail}
                                   alt={camera.name}
@@ -683,6 +694,12 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                               </div>
                               <p className="text-sm text-slate-600 mb-1">
                                 IP: {camera.ipAddress}
+                              </p>
+                              <p className="text-sm text-slate-600 mb-1">
+                                Source:{" "}
+                                {camera.sourceType === "video"
+                                  ? "Local video"
+                                  : "Camera IP"}
                               </p>
                               <p className="text-sm text-slate-600">
                                 {camera.location}

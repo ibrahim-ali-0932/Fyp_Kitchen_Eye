@@ -12,13 +12,14 @@ export const loginUser = async (email: string, password: string) => {
   localStorage.removeItem("token");
   localStorage.removeItem("token_uid");
   localStorage.removeItem("isAuthenticated");
+  localStorage.removeItem("user_email");
 
   const userCredential = await signInWithEmailAndPassword(
     auth,
     email,
     password,
   );
-  const user = userCredential.user;
+  const { user } = userCredential;
 
   if (!user.emailVerified) {
     throw new Error(
@@ -29,6 +30,7 @@ export const loginUser = async (email: string, password: string) => {
   const idToken = await user.getIdToken();
   localStorage.setItem("token", idToken);
   localStorage.setItem("token_uid", user.uid);
+  localStorage.setItem("user_email", user.email || email);
 
   return { idToken, user };
 };

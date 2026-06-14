@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from firebase_admin import auth as firebase_auth
+from ..router.signup import ensure_user_profile
 
 
 CLOCK_SKEW_SECONDS = 10
@@ -20,6 +21,13 @@ async def login(Authorization: str = Header(None)):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Email not verified. Please verify your email first.",
             )
-        return {"uid": decoded["uid"], "email": decoded.get("email")}
+
+        uid = decoded["uid"]
+        email = decoded.get("email", "")
+        ensure_user_profile(uid, email)
+
+        return {"uid": uid, "email": email}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))

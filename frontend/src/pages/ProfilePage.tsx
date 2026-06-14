@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { authorizedFetch } from "../services/authToken";
 import { API_URL } from "../services/api";
+import { auth } from "../firebase";
 
 interface UserProfile {
   email: string;
@@ -49,9 +50,6 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
       try {
         const response = await authorizedFetch(`${API_URL}/auth/profile/`, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
         });
 
         if (response.ok) {
@@ -66,7 +64,11 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
           setFormData({
             Fullname: data.Fullname || "",
             Branchname: data.Branchname || "",
-            email: data.email || "",
+            email:
+              data.email ||
+              auth.currentUser?.email ||
+              localStorage.getItem("user_email") ||
+              "",
             address: data.address || "",
           });
         } else {
@@ -74,12 +76,12 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
           console.error(
             "❌ Failed to fetch profile:",
             response.status,
-            errorData
+            errorData,
           );
           setError(
             `Failed to fetch profile: ${
               errorData.detail || response.statusText
-            }`
+            }`,
           );
         }
       } catch (error) {
@@ -133,7 +135,11 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
         setFormData({
           Fullname: data.Fullname || "",
           Branchname: data.Branchname || "",
-          email: data.email || "",
+          email:
+            data.email ||
+            auth.currentUser?.email ||
+            localStorage.getItem("user_email") ||
+            "",
           address: data.address || "",
         });
         setIsEditing(false);
@@ -163,7 +169,11 @@ export default function ProfilePage({ onProfileUpdate }: ProfilePageProps) {
       setFormData({
         Fullname: userProfile.Fullname || "",
         Branchname: userProfile.Branchname || "",
-        email: userProfile.email || "",
+        email:
+          userProfile.email ||
+          auth.currentUser?.email ||
+          localStorage.getItem("user_email") ||
+          "",
         address: userProfile.address || "",
       });
     }

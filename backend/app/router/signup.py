@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from firebase_admin import auth as firebase_auth
+from datetime import datetime
 from ..database.db import db
 
 
@@ -11,6 +12,49 @@ router = APIRouter(prefix="/signup", tags=["signup"])
 def normalize_organization_name(value: str) -> str:
     # Normalize for duplicate checks: trim, collapse internal spaces, lowercase.
     return " ".join(value.strip().split()).lower()
+
+
+def build_user_profile(
+    email: str,
+    full_name: str = "",
+    organization: str = "",
+    address: str = "",
+    role: str = "Viewer",
+    status: str = "Active",
+    plan: str = "basic",
+) -> dict:
+    organization_value = str(organization or "").strip()
+    full_name_value = str(full_name or "").strip()
+    address_value = str(address or "").strip()
+    normalized_organization = normalize_organization_name(organization_value)
+
+    profile_data = {
+        "email": email,
+        "fullName": full_name_value,
+        "branchName": organization_value,
+        "address": address_value,
+        "role": role,
+        "status": status,
+        "plan": plan,
+        "createdAt": datetime.now().isoformat(),
+    }
+
+    if normalized_organization:
+        profile_data["branchNameNormalized"] = normalized_organization
+
+    return profile_data
+
+
+def ensure_user_profile(uid: str, email: str) -> dict:
+    """Create a Firestore user document if one does not exist yet."""
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
+    if user_doc.exists:
+        return user_doc.to_dict() or {}
+
+    profile_data = build_user_profile(email=email)
+    user_ref.set(profile_data)
+    return profile_data
 
 
 @router.post("/")
@@ -132,13 +176,12 @@ async def signup(request: Request, Authorization: str = Header(None)):
                     detail="This organization already exists. You cannot register with this organization.",
                 )
         
-        profile_data = {
-            "email": user_email,
-            "branchName": organization_value,  # Save exactly what was sent (after trim)
-            "branchNameNormalized": normalized_organization,
-            "fullName": full_name_value,       # Save exactly what was sent (after trim)
-            "address": address_value           # Save exactly what was sent (after trim)
-        }
+        profile_data = build_user_profile(
+            email=user_email,
+            full_name=full_name_value,
+            organization=organization_value,
+            address=address_value,
+        )
         
         print(f"🔵 ===== SAVING PROFILE TO FIRESTORE =====")
         print(f"🔵 UID: {uid}")

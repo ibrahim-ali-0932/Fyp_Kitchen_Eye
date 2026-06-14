@@ -29,6 +29,7 @@ import Subscription from "./Subscription";
 import NotificationBell from "../components/NotificationBell";
 import { authorizedFetch } from "../services/authToken";
 import { API_URL } from "../services/api";
+import { auth } from "../firebase";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface DashboardLayoutProps {
@@ -102,6 +103,15 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const getEmailFallback = () => {
+    return (
+      userProfile?.email ||
+      auth.currentUser?.email ||
+      localStorage.getItem("user_email") ||
+      "No email"
+    );
+  };
+
   const handlePageChange = (page: Page, closeMobileSidebar = false) => {
     const targetPath = PAGE_TO_PATH[page];
     if (location.pathname !== targetPath) {
@@ -119,9 +129,6 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
       setLoading(true);
       const response = await authorizedFetch(`${API_URL}/auth/profile/`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
 
       if (response.ok) {
@@ -129,7 +136,11 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         const hasEmail = data.email && data.email.trim() !== "";
         const hasFullname = data.Fullname && data.Fullname.trim() !== "";
         const profileData = {
-          email: data.email || "No email",
+          email:
+            data.email ||
+            auth.currentUser?.email ||
+            localStorage.getItem("user_email") ||
+            "No email",
           Fullname: data.Fullname || "",
           Branchname: data.Branchname || "",
           address: data.address || "",
@@ -141,7 +152,10 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
 
         // Set default values on any error
         setUserProfile({
-          email: "No email",
+          email:
+            auth.currentUser?.email ||
+            localStorage.getItem("user_email") ||
+            "No email",
           Fullname: "User",
           Branchname: "",
           address: "",
@@ -159,7 +173,10 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
 
       // Set default values on exception
       setUserProfile({
-        email: "No email",
+        email:
+          auth.currentUser?.email ||
+          localStorage.getItem("user_email") ||
+          "No email",
         Fullname: "User",
         Branchname: "",
         address: "",
@@ -332,7 +349,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
                   {loading ? "Loading..." : userProfile?.Fullname || "User"}
                 </p>
                 <p className="text-sm text-slate-400 truncate">
-                  {loading ? "Loading..." : userProfile?.email || "No email"}
+                  {loading ? "Loading..." : getEmailFallback()}
                 </p>
               </div>
             )}
@@ -420,7 +437,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
                     {loading ? "Loading..." : userProfile?.Fullname || "User"}
                   </p>
                   <p className="text-sm text-slate-400 truncate">
-                    {loading ? "Loading..." : userProfile?.email || "No email"}
+                    {loading ? "Loading..." : getEmailFallback()}
                   </p>
                 </div>
               </div>
