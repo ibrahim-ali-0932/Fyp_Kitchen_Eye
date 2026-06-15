@@ -98,6 +98,75 @@ def _date_strings_for_range(days: int, offset_days: int = 0) -> list[str]:
     return result
 
 
+def _parse_violation_datetime(raw_value) -> datetime | None:
+    if raw_value is None:
+        return None
+
+    text = str(raw_value).strip().replace("Z", "+00:00")
+    if not text:
+        return None
+
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _violation_docs_for_user(user_id: str, camera_ids: list[str] | None = None) -> list[dict]:
+    docs = [d.to_dict() or {} for d in db.collection("violations").where("user_id", "==", user_id).stream()]
+
+    if camera_ids is not None:
+        if len(camera_ids) == 0:
+            return []
+        camera_id_set = set(camera_ids)
+        docs = [d for d in docs if str(d.get("camera_id") or "") in camera_id_set]
+
+    return docs
+
+
+def _aggregate_violations_for_dates(
+    user_id: str,
+    date_strings: list[str],
+    camera_ids: list[str] | None,
+) -> dict:
+    targets = set(date_strings)
+    totals = {
+        "apron_count": 0,
+        "gloves_count": 0,
+        "hairnet_count": 0,
+        "fire_count": 0,
+    }
+
+    for row in _violation_docs_for_user(user_id, camera_ids):
+        occurred_at = _parse_violation_datetime(row.get("violation_time") or row.get("timestamp"))
+        if not occurred_at or occurred_at.date().isoformat() not in targets:
+            continue
+
+        category = _map_category(str(row.get("violation_type", "")))
+        if not category:
+            continue
+
+        totals[f"{category}_count"] += 1
+
+    totals["total_count"] = (
+        totals["apron_count"]
+        + totals["gloves_count"]
+        + totals["hairnet_count"]
+        + totals["fire_count"]
+    )
+    totals["hygiene_score"] = _hygiene_score(
+        totals["apron_count"],
+        totals["gloves_count"],
+        totals["hairnet_count"],
+        totals["fire_count"],
+    )
+    return totals
+
+
 def update_stats(user_id: str, violation_type: str):
     """Called after every violation write. Updates stats_daily, stats_summary, violations_chart."""
     today     = datetime.now(timezone.utc).date().isoformat()
@@ -171,7 +240,7 @@ def update_stats(user_id: str, violation_type: str):
     })
 
 
-def build_summary_for_days(user_id: str, days: int) -> dict:
+def build_summary_for_days(user_id: str, days: int, camera_ids: list[str] | None = None) -> dict:
     days = max(1, int(days or 1))
     if days == 2:
         current_dates = _date_strings_for_range(1, offset_days=1)
@@ -180,8 +249,12 @@ def build_summary_for_days(user_id: str, days: int) -> dict:
         current_dates = _date_strings_for_range(days)
         previous_dates = _date_strings_for_range(days, offset_days=days)
 
-    current = _aggregate_days(user_id, current_dates)
-    previous = _aggregate_days(user_id, previous_dates)
+    if camera_ids is None:
+        current = _aggregate_days(user_id, current_dates)
+        previous = _aggregate_days(user_id, previous_dates)
+    else:
+        current = _aggregate_violations_for_dates(user_id, current_dates, camera_ids)
+        previous = _aggregate_violations_for_dates(user_id, previous_dates, camera_ids)
 
     return {
         "user_id": user_id,
@@ -200,10 +273,49 @@ def build_summary_for_days(user_id: str, days: int) -> dict:
     }
 
 
-def build_chart_days(user_id: str, days: int = 30) -> list:
+def build_chart_days(user_id: str, days: int = 30, camera_ids: list[str] | None = None) -> list[dict]:
     """Returns [{date, apron, gloves, hairnet, fire}] for last N days. Missing days zero-filled."""
     today = datetime.now(timezone.utc).date()
     result = []
+
+    if camera_ids is not None:
+        if len(camera_ids) == 0:
+            for i in range(days - 1, -1, -1):
+                date_str = (today - timedelta(days=i)).isoformat()
+                result.append({"date": date_str, "apron": 0, "gloves": 0, "hairnet": 0, "fire": 0})
+            return result
+
+        counts_by_day: dict[str, dict[str, int]] = {}
+        for row in _violation_docs_for_user(user_id, camera_ids):
+            occurred_at = _parse_violation_datetime(row.get("violation_time") or row.get("timestamp"))
+            if not occurred_at:
+                continue
+
+            category = _map_category(str(row.get("violation_type", "")))
+            if not category:
+                continue
+
+            day_key = occurred_at.date().isoformat()
+            day_counts = counts_by_day.setdefault(day_key, {
+                "apron": 0,
+                "gloves": 0,
+                "hairnet": 0,
+                "fire": 0,
+            })
+            day_counts[category] += 1
+
+        for i in range(days - 1, -1, -1):
+            date_str = (today - timedelta(days=i)).isoformat()
+            day_counts = counts_by_day.get(date_str, {})
+            result.append({
+                "date": date_str,
+                "apron": int(day_counts.get("apron", 0) or 0),
+                "gloves": int(day_counts.get("gloves", 0) or 0),
+                "hairnet": int(day_counts.get("hairnet", 0) or 0),
+                "fire": int(day_counts.get("fire", 0) or 0),
+            })
+        return result
+
     for i in range(days - 1, -1, -1):
         date_str = (today - timedelta(days=i)).isoformat()
         d = _get_daily(user_id, date_str)
@@ -215,6 +327,46 @@ def build_chart_days(user_id: str, days: int = 30) -> list:
             "fire":    d["fire_count"],
         })
     return result
+
+
+def _compute_summary_for_cameras(user_id: str, camera_ids: list[str] | None) -> dict:
+    if camera_ids is not None and len(camera_ids) == 0:
+        return {
+            "user_id": user_id,
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+            "apron_count": 0,
+            "gloves_count": 0,
+            "hairnet_count": 0,
+            "fire_count": 0,
+            "total_count": 0,
+            "hygiene_score": 100,
+            "apron_change_pct": 0,
+            "gloves_change_pct": 0,
+            "hairnet_change_pct": 0,
+            "fire_change_pct": 0,
+        }
+
+    current_dates = _date_strings_for_range(1)
+    previous_dates = _date_strings_for_range(1, offset_days=1)
+    current = _aggregate_violations_for_dates(user_id, current_dates, camera_ids)
+    previous = _aggregate_violations_for_dates(user_id, previous_dates, camera_ids)
+
+    return {
+        "user_id": user_id,
+        "last_updated": datetime.now(timezone.utc).isoformat(),
+        "notification_count": int((db.collection("stats_summary").document(user_id).get().to_dict() or {}).get("notification_count", 0) or 0),
+        "apron_count": current["apron_count"],
+        "gloves_count": current["gloves_count"],
+        "hairnet_count": current["hairnet_count"],
+        "fire_count": current["fire_count"],
+        "total_count": current["total_count"],
+        "hygiene_score": current["hygiene_score"],
+        "apron_change_pct": _pct_change(current["apron_count"], previous["apron_count"]),
+        "gloves_change_pct": _pct_change(current["gloves_count"], previous["gloves_count"]),
+        "hairnet_change_pct": _pct_change(current["hairnet_count"], previous["hairnet_count"]),
+        "fire_change_pct": _pct_change(current["fire_count"], previous["fire_count"]),
+    }
 
 
 def empty_summary(user_id: str) -> dict:

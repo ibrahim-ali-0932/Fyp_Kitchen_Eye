@@ -7,6 +7,7 @@ import {
   Camera,
   Wifi,
   WifiOff,
+  Save,
 } from "lucide-react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -21,6 +22,7 @@ import {
   plansAPI,
   User as APIUser,
   Camera as APICamera,
+  PlanLimits,
 } from "../services/adminService";
 
 export interface User {
@@ -156,6 +158,14 @@ const mockCameras: CameraInfo[] = [
 export function AdminPanel({ onLogout }: AdminPanelProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [plans, setPlans] = useState<Array<{ id: string; name?: string }>>([]);
+  const [planLimits, setPlanLimits] = useState<PlanLimits[]>([]);
+  const [limitsPlanId, setLimitsPlanId] = useState("basic");
+  const [limitsDraft, setLimitsDraft] = useState({
+    max_branches: 1,
+    max_cameras: 1,
+    max_users: 1,
+  });
+  const [savingLimits, setSavingLimits] = useState(false);
   const [cameras, setCameras] = useState<CameraInfo[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -178,10 +188,11 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
       const token = "admin_bypass";
 
       console.log("📡 Fetching users and cameras...");
-      const [usersData, camerasData, plansData] = await Promise.all([
+      const [usersData, camerasData, plansData, limitsData] = await Promise.all([
         usersAPI.getAll(token),
         camerasAPI.getAll(token),
         plansAPI.getAll(token),
+        plansAPI.getLimits(token),
       ]);
 
       console.log("📥 Received data:", {
@@ -220,7 +231,24 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
 
       setUsers(transformedUsers);
       setPlans(plansData || []);
+      setPlanLimits(limitsData || []);
       setCameras(transformedCameras);
+
+      if ((limitsData || []).length > 0) {
+        const preferredPlan = (limitsData || []).some((p: PlanLimits) => p.plan === limitsPlanId)
+          ? limitsPlanId
+          : (limitsData || [])[0].plan;
+        setLimitsPlanId(preferredPlan);
+        const selectedLimit = (limitsData || []).find((p: PlanLimits) => p.plan === preferredPlan);
+        if (selectedLimit) {
+          setLimitsDraft({
+            max_branches: selectedLimit.max_branches,
+            max_cameras: selectedLimit.max_cameras,
+            max_users: selectedLimit.max_users,
+          });
+        }
+      }
+
       if (transformedUsers.length > 0 && !selectedUserId) {
         setSelectedUserId(transformedUsers[0].id);
       }
@@ -337,6 +365,123 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
       alert("Failed to update plan. See console for details.");
     }
   };
+
+  const handleLimitsPlanChange = (value: string) => {
+    setLimitsPlanId(value);
+    const selected = planLimits.find((p) => p.plan === value);
+    if (!selected) return;
+    setLimitsDraft({
+      max_branches: selected.max_branches,
+      max_cameras: selected.max_cameras,
+      max_users: selected.max_users,
+    });
+  };
+
+  const parseLimitInput = (value: string) => {
+    if (!value.trim()) return 0;
+    const parsed = Number(value);
+    if (Number.isNaN(parsed)) return 0;
+    return Math.max(-1, Math.floor(parsed));
+  };
+
+  const handleSaveLimits = async () => {
+    try {
+      setSavingLimits(true);
+      const token = localStorage.getItem("token") || "admin_bypass";
+      const updated = await plansAPI.updateLimits(limitsPlanId, limitsDraft, token);
+
+      setPlanLimits((prev) => {
+        const found = prev.some((p) => p.plan === updated.plan);
+        if (!found) return [...prev, updated];
+        return prev.map((p) => (p.plan === updated.plan ? updated : p));
+      });
+
+      alert("Plan limits updated successfully");
+    } catch (err: any) {
+      console.error("Failed to save plan limits", err);
+      alert(err?.message || "Failed to save plan limits");
+    } finally {
+      setSavingLimits(false);
+    }
+  };
+
+  const planLimitsCard = (
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
+        <div>
+          <h2 className="text-xl font-semibold">Plan Quantitative Limits</h2>
+          <p className="text-sm text-slate-600 mt-1">
+            Configure numeric limits per plan. Use -1 for unlimited.
+          </p>
+        </div>
+        <div>
+          <select
+            value={limitsPlanId}
+            onChange={(e) => handleLimitsPlanChange(e.target.value)}
+            className="border rounded px-3 py-2"
+          >
+            {planLimits.map((plan) => (
+              <option key={plan.plan} value={plan.plan}>
+                {plan.plan.toUpperCase()}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="text-sm text-slate-600">Max Cameras</label>
+          <Input
+            type="number"
+            min={-1}
+            value={limitsDraft.max_cameras}
+            onChange={(e) =>
+              setLimitsDraft((prev) => ({
+                ...prev,
+                max_cameras: parseLimitInput(e.target.value),
+              }))
+            }
+          />
+        </div>
+        <div>
+          <label className="text-sm text-slate-600">Max Branches</label>
+          <Input
+            type="number"
+            min={-1}
+            value={limitsDraft.max_branches}
+            onChange={(e) =>
+              setLimitsDraft((prev) => ({
+                ...prev,
+                max_branches: parseLimitInput(e.target.value),
+              }))
+            }
+          />
+        </div>
+        <div>
+          <label className="text-sm text-slate-600">Max Users</label>
+          <Input
+            type="number"
+            min={-1}
+            value={limitsDraft.max_users}
+            onChange={(e) =>
+              setLimitsDraft((prev) => ({
+                ...prev,
+                max_users: parseLimitInput(e.target.value),
+              }))
+            }
+          />
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <Button onClick={handleSaveLimits} disabled={savingLimits || !limitsPlanId}>
+          <Save className="w-4 h-4 mr-2" />
+          {savingLimits ? "Saving..." : "Save Limits"}
+        </Button>
+      </div>
+    </Card>
+  );
 
   // Loading state
   if (isLoading) {
@@ -507,6 +652,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
 
         {/* RIGHT SECTION - User Details + Camera Management */}
         <div className="flex-1 overflow-y-auto bg-slate-50">
+          <div className="p-6 pb-0">{planLimitsCard}</div>
           {selectedUser ? (
             <div className="p-6 space-y-6">
               {/* User Details Card */}
@@ -721,7 +867,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
               </Card>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-[calc(100%-220px)]">
               <p className="text-slate-500">Select a user to view details</p>
             </div>
           )}

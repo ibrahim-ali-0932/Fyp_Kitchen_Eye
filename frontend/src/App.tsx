@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
@@ -127,6 +127,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      <Route path="/branches" element={<Navigate to="/dashboard/branches" replace />} />
 
       {/* Catch-all route - redirect to home */}
       <Route

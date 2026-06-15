@@ -9,6 +9,7 @@ export async function generateViolationReport(params: {
   outputFormat: ReportFormat;
   startDate?: string;
   endDate?: string;
+  branchId?: string;
   violationIds?: string[];
   includeImages?: boolean;
 }): Promise<void> {
@@ -22,6 +23,7 @@ export async function generateViolationReport(params: {
       output_format: params.outputFormat,
       start_date: params.startDate,
       end_date: params.endDate,
+      branch_id: params.branchId,
       violation_ids: params.violationIds,
       include_images: params.includeImages ?? false,
     }),

@@ -12,8 +12,10 @@ import {
 } from "../components/ui/select";
 import { Calendar, Download, FileText, Loader2 } from "lucide-react";
 import { generateViolationReport } from "../services/reportService";
+import BranchSelector from "../components/BranchSelector";
 
 export default function Reports() {
+  const [branchId, setBranchId] = useState("all");
   const [reportType, setReportType] = useState<"weekly" | "monthly" | "quarterly" | "custom">("monthly");
   const [outputFormat, setOutputFormat] = useState<"csv" | "pdf">("pdf");
   const [startDate, setStartDate] = useState("");
@@ -32,6 +34,7 @@ export default function Reports() {
         outputFormat,
         startDate: reportType === "custom" ? startDate : undefined,
         endDate: reportType === "custom" ? endDate : undefined,
+        branchId,
         includeImages: outputFormat === "pdf",
       });
       setSuccess(`Report generated and downloaded as ${outputFormat.toUpperCase()}.`);
@@ -80,6 +83,8 @@ export default function Reports() {
           Generate and download compliance reports for audits and analysis
         </p>
       </div>
+
+      <BranchSelector value={branchId} onChange={setBranchId} />
 
       {/* Generate New Report */}
       <Card className="p-6 bg-gradient-to-br from-blue-50 to-white border-blue-100">

@@ -12,6 +12,7 @@ import { Input } from "../components/ui/input";
 import { API_URL } from "../services/api";
 import { authorizedFetch } from "../services/authToken";
 import { fetchUserViolations, type ViolationRecord } from "../services/violationsService";
+import BranchSelector from "../components/BranchSelector";
 
 type AlertCategory = "apron" | "gloves" | "hairnet" | "fire";
 
@@ -136,6 +137,7 @@ function buildViolationImagePayload(violationId: string, imageDataUrl: string | 
 }
 
 export default function NotificationSettings() {
+  const [branchId, setBranchId] = useState("all");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [isReceivingEmails, setIsReceivingEmails] = useState(true);
   const [recipientEmail, setRecipientEmail] = useState("f223367@cfd.nu.edu.pk");
@@ -172,7 +174,7 @@ export default function NotificationSettings() {
   );
 
   const fetchAllViolations = async () => {
-    const raw = await fetchUserViolations();
+    const raw = await fetchUserViolations({ branchId });
     const mapped = raw
       .map(mapViolation)
       .filter((item): item is MappedViolation => Boolean(item))
@@ -269,6 +271,7 @@ export default function NotificationSettings() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
 
     const init = async () => {
       try {
@@ -291,7 +294,7 @@ export default function NotificationSettings() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [branchId]);
 
   useEffect(() => {
     if (!isReceivingEmails) {
@@ -309,7 +312,7 @@ export default function NotificationSettings() {
     return () => {
       window.clearInterval(interval);
     };
-  }, [isReceivingEmails]);
+  }, [isReceivingEmails, branchId]);
 
   const startReceivingEmails = () => {
     setEmailNotifications(true);
@@ -354,6 +357,8 @@ export default function NotificationSettings() {
         <h1 className="text-2xl font-semibold">Notification Settings</h1>
         <p className="text-slate-600 mt-1">Choose which violations trigger email alerts and attach the latest image when available.</p>
       </div>
+
+      <BranchSelector value={branchId} onChange={setBranchId} />
 
       <Card className="p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

@@ -22,6 +22,7 @@ import {
 } from "../components/ui/select";
 import { fetchDashboard, DashboardData } from "../services/statsService";
 import { fetchViolationImage } from "../services/violationsService";
+import BranchSelector from "../components/BranchSelector";
 
 const DAY_OPTIONS = [
   { label: "Today", value: 1 },
@@ -39,6 +40,7 @@ function getRangeLabel(days: number): string {
 
 export default function Dashboard() {
   const [days, setDays]       = useState(7);
+  const [branchId, setBranchId] = useState("all");
   const [data, setData]       = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
@@ -50,7 +52,7 @@ export default function Dashboard() {
   );
   const isLoadingRef = useRef(false);
 
-  const load = async (d: number) => {
+  const load = async (d: number, bid: string) => {
     if (isLoadingRef.current) {
       return;
     }
@@ -66,7 +68,7 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      const dashboard = await fetchDashboard(d);
+      const dashboard = await fetchDashboard(d, bid);
       setData(dashboard);
 
       const imagePairs = await Promise.all(
@@ -99,7 +101,7 @@ export default function Dashboard() {
   useEffect(() => {
     const onOnline = () => {
       setIsOffline(false);
-      load(days);
+      load(days, branchId);
     };
     const onOffline = () => {
       setIsOffline(true);
@@ -109,10 +111,10 @@ export default function Dashboard() {
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
 
-    load(days);
+    load(days, branchId);
     const iv = setInterval(() => {
       if (typeof navigator === "undefined" || navigator.onLine) {
-        load(days);
+        load(days, branchId);
       }
     }, 30000);
 
@@ -121,7 +123,7 @@ export default function Dashboard() {
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
     };
-  }, [days]);
+  }, [days, branchId]);
 
   useEffect(() => {
     return () => {
@@ -164,6 +166,8 @@ export default function Dashboard() {
           </SelectContent>
         </Select>
       </div>
+
+      <BranchSelector value={branchId} onChange={setBranchId} />
 
       {isOffline && (
         <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm">

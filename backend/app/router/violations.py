@@ -101,9 +101,23 @@ def _matches_search(payload: dict, search_text: str | None) -> bool:
     return needle in haystack
 
 
+def _camera_ids_for_branch(user_id: str, branch_id: str | None) -> set[str] | None:
+    if not branch_id or branch_id == "all":
+        return None
+
+    docs = (
+        db.collection("cameras")
+        .where("user_id", "==", user_id)
+        .where("branch_id", "==", branch_id)
+        .stream()
+    )
+    return {str((d.to_dict() or {}).get("camera_id") or d.id) for d in docs}
+
+
 def _list_user_violations(
     user_id: str,
     limit: int,
+    branch_id: str | None = None,
     today_only: bool = False,
     search: str | None = None,
     category: str | None = None,
@@ -115,10 +129,16 @@ def _list_user_violations(
     normalized_category = _normalize_category(category) if category else None
     normalized_status = status.lower() if status else None
     normalized_severity = severity.lower() if severity else None
+    camera_ids = _camera_ids_for_branch(user_id, branch_id)
+
+    if camera_ids is not None and len(camera_ids) == 0:
+        return []
 
     items = []
     for doc in db.collection("violations").where("user_id", "==", user_id).stream():
         d = doc.to_dict() or {}
+        if camera_ids is not None and str(d.get("camera_id") or "") not in camera_ids:
+            continue
         raw_timestamp = d.get("violation_time") or d.get("timestamp")
         occurred_at = _parse_timestamp(raw_timestamp)
 
@@ -156,6 +176,7 @@ def _list_user_violations(
 @router.get("/user")
 async def list_user_violations(
     limit: int = Query(default=100, ge=1, le=1000),
+    branch_id: str | None = Query(default=None),
     search: str | None = Query(default=None),
     category: str | None = Query(default=None),
     status: str | None = Query(default=None),
@@ -199,6 +220,7 @@ async def list_user_violations(
         return _list_user_violations(
             user_id=user_id,
             limit=limit,
+            branch_id=branch_id,
             today_only=False,
             search=search,
             category=category,

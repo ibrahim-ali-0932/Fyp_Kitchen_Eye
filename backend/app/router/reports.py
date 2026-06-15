@@ -25,6 +25,7 @@ class GenerateReportRequest(BaseModel):
 	end_date: str | None = None
 	violation_ids: list[str] | None = None
 	include_images: bool = False
+	branch_id: str | None = None
 
 
 def _parse_occurrence(raw: dict) -> datetime | None:
@@ -92,6 +93,23 @@ async def generate_report(
 
 	start_date, end_date = _date_range(payload)
 	requested_ids = {str(item) for item in (payload.violation_ids or [])}
+	branch_name = "All Branches"
+	camera_ids: set[str] | None = None
+
+	if payload.branch_id and payload.branch_id != "all":
+		camera_docs = (
+			db.collection("cameras")
+			.where("user_id", "==", user_id)
+			.where("branch_id", "==", payload.branch_id)
+			.stream()
+		)
+		camera_ids = {str((doc.to_dict() or {}).get("camera_id") or doc.id) for doc in camera_docs}
+
+		branch_doc = db.collection("branches").document(payload.branch_id).get()
+		if branch_doc.exists:
+			branch_name = str((branch_doc.to_dict() or {}).get("name") or "Unknown Branch")
+		else:
+			branch_name = "Unknown Branch"
 
 	records = []
 	seen_ids = set()
@@ -103,6 +121,8 @@ async def generate_report(
 		data = snap.to_dict() or {}
 		occurred_at = _parse_occurrence(data)
 		if not occurred_at:
+			continue
+		if camera_ids is not None and str(data.get("camera_id") or "") not in camera_ids:
 			continue
 		if not (start_date <= occurred_at.date() <= end_date):
 			continue
@@ -127,6 +147,8 @@ async def generate_report(
 			data = snap.to_dict() or {}
 			occurred_at = _parse_occurrence(data)
 			if not occurred_at:
+				continue
+			if camera_ids is not None and str(data.get("camera_id") or "") not in camera_ids:
 				continue
 			if not (start_date <= occurred_at.date() <= end_date):
 				continue
@@ -160,6 +182,7 @@ async def generate_report(
 		with open(path, "w", newline="", encoding="utf-8") as fp:
 			writer = csv.writer(fp)
 			writer.writerow(["Report Type", payload.report_type])
+			writer.writerow(["Branch", branch_name])
 			writer.writerow(["Start Date", start_date.isoformat()])
 			writer.writerow(["End Date", end_date.isoformat()])
 			writer.writerow(["Total Violations", len(records)])
@@ -185,6 +208,8 @@ async def generate_report(
 	y -= 24
 	pdf.setFont("Helvetica", 11)
 	pdf.drawString(40, y, f"Type: {payload.report_type.title()}   Range: {start_date.isoformat()} to {end_date.isoformat()}")
+	y -= 18
+	pdf.drawString(40, y, f"Branch: {branch_name}")
 	y -= 18
 	pdf.drawString(40, y, f"Total: {len(records)} | Apron: {totals['apron']} | Hair Net: {totals['hair_net']} | Gloves: {totals['gloves']} | Fire: {totals['fire']}")
 	y -= 26

@@ -18,6 +18,7 @@ import {
 import { Download, Search, Camera, Clock, Loader2 } from "lucide-react";
 import { fetchUserViolations, fetchViolationImage, ViolationRecord } from "../services/violationsService";
 import { generateViolationReport } from "../services/reportService";
+import BranchSelector from "../components/BranchSelector";
 
 function getSeverityColor(s: string) {
   return s === "Critical" ? "bg-red-100 text-red-700 border-red-200"
@@ -76,6 +77,7 @@ export default function ViolationHistory() {
   monthAgo.setDate(today.getDate() - 29);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [branchId, setBranchId] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSeverity, setSelectedSeverity] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -120,6 +122,7 @@ export default function ViolationHistory() {
       setLoading(true);
       const category = selectedCategory === "hairnet" ? "hair_net" : selectedCategory;
       const raw = await fetchUserViolations({
+        branchId,
         search: searchQuery,
         category,
         severity: selectedSeverity,
@@ -141,7 +144,7 @@ export default function ViolationHistory() {
   useEffect(() => {
     handleSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [branchId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -225,6 +228,7 @@ export default function ViolationHistory() {
         outputFormat: format,
         startDate,
         endDate,
+        branchId,
         violationIds: violations.map((v) => v.id),
         includeImages: format === "pdf",
       });
@@ -242,6 +246,8 @@ export default function ViolationHistory() {
         <h1 className="text-3xl mb-2">Violation History</h1>
         <p className="text-slate-600">View and manage all detected violations</p>
       </div>
+
+      <BranchSelector value={branchId} onChange={setBranchId} />
 
       {/* Filters */}
       <Card className="p-6">

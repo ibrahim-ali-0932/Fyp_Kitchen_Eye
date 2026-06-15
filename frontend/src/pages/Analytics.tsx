@@ -11,6 +11,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { fetchChart, fetchSummary, ChartDay, ViolationSummary } from "../services/statsService";
+import BranchSelector from "../components/BranchSelector";
 
 const DAY_OPTIONS = [
   { label: "Last 7 Days",  value: 7  },
@@ -20,14 +21,15 @@ const DAY_OPTIONS = [
 
 export default function Analytics() {
   const [days, setDays]         = useState(7);
+  const [branchId, setBranchId] = useState("all");
   const [chart, setChart]       = useState<ChartDay[]>([]);
   const [summary, setSummary]   = useState<ViolationSummary | null>(null);
   const [loading, setLoading]   = useState(true);
 
-  const load = async (d: number) => {
+  const load = async (d: number, bid: string) => {
     setLoading(true);
     try {
-      const [c, s] = await Promise.all([fetchChart(d), fetchSummary()]);
+      const [c, s] = await Promise.all([fetchChart(d, bid), fetchSummary(bid)]);
       setChart(c.days || []);
       setSummary(s);
     } catch (e) {
@@ -37,7 +39,7 @@ export default function Analytics() {
     }
   };
 
-  useEffect(() => { load(days); }, [days]);
+  useEffect(() => { load(days, branchId); }, [days, branchId]);
 
   const trendData = chart.map((d) => ({
     day: d.date.slice(5), apron: d.apron, gloves: d.gloves, hairnet: d.hairnet, fire: d.fire,
@@ -76,6 +78,8 @@ export default function Analytics() {
           </SelectContent>
         </Select>
       </div>
+
+      <BranchSelector value={branchId} onChange={setBranchId} />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

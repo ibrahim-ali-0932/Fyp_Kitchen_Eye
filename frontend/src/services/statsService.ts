@@ -54,9 +54,13 @@ export interface DashboardData {
   recent_violations: RecentViolation[];
 }
 
-export async function fetchDashboard(days = 7): Promise<DashboardData> {
+export async function fetchDashboard(days = 7, branchId = "all"): Promise<DashboardData> {
   const headers = await authHeaders();
-  const res = await fetch(`${BASE_URL}/stats/dashboard?days=${days}`, { headers });
+  let url = `${BASE_URL}/stats/dashboard?days=${days}`;
+  if (branchId !== "all") {
+    url += `&branch_id=${encodeURIComponent(branchId)}`;
+  }
+  const res = await fetch(url, { headers });
   if (!res.ok) throw new Error(`Dashboard fetch failed: ${res.status}`);
   const data = await res.json();
   return {
@@ -66,16 +70,21 @@ export async function fetchDashboard(days = 7): Promise<DashboardData> {
   };
 }
 
-export async function fetchSummary(): Promise<ViolationSummary> {
+export async function fetchSummary(branchId = "all"): Promise<ViolationSummary> {
   const headers = await authHeaders();
-  const res = await fetch(`${BASE_URL}/stats/summary`, { headers });
+  const params = branchId !== "all" ? `?branch_id=${encodeURIComponent(branchId)}` : "";
+  const res = await fetch(`${BASE_URL}/stats/summary${params}`, { headers });
   if (!res.ok) throw new Error(`Summary fetch failed: ${res.status}`);
   return res.json();
 }
 
-export async function fetchChart(days = 7): Promise<{ user_id: string; days: ChartDay[] }> {
+export async function fetchChart(days = 7, branchId = "all"): Promise<{ user_id: string; days: ChartDay[] }> {
   const headers = await authHeaders();
-  const res = await fetch(`${BASE_URL}/stats/chart?days=${days}`, { headers });
+  let url = `${BASE_URL}/stats/chart?days=${days}`;
+  if (branchId !== "all") {
+    url += `&branch_id=${encodeURIComponent(branchId)}`;
+  }
+  const res = await fetch(url, { headers });
   if (!res.ok) throw new Error(`Chart fetch failed: ${res.status}`);
   return res.json();
 }

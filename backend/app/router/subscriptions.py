@@ -4,7 +4,9 @@ from pydantic import BaseModel
 from app.auth.authentication import get_current_user
 from services.subscription_service import (
     activate_subscription,
+    cancel_subscription,
     create_checkout_session,
+    get_current_subscription_details,
     parse_webhook_event,
     process_webhook_event,
 )
@@ -42,6 +44,27 @@ async def activate(body: ActivateRequest, decoded=Depends(get_current_user)):
     try:
         activate_subscription(decoded["uid"], body.plan)
         return {"status": "activated"}
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error))
+
+
+@router.get("/current")
+async def current(decoded=Depends(get_current_user)):
+    try:
+        return get_current_subscription_details(decoded["uid"])
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error))
+
+
+@router.post("/cancel")
+async def cancel(decoded=Depends(get_current_user)):
+    try:
+        result = cancel_subscription(decoded["uid"])
+        return {"status": "cancel_scheduled", **result}
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+    except stripe.error.StripeError as error:
+        raise HTTPException(status_code=400, detail=str(error))
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error))
 

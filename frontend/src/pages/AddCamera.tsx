@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -11,8 +11,23 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  GitBranch,
 } from "lucide-react";
 import { camerasAPI } from "../services/adminService";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+const API_BASE_URL = "http://localhost:8000";
+
+interface Branch {
+  id: string;
+  name: string;
+  address?: string;
+}
 import {
   Select,
   SelectContent,
@@ -45,6 +60,7 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
     ipAddress: "",
     location: "",
     userId: "",
+    branchId: "",
     sourceType: "ip" as "ip" | "video",
     status: "Offline" as "Online" | "Offline",
   });
@@ -54,14 +70,45 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
     ipAddress: "",
     location: "",
     userId: "",
+    branchId: "",
     sourceType: "",
   });
 
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [connectionResult, setConnectionResult] = useState<
     "success" | "error" | null
   >(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!formData.userId) {
+      setBranches([]);
+      setFormData((prev) => ({ ...prev, branchId: "" }));
+      return;
+    }
+    setLoadingBranches(true);
+    (async () => {
+      try {
+        const token = localStorage.getItem("token") || "admin_bypass";
+        const res = await fetch(
+          `${API_BASE_URL}/branches/?user_id=${encodeURIComponent(formData.userId)}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!res.ok) throw new Error("Failed to fetch branches");
+        const data = await res.json();
+        const userBranches: Branch[] = data.branches || [];
+        setBranches(userBranches);
+        setFormData((prev) => ({ ...prev, branchId: "" }));
+      } catch (err) {
+        console.error("Could not load branches for user", err);
+        setBranches([]);
+      } finally {
+        setLoadingBranches(false);
+      }
+    })();
+  }, [formData.userId]);
 
   const validateForm = () => {
     const newErrors = {
@@ -69,6 +116,7 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
       ipAddress: "",
       location: "",
       userId: "",
+      branchId: "",
       sourceType: "",
     };
 
@@ -96,12 +144,17 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
       newErrors.userId = "Please select a user";
     }
 
+    if (branches.length > 0 && !formData.branchId) {
+      newErrors.branchId = "Please select a branch";
+    }
+
     setErrors(newErrors);
     return (
       !newErrors.name &&
       !newErrors.ipAddress &&
       !newErrors.location &&
-      !newErrors.userId
+      !newErrors.userId &&
+      !newErrors.branchId
     );
   };
 
@@ -150,8 +203,10 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
         token = "admin_bypass";
       }
 
+      const selectedBranch = branches.find((b) => b.id === formData.branchId);
       const cameraData = {
-        branch: formData.name,
+        branch: selectedBranch?.name || formData.name,
+        branch_id: formData.branchId || undefined,
         ip_address: formData.ipAddress,
         location: formData.location,
         status: formData.status === "Online" ? "active" : "inactive",
@@ -238,6 +293,53 @@ export default function AddCamera({ users, onBack, onSave }: AddCameraProps) {
                 </div>
               )}
             </div>
+
+            {/* Branch Selection */}
+            {formData.userId && (
+              <div>
+                <label className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <GitBranch className="w-4 h-4" />
+                  Assign to Branch
+                  {branches.length > 0 && <span className="text-red-500">*</span>}
+                </label>
+                {loadingBranches ? (
+                  <div className="flex items-center gap-2 text-sm text-slate-500 py-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading branches...
+                  </div>
+                ) : branches.length === 0 ? (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800">
+                    This user has no branches. The camera will not be assigned to a branch.
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.branchId}
+                    onValueChange={(value: string) =>
+                      setFormData({ ...formData, branchId: value })
+                    }
+                  >
+                    <SelectTrigger className={errors.branchId ? "border-red-500" : ""}>
+                      <SelectValue placeholder="Select a branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{branch.name}</span>
+                            {branch.address && (
+                              <span className="text-xs text-slate-500">{branch.address}</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {errors.branchId && (
+                  <p className="text-sm text-red-500 mt-1">{errors.branchId}</p>
+                )}
+              </div>
+            )}
 
             {/* Camera Name */}
             <div>

@@ -6,6 +6,7 @@ import { Badge } from "../components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import type { CameraInfo } from "./AdminPanel";
+import BranchSelector from "../components/BranchSelector";
 
 interface CameraManagementProps {
   cameras: CameraInfo[];
@@ -22,6 +23,7 @@ export function CameraManagement({
   onUpdateCamera,
   onDeleteCamera,
 }: CameraManagementProps) {
+  const [branchId, setBranchId] = useState("all");
   const [isAddCameraOpen, setIsAddCameraOpen] = useState(false);
   const [isConfigureOpen, setIsConfigureOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -110,6 +112,14 @@ export function CameraManagement({
     setIsDeleteDialogOpen(true);
   };
 
+  const visibleCameras =
+    branchId === "all"
+      ? cameras
+      : cameras.filter((camera) => {
+          const cameraAny = camera as any;
+          return cameraAny.branch_id === branchId;
+        });
+
   return (
     <>
       <Card className="bg-white/5 border-white/10">
@@ -125,9 +135,10 @@ export function CameraManagement({
               Add Camera
             </Button>
           </div>
+          <BranchSelector value={branchId} onChange={setBranchId} />
         </CardHeader>
         <CardContent>
-          {cameras.length === 0 ? (
+          {visibleCameras.length === 0 ? (
             <div className="text-center py-12">
               <Camera className="size-12 text-[#90a1b9] mx-auto mb-3" />
               <p className="text-[#90a1b9]">No cameras added yet</p>
@@ -135,7 +146,7 @@ export function CameraManagement({
             </div>
           ) : (
             <div className="space-y-3">
-              {cameras.map((camera) => (
+              {visibleCameras.map((camera) => (
                 <div
                   key={camera.id}
                   className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"

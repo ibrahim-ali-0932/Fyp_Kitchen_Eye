@@ -6,6 +6,7 @@ from .router import (
     signup,
     login,
     profile,
+    branches,
     stats,
     violations,
     users,
@@ -35,6 +36,7 @@ app.add_middleware(
 app.include_router(signup.router, prefix="/auth")
 app.include_router(login.router, prefix="/auth")
 app.include_router(profile.router, prefix="/auth")
+app.include_router(branches.router)
 app.include_router(stats.router)
 app.include_router(violations.router)
 app.include_router(reports.router)

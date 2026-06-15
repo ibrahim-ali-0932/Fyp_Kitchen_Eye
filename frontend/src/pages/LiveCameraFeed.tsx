@@ -9,6 +9,7 @@ import { getVideoUrl } from "../services/api";
 import { detectionAPI } from "../services/api";
 import { camerasAPI, type Camera as ApiCamera } from "../services/adminService";
 import { getAuthToken } from "../services/authToken";
+import BranchSelector from "../components/BranchSelector";
 
 interface SelectedCamera {
   id: string;
@@ -85,15 +86,16 @@ export default function LiveCameraFeed() {
   const [error, setError] = useState<string | null>(null);
   const [detectionEnabled, setDetectionEnabled] = useState(true);
   const [detectionBusy, setDetectionBusy] = useState(false);
+  const [branchId, setBranchId] = useState("all");
 
-  const loadCameras = async () => {
+  const loadCameras = async (bid: string) => {
     setLoading(true);
     setError(null);
 
     try {
       const token = await getAuthToken();
       const [data, detectionState] = await Promise.all([
-        camerasAPI.getAll(token),
+        camerasAPI.getAll(token, undefined, bid),
         detectionAPI.getStatus(token),
       ]);
       setCameras(data.map((camera, index) => mapCamera(camera, index)));
@@ -125,8 +127,8 @@ export default function LiveCameraFeed() {
   };
 
   useEffect(() => {
-    loadCameras();
-  }, []);
+    loadCameras(branchId);
+  }, [branchId]);
 
   const visibleCameras = cameras.length > 0 ? cameras : fallbackCameras;
   const isFallbackView = cameras.length === 0;
@@ -154,6 +156,8 @@ export default function LiveCameraFeed() {
             : "Showing cameras from database"}
         </div>
       </div>
+
+      <BranchSelector value={branchId} onChange={setBranchId} />
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -193,7 +197,7 @@ export default function LiveCameraFeed() {
         <Card className="p-6">
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700"
-            onClick={loadCameras}
+            onClick={() => loadCameras(branchId)}
             disabled={loading}
           >
             <RefreshCw className="w-4 h-4 mr-2" />

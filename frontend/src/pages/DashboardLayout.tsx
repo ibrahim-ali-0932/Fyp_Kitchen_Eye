@@ -18,6 +18,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 import Dashboard from "./Dashboard";
 import ViolationHistory from "./ViolationHistory";
@@ -25,6 +26,7 @@ import LiveCameraFeed from "./LiveCameraFeed";
 import Analytics from "./Analytics";
 import Reports from "./Reports";
 import NotificationSettings from "./NotificationSettings";
+import BranchesPage from "./BranchesPage";
 import ProfilePage from "./ProfilePage";
 import Subscription from "./Subscription";
 import NotificationBell from "../components/NotificationBell";
@@ -41,6 +43,7 @@ type Page =
   | "dashboard"
   | "violations"
   | "cameras"
+  | "branches"
   | "analytics"
   | "reports"
   | "notifications"
@@ -65,6 +68,7 @@ const PAGE_TO_PATH: Record<Page, string> = {
   dashboard: "/dashboard",
   violations: "/dashboard/violations",
   cameras: "/dashboard/cameras",
+  branches: "/dashboard/branches",
   analytics: "/dashboard/analytics",
   reports: "/dashboard/reports",
   notifications: "/dashboard/notifications",
@@ -77,6 +81,7 @@ const PATH_TO_PAGE: Record<string, Page> = {
   dashboard: "dashboard",
   violations: "violations",
   cameras: "cameras",
+  branches: "branches",
   analytics: "analytics",
   reports: "reports",
   notifications: "notifications",
@@ -229,12 +234,23 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   };
 
   const normalizedPlan = (userProfile?.plan || "basic").toLowerCase();
+  const normalizedRole = (userProfile?.role || "").toLowerCase();
+  const normalizedSubscriptionStatus = (userProfile?.subscription_status || "").toLowerCase();
   const isBasicPlan = normalizedPlan === "basic";
-  const currentPlanLabel = userProfile?.plan || "Basic";
   const isAdminBypass =
     (userProfile?.role || "").toLowerCase() === "admin" ||
     localStorage.getItem("token") === "admin_bypass";
-  const isProPlan = normalizedPlan === "pro" || normalizedPlan === "enterprise";
+  const isProPlan = normalizedPlan.includes("pro") || normalizedPlan.includes("enterprise");
+  const hasPaidSubscription =
+    isProPlan ||
+    (
+      !isBasicPlan &&
+      (
+        normalizedSubscriptionStatus === "active" ||
+        normalizedSubscriptionStatus === "paid" ||
+        normalizedSubscriptionStatus === "trialing"
+      )
+    );
 
   const getTrialState = () => {
     const createdAtRaw = userProfile?.createdAt;
@@ -267,6 +283,15 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   const trialState = getTrialState();
 
   const canAccessPage = (page: Page) => {
+    if (page === "branches") {
+      return (
+        isAdminBypass ||
+        normalizedRole === "admin" ||
+        normalizedRole === "owner" ||
+        hasPaidSubscription
+      );
+    }
+
     if (isAdminBypass || isProPlan) {
       return true;
     }
@@ -283,29 +308,16 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   };
 
   const renderPlanCard = () => {
-    if (isBasicPlan) {
-      return (
-        <div className="rounded-xl p-4 bg-gradient-to-br from-blue-600 to-indigo-700 border border-blue-300/20 shadow-lg shadow-blue-950/20">
-          <p className="text-sm mb-3 text-white/95">
-            Upgrade to Pro for advanced features
-          </p>
-          <Button
-            size="sm"
-            className="w-full bg-white text-blue-700 hover:bg-blue-50 active:bg-blue-100"
-            onClick={() => handlePageChange("subscription")}
-          >
-            <CreditCard className="w-4 h-4 mr-2" />
-            Upgrade Plan
-          </Button>
-        </div>
-      );
+    const needsUpgrade = !hasPaidSubscription || isBasicPlan;
+
+    if (!needsUpgrade) {
+      return null;
     }
 
     return (
       <div className="rounded-xl p-4 bg-gradient-to-br from-blue-600 to-indigo-700 border border-blue-300/20 shadow-lg shadow-blue-950/20">
-        <p className="text-sm text-white/90 mb-1">Current Plan</p>
-        <p className="text-lg font-semibold capitalize mb-3 text-white">
-          {currentPlanLabel}
+        <p className="text-sm mb-3 text-white/95">
+          Upgrade to Pro for advanced features
         </p>
         <Button
           size="sm"
@@ -313,7 +325,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           onClick={() => handlePageChange("subscription")}
         >
           <CreditCard className="w-4 h-4 mr-2" />
-          View Plan Details
+          Upgrade Plan
         </Button>
       </div>
     );
@@ -323,9 +335,11 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
     { id: "dashboard" as Page, icon: LayoutDashboard, label: "Dashboard" },
     { id: "violations" as Page, icon: History, label: "Violation History" },
     { id: "cameras" as Page, icon: Camera, label: "Live Camera Feed" },
+    { id: "branches" as Page, icon: Building2, label: "Branches" },
     { id: "analytics" as Page, icon: TrendingUp, label: "Analytics & Trends" },
     { id: "reports" as Page, icon: FileText, label: "Reports" },
     { id: "notifications" as Page, icon: Bell, label: "Notification" },
+    { id: "subscription" as Page, icon: CreditCard, label: "Subscription" },
   ];
 
   const renderPage = () => {
@@ -374,6 +388,8 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         return <ViolationHistory />;
       case "cameras":
         return <LiveCameraFeed />;
+      case "branches":
+        return <BranchesPage />;
       case "analytics":
         return <Analytics />;
       case "reports":
@@ -577,36 +593,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
             </nav>
 
             <div className="p-4">
-              {isBasicPlan ? (
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-4 border border-blue-300/20 shadow-lg shadow-blue-950/20">
-                  <p className="text-sm mb-3 text-white/95">
-                    Upgrade to Pro for advanced features
-                  </p>
-                  <Button
-                    size="sm"
-                    className="w-full bg-white text-blue-700 hover:bg-blue-50 active:bg-blue-100"
-                    onClick={() => handlePageChange("subscription", true)}
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Upgrade Plan
-                  </Button>
-                </div>
-              ) : (
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-4 border border-blue-300/20 shadow-lg shadow-blue-950/20">
-                  <p className="text-sm text-white/90 mb-1">Current Plan</p>
-                  <p className="text-lg font-semibold capitalize mb-3 text-white">
-                    {currentPlanLabel}
-                  </p>
-                  <Button
-                    size="sm"
-                    className="w-full bg-white text-blue-700 hover:bg-blue-50 active:bg-blue-100"
-                    onClick={() => handlePageChange("subscription", true)}
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    View Plan Details
-                  </Button>
-                </div>
-              )}
+              {renderPlanCard()}
             </div>
 
             <div className="p-4 border-t border-slate-800">

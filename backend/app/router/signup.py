@@ -53,6 +53,7 @@ def ensure_user_profile(uid: str, email: str) -> dict:
         return user_doc.to_dict() or {}
 
     profile_data = build_user_profile(email=email)
+    profile_data["owner_id"] = uid
     user_ref.set(profile_data)
     return profile_data
 
@@ -182,6 +183,7 @@ async def signup(request: Request, Authorization: str = Header(None)):
             organization=organization_value,
             address=address_value,
         )
+        profile_data["owner_id"] = uid
         
         print(f"🔵 ===== SAVING PROFILE TO FIRESTORE =====")
         print(f"🔵 UID: {uid}")

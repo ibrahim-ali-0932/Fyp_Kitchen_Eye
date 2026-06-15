@@ -25,6 +25,21 @@ export interface Camera {
   stream_url?: string;
 }
 
+export interface PlanLimits {
+  plan: string;
+  max_branches: number;
+  max_cameras: number;
+  max_users: number;
+}
+
+export interface PlanOption {
+  id: string;
+  name?: string;
+  max_branches?: number;
+  max_cameras?: number;
+  max_users?: number;
+}
+
 export const usersAPI = {
   // Get all users
   async getAll(token: string): Promise<User[]> {
@@ -107,7 +122,7 @@ export const usersAPI = {
 };
 
 export const plansAPI = {
-  async getAll(token: string): Promise<Array<{ id: string; name?: string }>> {
+  async getAll(token: string): Promise<PlanOption[]> {
     const response = await fetch(`${API_BASE_URL}/auth/users/plans`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -121,14 +136,55 @@ export const plansAPI = {
     const data = await response.json();
     return data.plans || [];
   },
+
+  async getLimits(token: string): Promise<PlanLimits[]> {
+    const response = await fetch(`${API_BASE_URL}/auth/users/plans/limits`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch plan limits");
+    }
+
+    const data = await response.json();
+    return data.plans || [];
+  },
+
+  async updateLimits(
+    planId: string,
+    updates: { max_branches?: number; max_cameras?: number; max_users?: number },
+    token: string,
+  ): Promise<PlanLimits> {
+    const response = await fetch(`${API_BASE_URL}/auth/users/plans/${planId}/limits`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updates),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || "Failed to update plan limits");
+    }
+
+    const data = await response.json();
+    return data.plan;
+  },
 };
 
 export const camerasAPI = {
   // Get all cameras
-  async getAll(token: string, userId?: string): Promise<Camera[]> {
+  async getAll(token: string, userId?: string, branchId?: string): Promise<Camera[]> {
     const url = new URL(`${API_BASE_URL}/auth/cameras/`);
     if (userId) {
       url.searchParams.set("user_id", userId);
+    }
+    if (branchId && branchId !== "all") {
+      url.searchParams.set("branch_id", branchId);
     }
 
     const response = await fetch(url.toString(), {
@@ -188,12 +244,13 @@ export const camerasAPI = {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("❌ API error response:", errorText);
+      let detail = "";
       try {
-        const error = JSON.parse(errorText);
-        throw new Error(error.detail || "Failed to create camera");
+        detail = JSON.parse(errorText)?.detail || "";
       } catch {
-        throw new Error(`Failed to create camera: ${response.status} ${response.statusText}`);
+        detail = "";
       }
+      throw new Error(detail || `Failed to create camera: ${response.status} ${response.statusText}`);
     }
 
     const result = await response.json();
@@ -219,12 +276,13 @@ export const camerasAPI = {
 
     if (!response.ok) {
       const errorText = await response.text();
+      let detail = "";
       try {
-        const error = JSON.parse(errorText);
-        throw new Error(error.detail || "Failed to test camera source");
+        detail = JSON.parse(errorText)?.detail || "";
       } catch {
-        throw new Error(`Failed to test camera source: ${response.status} ${response.statusText}`);
+        detail = "";
       }
+      throw new Error(detail || `Failed to test camera source: ${response.status} ${response.statusText}`);
     }
 
     return response.json();

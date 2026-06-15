@@ -3,6 +3,12 @@ from firebase_admin import auth as firebase_auth
 from ..database.db import db
 from typing import List, Optional
 from pydantic import BaseModel
+from services.plan_limits_service import (
+    enforce_limit_for_user,
+    get_account_owner_id,
+    list_plan_limits,
+    update_plan_limits,
+)
 
 CLOCK_SKEW_SECONDS = 10
 
@@ -17,6 +23,13 @@ class CreateUserRequest(BaseModel):
     address: str = ""
     role: str = "Viewer"
     status: str = "Active"
+    owner_user_id: str | None = None
+
+
+class PlanLimitsUpdateRequest(BaseModel):
+    max_branches: int | None = None
+    max_cameras: int | None = None
+    max_users: int | None = None
 
 
 @router.get("/")
@@ -111,15 +124,26 @@ async def create_user(request: CreateUserRequest, Authorization: str = Header(No
         # Admin bypass or verify token
         id_token = (Authorization or "").replace("Bearer ", "")
 
+        acting_user_id = None
         if id_token != "admin_bypass" and id_token:
             try:
                 decoded_token = firebase_auth.verify_id_token(
                     id_token,
                     clock_skew_seconds=CLOCK_SKEW_SECONDS,
                 )
+                acting_user_id = decoded_token.get("uid")
             except Exception as e:
                 print(f"Token verification failed: {e}")
                 pass
+
+        owner_id = None
+        if id_token == "admin_bypass":
+            owner_id = str(request.owner_user_id or "").strip() or None
+            if owner_id:
+                enforce_limit_for_user(owner_id, "users")
+        elif acting_user_id:
+            owner_id = get_account_owner_id(acting_user_id)
+            enforce_limit_for_user(owner_id, "users")
 
         # Create user in Firebase Auth
         user = firebase_auth.create_user(
@@ -137,6 +161,7 @@ async def create_user(request: CreateUserRequest, Authorization: str = Header(No
             "role": request.role,
             "status": request.status,
             "plan": "basic",
+            "owner_id": owner_id or user.uid,
             "createdAt": datetime.now().isoformat(),
         }
 
@@ -156,25 +181,55 @@ async def create_user(request: CreateUserRequest, Authorization: str = Header(No
 async def get_plans(Authorization: str = Header(None)):
     """Return available plans from Firestore (fallback to hardcoded list)."""
     try:
-        plans_ref = db.collection("plans")
-        docs = list(plans_ref.stream())
-        if docs:
-            plans = []
-            for d in docs:
-                data = d.to_dict() or {}
-                data["id"] = d.id
-                plans.append(data)
-            return {"plans": plans}
-
-        # Fallback hardcoded plans
-        fallback = [
-            {"id": "basic", "name": "Basic"},
-            {"id": "pro", "name": "Pro"},
-            {"id": "enterprise", "name": "Enterprise"},
-        ]
-        return {"plans": fallback}
+        plans = list_plan_limits()
+        return {
+            "plans": [
+                {
+                    "id": p["plan"],
+                    "name": p["plan"].capitalize(),
+                    "max_branches": p["max_branches"],
+                    "max_cameras": p["max_cameras"],
+                    "max_users": p["max_users"],
+                }
+                for p in plans
+            ]
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch plans: {e}")
+
+
+@router.get("/plans/limits")
+async def get_plan_limits_catalog(Authorization: str = Header(None)):
+    try:
+        return {"plans": list_plan_limits()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch plan limits: {e}")
+
+
+@router.put("/plans/{plan_id}/limits")
+async def set_plan_limits(
+    plan_id: str,
+    body: PlanLimitsUpdateRequest,
+    Authorization: str = Header(None),
+):
+    try:
+        id_token = (Authorization or "").replace("Bearer ", "")
+        updated_by = None
+
+        if id_token and id_token != "admin_bypass":
+            try:
+                decoded = firebase_auth.verify_id_token(
+                    id_token,
+                    clock_skew_seconds=CLOCK_SKEW_SECONDS,
+                )
+                updated_by = decoded.get("uid")
+            except Exception:
+                pass
+
+        updated = update_plan_limits(plan_id, body.model_dump(), updated_by=updated_by)
+        return {"plan": updated}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update plan limits: {e}")
 
 
 @router.put("/{user_id}/plan")

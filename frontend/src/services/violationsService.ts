@@ -22,6 +22,7 @@ export type ViolationRecord = {
 };
 
 export type FetchUserViolationsParams = {
+  branchId?: string;
   search?: string;
   category?: string;
   severity?: string;
@@ -35,6 +36,7 @@ export type FetchUserViolationsParams = {
 
 export async function fetchUserViolations(params?: FetchUserViolationsParams): Promise<ViolationRecord[]> {
   const query = new URLSearchParams();
+  if (params?.branchId && params.branchId !== "all") query.set("branch_id", params.branchId);
   if (params?.search?.trim()) query.set("search", params.search.trim());
   if (params?.category && params.category !== "all") query.set("category", params.category);
   if (params?.severity && params.severity !== "all") query.set("severity", params.severity);
