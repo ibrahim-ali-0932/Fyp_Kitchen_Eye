@@ -12,6 +12,7 @@ from .router import (
     cameras,
     reports,
     detection,
+    subscriptions,
 )
 
 app = FastAPI(title="KitchenEye API")
@@ -40,6 +41,7 @@ app.include_router(reports.router)
 app.include_router(users.router, prefix="/auth")
 app.include_router(cameras.router, prefix="/auth")
 app.include_router(detection.router)
+app.include_router(subscriptions.router)
 
 # Mount static files for video serving
 videos_dir_candidates = [

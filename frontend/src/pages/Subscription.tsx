@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -11,8 +12,37 @@ import {
   FileText,
   BarChart3,
 } from "lucide-react";
+import { auth } from "../firebase";
+import { createCheckoutSession } from "../services/subscriptionService";
 
 export default function Subscription() {
+  const navigate = useNavigate();
+
+  const handleUpgrade = async (planName: string) => {
+    const plan = planName.toLowerCase();
+
+    if (plan === "basic") {
+      return;
+    }
+
+    if (plan === "enterprise") {
+      window.location.href = "mailto:sales@kitcheneye.com";
+      return;
+    }
+
+    if (!auth.currentUser?.email) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      await createCheckoutSession(plan, auth.currentUser.email);
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert("Could not start checkout. Please try again.");
+    }
+  };
+
   const plans = [
     {
       name: "Basic",
@@ -194,6 +224,7 @@ export default function Subscription() {
                 className={`w-full mb-6 ${colors.button}`}
                 size="lg"
                 disabled={plan.name === "Basic"}
+                onClick={() => handleUpgrade(plan.name)}
               >
                 {plan.cta}
               </Button>

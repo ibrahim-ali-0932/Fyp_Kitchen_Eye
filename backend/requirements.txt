@@ -6,3 +6,4 @@ pydantic
 reportlab
 Pillow
 python-dotenv
+stripe

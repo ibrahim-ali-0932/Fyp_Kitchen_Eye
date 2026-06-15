@@ -61,6 +61,9 @@ def getprofile(decoded=Depends(get_current_user)):
     branchname = data.get("branchName") or data.get("Branchname") or ""
     address = data.get("address") or ""
     plan = data.get("plan") or "basic"
+    role = data.get("role") or ""
+    created_at = data.get("createdAt")
+    subscription_status = data.get("subscription_status") or ""
 
     print("🔵 ===== TRANSFORMED VALUES =====")
     print(f"🔵 Email (transformed): '{email}'")
@@ -74,6 +77,9 @@ def getprofile(decoded=Depends(get_current_user)):
         "Branchname": branchname,
         "address": address,
         "plan": plan,
+        "role": role,
+        "createdAt": created_at,
+        "subscription_status": subscription_status,
     }
 
     print("✅ Transformed data:")
@@ -82,6 +88,9 @@ def getprofile(decoded=Depends(get_current_user)):
     print(f"   - Branchname: {branchname}")
     print(f"   - Address: {address}")
     print(f"   - Plan: {plan}")
+    print(f"   - Role: {role}")
+    print(f"   - CreatedAt: {created_at}")
+    print(f"   - Subscription Status: {subscription_status}")
     print(f"✅ Returning profile data: {transformed_data}")
 
     try:
@@ -125,6 +134,9 @@ def update_profile(body: profile, decoded=Depends(get_current_user)):
             "Branchname": body.Branchname,
             "address": body.address,
             "plan": snap.to_dict().get("plan", "basic"),
+            "role": snap.to_dict().get("role", ""),
+            "createdAt": snap.to_dict().get("createdAt"),
+            "subscription_status": snap.to_dict().get("subscription_status", ""),
         }
 
         print(f"✅ Profile updated successfully: {updated_data}")

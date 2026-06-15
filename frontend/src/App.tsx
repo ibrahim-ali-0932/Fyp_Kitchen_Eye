@@ -5,6 +5,8 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardLayout from "./pages/DashboardLayout";
 import BlogPage from "./pages/BlogPage";
+import SuccessPage from "./pages/SuccessPage";
+import CancelPage from "./pages/CancelPage";
 import { AdminPanel } from "./pages/AdminPanel";
 import { ProtectedRoute, PublicRoute } from "./components/auth";
 import { auth } from "./firebase";
@@ -74,6 +76,9 @@ function AppRoutes() {
           />
         }
       />
+
+      <Route path="/success" element={<SuccessPage />} />
+      <Route path="/cancel" element={<CancelPage />} />
 
       {/* Auth Routes - redirect to dashboard if already logged in */}
       <Route

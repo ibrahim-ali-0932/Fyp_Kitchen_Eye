@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { Card } from "../components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import {
   LayoutDashboard,
@@ -9,7 +10,7 @@ import {
   TrendingUp,
   FileText,
   Bell,
-  Users,
+  Lock,
   CreditCard,
   LogOut,
   Search,
@@ -52,7 +53,13 @@ interface UserProfile {
   Branchname: string;
   address: string;
   plan?: string;
+  role?: string;
+  createdAt?: string;
+  subscription_status?: string;
 }
+
+const TRIAL_DAYS = 7;
+const TRIAL_ALLOWED_PAGES: Page[] = ["dashboard", "violations"];
 
 const PAGE_TO_PATH: Record<Page, string> = {
   dashboard: "/dashboard",
@@ -133,8 +140,6 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
 
       if (response.ok) {
         const data = await response.json();
-        const hasEmail = data.email && data.email.trim() !== "";
-        const hasFullname = data.Fullname && data.Fullname.trim() !== "";
         const profileData = {
           email:
             data.email ||
@@ -145,6 +150,9 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           Branchname: data.Branchname || "",
           address: data.address || "",
           plan: data.plan || "basic",
+          role: data.role || "",
+          createdAt: data.createdAt || "",
+          subscription_status: data.subscription_status || "",
         };
         setUserProfile(profileData);
       } else {
@@ -160,6 +168,9 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           Branchname: "",
           address: "",
           plan: "basic",
+          role: "",
+          createdAt: "",
+          subscription_status: "",
         });
       }
     } catch (error) {
@@ -181,6 +192,9 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         Branchname: "",
         address: "",
         plan: "basic",
+        role: "",
+        createdAt: "",
+        subscription_status: "",
       });
     } finally {
       setLoading(false);
@@ -217,6 +231,56 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   const normalizedPlan = (userProfile?.plan || "basic").toLowerCase();
   const isBasicPlan = normalizedPlan === "basic";
   const currentPlanLabel = userProfile?.plan || "Basic";
+  const isAdminBypass =
+    (userProfile?.role || "").toLowerCase() === "admin" ||
+    localStorage.getItem("token") === "admin_bypass";
+  const isProPlan = normalizedPlan === "pro" || normalizedPlan === "enterprise";
+
+  const getTrialState = () => {
+    const createdAtRaw = userProfile?.createdAt;
+    if (!createdAtRaw || isProPlan || isAdminBypass) {
+      return { active: false, daysLeft: 0 };
+    }
+
+    const createdAt = new Date(createdAtRaw);
+    if (Number.isNaN(createdAt.getTime())) {
+      return { active: false, daysLeft: 0 };
+    }
+
+    const trialEnd = new Date(
+      createdAt.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000,
+    );
+    const now = new Date();
+    const active = now < trialEnd;
+    const daysLeft = active
+      ? Math.max(
+          1,
+          Math.ceil(
+            (trialEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
+          ),
+        )
+      : 0;
+
+    return { active, daysLeft };
+  };
+
+  const trialState = getTrialState();
+
+  const canAccessPage = (page: Page) => {
+    if (isAdminBypass || isProPlan) {
+      return true;
+    }
+
+    if (page === "dashboard" || page === "subscription" || page === "profile") {
+      return true;
+    }
+
+    if (trialState.active && TRIAL_ALLOWED_PAGES.includes(page)) {
+      return true;
+    }
+
+    return false;
+  };
 
   const renderPlanCard = () => {
     if (isBasicPlan) {
@@ -261,10 +325,48 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
     { id: "cameras" as Page, icon: Camera, label: "Live Camera Feed" },
     { id: "analytics" as Page, icon: TrendingUp, label: "Analytics & Trends" },
     { id: "reports" as Page, icon: FileText, label: "Reports" },
-    { id: "notifications" as Page, icon: Bell, label: "Notification Settings" },
+    { id: "notifications" as Page, icon: Bell, label: "Notification" },
   ];
 
   const renderPage = () => {
+    if (!canAccessPage(currentPage)) {
+      return (
+        <div className="p-6">
+          <Card className="max-w-3xl mx-auto p-8 border-blue-100 bg-gradient-to-br from-blue-50 to-white">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                <Lock className="w-6 h-6 text-blue-700" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl mb-2">Upgrade Required</h2>
+                <p className="text-slate-600 mb-4">
+                  This feature is available on the Pro plan.
+                  {trialState.active
+                    ? ` Your trial allows Dashboard and Violation History only (${trialState.daysLeft} day${trialState.daysLeft === 1 ? "" : "s"} left).`
+                    : " Upgrade to Pro to unlock Live Feed, Analytics, Reports, and Notification settings."}
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => handlePageChange("subscription")}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Upgrade to Pro
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handlePageChange("dashboard")}
+                  >
+                    Back to Dashboard
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      );
+    }
+
     switch (currentPage) {
       case "dashboard":
         return <Dashboard />;
@@ -358,20 +460,28 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handlePageChange(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                currentPage === item.id
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              } ${sidebarCollapsed ? "justify-center" : ""}`}
-            >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span>{item.label}</span>}
-            </button>
-          ))}
+          {menuItems.map((item) => {
+            const locked = !canAccessPage(item.id);
+            return (
+              <button
+                key={item.id}
+                onClick={() => handlePageChange(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                  currentPage === item.id
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                } ${sidebarCollapsed ? "justify-center" : ""}`}
+              >
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {!sidebarCollapsed && (
+                  <span className="flex items-center gap-2">
+                    {item.label}
+                    {locked && <Lock className="w-3.5 h-3.5 text-slate-400" />}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Subscription CTA */}
@@ -444,20 +554,26 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
             </div>
 
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar">
-              {menuItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handlePageChange(item.id, true)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                    currentPage === item.id
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </button>
-              ))}
+              {menuItems.map((item) => {
+                const locked = !canAccessPage(item.id);
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handlePageChange(item.id, true)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                      currentPage === item.id
+                        ? "bg-blue-600 text-white"
+                        : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="flex items-center gap-2">
+                      {item.label}
+                      {locked && <Lock className="w-3.5 h-3.5 text-slate-400" />}
+                    </span>
+                  </button>
+                );
+              })}
             </nav>
 
             <div className="p-4">

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from firebase_admin import credentials, firestore
 
 _BACKEND_DIR     = Path(__file__).resolve().parents[2]
-_ENV_PATH        = _BACKEND_DIR / ".env"
+_ENV_PATH        = _BACKEND_DIR / ".env" / "backend.env"
 _CREDENTIALS_DIR = _BACKEND_DIR / "app" / "credentials"
 
 
